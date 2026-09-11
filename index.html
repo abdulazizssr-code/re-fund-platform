@@ -722,7 +722,7 @@ __def('i18n/index', function(){
 const dict = {
     en: {
         appTitle: 'RE Fund Platform', signIn: 'Sign in', email: 'Email', sendCode: 'Send login code', code: '6–8 digit code from the email',
-        verify: 'Verify', codeSent: 'Code sent — check your inbox.', signOut: 'Sign out', guest: 'Guest',
+        password: 'Password', useCode: 'Sign in with an email code instead', usePassword: 'Sign in with a password instead', verify: 'Verify', codeSent: 'Code sent — check your inbox.', signOut: 'Sign out', guest: 'Guest',
         projects: 'Projects', newProject: 'New', save: 'Save', saveVersion: 'Save version', versions: 'Versions', delete: 'Delete', load: 'Load',
         unsaved: '— unsaved —', projectName: 'Project name', saved: 'Saved', deleted: 'Deleted', confirmDelete: 'Delete this project and all its versions and actuals?',
         tabAssumptions: 'Assumptions', tabResults: 'Results', tabActuals: 'Actuals vs Budget',
@@ -740,7 +740,7 @@ const dict = {
     },
     ar: {
         appTitle: 'منصة الصناديق العقارية', signIn: 'تسجيل الدخول', email: 'البريد الإلكتروني', sendCode: 'إرسال رمز الدخول', code: 'الرمز المرسل إلى بريدك',
-        verify: 'تحقق', codeSent: 'تم إرسال الرمز — راجع بريدك.', signOut: 'تسجيل الخروج', guest: 'زائر',
+        password: 'كلمة المرور', useCode: 'الدخول برمز عبر البريد بدلاً من ذلك', usePassword: 'الدخول بكلمة المرور بدلاً من ذلك', verify: 'تحقق', codeSent: 'تم إرسال الرمز — راجع بريدك.', signOut: 'تسجيل الخروج', guest: 'زائر',
         projects: 'المشاريع', newProject: 'جديد', save: 'حفظ', saveVersion: 'حفظ نسخة', versions: 'النسخ', delete: 'حذف', load: 'تحميل',
         unsaved: '— غير محفوظ —', projectName: 'اسم المشروع', saved: 'تم الحفظ', deleted: 'تم الحذف', confirmDelete: 'حذف هذا المشروع وكل نسخه وبياناته الفعلية؟',
         tabAssumptions: 'الافتراضات', tabResults: 'النتائج', tabActuals: 'الفعلي مقابل الميزانية',
@@ -768,30 +768,26 @@ __def('components/Login', function(){
 
 
 const {supabase} = __req('lib/supabase');
-// Email + one-time code. No passwords, no usernames.
+// Two ways in: email + password (default, no email sending involved) or email + one-time code.
 function Login({ t }) {
-    const [email, setEmail] = useState(''), [code, setCode] = useState(''), [sent, setSent] = useState(false), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
-    const send = async (e) => {
+    const [mode, setMode] = useState('password');
+    const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [code, setCode] = useState('');
+    const [sent, setSent] = useState(false), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
+    const em = () => email.trim().toLowerCase();
+    const go = async (fn) => { setBusy(true); setErr(''); const { error } = await fn(); setBusy(false); if (error)
+        setErr(error.message); return !error; };
+    const submit = async (e) => {
         e.preventDefault();
-        setBusy(true);
-        setErr('');
-        const { error } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false } });
-        setBusy(false);
-        if (error)
-            setErr(error.message);
-        else
-            setSent(true);
+        if (mode === 'password')
+            return go(() => supabase.auth.signInWithPassword({ email: em(), password }));
+        if (!sent) {
+            if (await go(() => supabase.auth.signInWithOtp({ email: em(), options: { shouldCreateUser: false } })))
+                setSent(true);
+            return;
+        }
+        return go(() => supabase.auth.verifyOtp({ email: em(), token: code.trim(), type: 'email' }));
     };
-    const verify = async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setErr('');
-        const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: 'email' });
-        setBusy(false);
-        if (error)
-            setErr(error.message);
-    };
-    return (_jsxs("div", { className: "login", children: [_jsx("h1", { children: t('appTitle') }), _jsxs("form", { onSubmit: sent ? verify : send, children: [_jsxs("label", { children: [t('email'), _jsx("input", { type: "email", required: true, value: email, onChange: e => setEmail(e.target.value), disabled: sent })] }), sent && _jsxs("label", { children: [t('code'), _jsx("input", { inputMode: "numeric", required: true, value: code, onChange: e => setCode(e.target.value), autoFocus: true })] }), sent && _jsx("p", { className: "ok", children: t('codeSent') }), err && _jsx("p", { className: "err", children: err }), _jsx("button", { disabled: busy, children: sent ? t('verify') : t('sendCode') })] })] }));
+    return (_jsxs("div", { className: "login", children: [_jsx("h1", { children: t('appTitle') }), _jsxs("form", { onSubmit: submit, children: [_jsxs("label", { children: [t('email'), _jsx("input", { type: "email", required: true, autoComplete: "username", value: email, onChange: e => setEmail(e.target.value), disabled: sent })] }), mode === 'password' && _jsxs("label", { children: [t('password'), _jsx("input", { type: "password", required: true, autoComplete: "current-password", value: password, onChange: e => setPassword(e.target.value) })] }), mode === 'code' && sent && _jsxs("label", { children: [t('code'), _jsx("input", { inputMode: "numeric", required: true, value: code, onChange: e => setCode(e.target.value), autoFocus: true })] }), mode === 'code' && sent && _jsx("p", { className: "ok", children: t('codeSent') }), err && _jsx("p", { className: "err", children: err }), _jsx("button", { disabled: busy, children: mode === 'password' ? t('signIn') : sent ? t('verify') : t('sendCode') })] }), _jsx("button", { className: "link", onClick: () => { setMode(mode === 'password' ? 'code' : 'password'); setSent(false); setErr(''); }, children: mode === 'password' ? t('useCode') : t('usePassword') })] }));
 }
 
 return {default: Login};
