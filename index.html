@@ -1,0 +1,1193 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RE Fund Platform</title><style>:root { --bg:#fafaf7; --fg:#1b1b1b; --line:#ddd; --accent:#0f6e56; --danger:#b3261e; --muted:#666; }
+* { box-sizing:border-box } body { margin:0; font-family:system-ui,"Segoe UI",Tahoma,sans-serif; background:var(--bg); color:var(--fg); font-size:14px }
+.app { max-width:1200px; margin:0 auto; padding:16px }
+header { display:flex; gap:16px; align-items:center; flex-wrap:wrap } header h1 { font-size:20px; margin:0; flex:1 }
+nav { display:flex; gap:4px; border-bottom:1px solid var(--line); margin:12px 0 }
+nav button { background:none; border:none; padding:10px 14px; cursor:pointer; border-bottom:2px solid transparent } nav button.active { border-bottom-color:var(--accent); color:var(--accent); font-weight:600 }
+.bar { display:flex; gap:8px; align-items:end; flex-wrap:wrap; margin:8px 0 } .bar label { display:flex; flex-direction:column; font-size:12px; color:var(--muted) }
+input,select,button { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:#fff }
+button { cursor:pointer; background:var(--accent); color:#fff; border-color:var(--accent) } button.danger { background:var(--danger); border-color:var(--danger) } button.link { background:none; color:var(--accent); border:none }
+.two-col { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:24px } section label { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0 } section input[type=number],section input[type=date] { width:180px }
+.tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin:12px 0 } .tile { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px } .tile span { display:block; color:var(--muted); font-size:12px } .tile strong { font-size:18px }
+.scroll { overflow-x:auto } table { border-collapse:collapse; white-space:nowrap } th,td { border-bottom:1px solid var(--line); padding:6px 10px; text-align:end } th:first-child { text-align:start } td.neg { color:var(--danger) }
+.login { max-width:360px; margin:80px auto; background:#fff; padding:24px; border:1px solid var(--line); border-radius:12px } .login label { display:block; margin:8px 0 } .login input { width:100% }
+.ok { color:var(--accent) } .err { color:var(--danger) } .center { text-align:center; margin-top:80px }
+</style>
+<script type="importmap">{"imports": {"react": "https://esm.sh/react@18.3.1", "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1", "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime", "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.45.4"}}</script></head><body><div id="root"></div>
+<script type="module">
+import {jsx as _jsx, jsxs as _jsxs} from 'react/jsx-runtime';
+import React, {useEffect, useMemo, useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {createClient} from '@supabase/supabase-js';
+const __m={},__c={};function __def(n,f){__m[n]=f}function __req(n){if(!(n in __c)){__c[n]=__m[n]()}return __c[n]}
+__def('lib/supabase', function(){
+// The only Supabase client. Never import this from src/engine/.
+
+const url = "https://hzvdsfyjbktanqdvojqb.supabase.co", key = "sb_publishable_tFV-RcZgeCwxXHRZ49sJNg_jEtOhbML";
+if (!url || !key)
+    throw new Error('Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY — copy .env.example to .env');
+const supabase = createClient(url, key);
+
+return {supabase};
+});
+__def('engine/index', function(){
+// PURE calculation engine — no DOM, no Firebase, no globals.
+// Extracted verbatim from calcWith() in legacy/index.html; only the input-reading header changed.
+// Contract: run(fund, projects, overrides) -> result object (irr, eqMult, netProfit, totalCost, tRev, quarterly arrays...) or null.
+// Any change to the numbers here must keep tests/excel-truth.test.js passing.
+function freqAmount(annual, freq, qi, nq) {
+    const yearsInFund = nq / 4;
+    if (freq === 'quarterly')
+        return annual / 4;
+    if (freq === 'semiannual')
+        return (qi % 2 === 1) ? annual / 2 : 0;
+    if (freq === 'annual')
+        return (qi % 4 === 3) ? annual : 0;
+    return 0;
+}
+function pct(v) { return v / 100; }
+function rescaleSchedule(arr, newN) {
+    const oldN = arr.length;
+    if (oldN === newN)
+        return arr.slice();
+    if (newN < 1)
+        return [];
+    const out = Array(newN).fill(0);
+    for (let j = 0; j < newN; j++) {
+        const tS = j / newN, tE = (j + 1) / newN;
+        for (let i = 0; i < oldN; i++) {
+            const iS = i / oldN, iE = (i + 1) / oldN;
+            const overlap = Math.max(0, Math.min(tE, iE) - Math.max(tS, iS));
+            if (overlap > 0)
+                out[j] += arr[i] * overlap * oldN;
+        }
+    }
+    return out;
+}
+function run(fund, projects, overrides) {
+    // fund: fund-level assumptions (see DEFAULT_FUND); projects: array (see DEFAULT_PROJECTS)
+    const A = Object.assign({}, fund, overrides || {});
+    const nq = Math.floor(A.fund_period_months / 3);
+    if (nq < 2)
+        return null;
+    const V = 1 + pct(A.vat_rate);
+    // Per-project land calculations
+    let totalLandArea = 0, totalLandPrice = 0;
+    let totalBrokerageExVAT = 0, totalBrokerageVAT = 0, totalRettAmount = 0;
+    let totalBuildArea = 0, totalSellArea = 0, totalSalePrice = 0;
+    let totalDesignFee = 0, totalSupervisionFee = 0, totalLicensingFee = 0;
+    // Aggregated quarterly arrays
+    const qBaseCon = Array(nq).fill(0), qDevFee = Array(nq).fill(0);
+    const qContingency = Array(nq).fill(0), qLicensing = Array(nq).fill(0);
+    const qDesignFee = Array(nq).fill(0), qInsurance = Array(nq).fill(0);
+    const qSupervision = Array(nq).fill(0);
+    const qGrossSales = Array(nq).fill(0), qWafi = Array(nq).fill(0), qSellExp = Array(nq).fill(0);
+    const qIKLand = Array(nq).fill(0), qIKBrok = Array(nq).fill(0), qIKDev = Array(nq).fill(0), qIKCon = Array(nq).fill(0), qIKSell = Array(nq).fill(0);
+    let totalBrokVATRefund = 0, totalRETTRefund = 0;
+    // Process each project
+    for (let pi = 0; pi < projects.length; pi++) {
+        const P = projects[pi];
+        const pLand = P.land_area * (P.land_price_sqm || 0);
+        totalLandArea += P.land_area || 0;
+        totalLandPrice += pLand;
+        const pBrokExVAT = pLand * pct(P.brokerage_pct || 0);
+        const pBrokVAT = pBrokExVAT * pct(A.vat_rate);
+        const pRett = pLand * pct(P.rett_pct || 0);
+        totalBrokerageExVAT += pBrokExVAT;
+        totalRettAmount += pRett;
+        if (Number(A.vat_refund))
+            totalBrokVATRefund += pBrokVAT;
+        if (Number(P.rett_refund))
+            totalRETTRefund += pRett;
+        const pBaseCon = P.build_area * (P.dev_cost_sqm || 0);
+        const pDevFee = pBaseCon * pct(P.dev_fee_pct || 0);
+        const pContingency = pBaseCon * pct(P.contingency_pct || 0);
+        const pInsurance = pBaseCon * pct(P.insurance_pct || 0);
+        totalBuildArea += P.build_area || 0;
+        let pDesignFee = P.design_fee || 0, pSupervisionFee = P.supervision_fee || 0;
+        if (P.design_fee_mode === 'pct')
+            pDesignFee = pBaseCon * pct(P.design_fee_pct || 0);
+        if (P.supervision_fee_mode === 'pct')
+            pSupervisionFee = pBaseCon * pct(P.supervision_fee_pct || 0);
+        totalDesignFee += pDesignFee;
+        totalSupervisionFee += pSupervisionFee;
+        totalLicensingFee += P.licensing_fee || 0;
+        if (P.strategy !== 'lease')
+            totalSellArea += P.sell_area || 0;
+        const pRev = (P.sell_area || 0) * (P.sale_price_sqm || 0);
+        const pSellExpTotal = pRev * pct(P.sell_exp_pct || 0);
+        // Rescale schedules if nq differs from stored schedule length
+        const _sBC = rescaleSchedule(P.schBaseCon || [], nq);
+        const _sDF = rescaleSchedule(P.schDevFee || [], nq);
+        const _sCt = rescaleSchedule(P.schContingency || [], nq);
+        const _sLc = rescaleSchedule(P.schLicensing || [], nq);
+        const _sDn = rescaleSchedule(P.schDesign || [], nq);
+        const _sIn = rescaleSchedule(P.schInsurance || [], nq);
+        const _sSp = rescaleSchedule(P.schSupervision || [], nq);
+        const _sSl = rescaleSchedule(P.salesSchedule || [], nq);
+        for (let qi = 0; qi < nq; qi++) {
+            const sBC = (_sBC[qi] || 0) / 100;
+            qBaseCon[qi] += pBaseCon * sBC * V;
+            qDevFee[qi] += pDevFee * ((_sDF[qi] || 0) / 100) * V;
+            qContingency[qi] += pContingency * ((_sCt[qi] || 0) / 100) * V;
+            qLicensing[qi] += (P.licensing_fee || 0) * ((_sLc[qi] || 0) / 100) * V;
+            qDesignFee[qi] += pDesignFee * ((_sDn[qi] || 0) / 100) * V;
+            qInsurance[qi] += pInsurance * ((_sIn[qi] || 0) / 100) * V;
+            qSupervision[qi] += pSupervisionFee * ((_sSp[qi] || 0) / 100) * V;
+            if (P.strategy === 'lease') {
+                // Lease: occupancy from schedule, rent with escalator, OpEx
+                const occPct = (P.occupancySchedule && P.occupancySchedule[qi]) || 0;
+                if (occPct > 0) {
+                    const yearIdx = Math.floor(qi / 4);
+                    const escalatedRent = (P.rent_per_sqm || 0) * Math.pow(1 + pct(P.rent_escalator_pct || 0), yearIdx);
+                    const egi = (P.leasable_area || 0) * escalatedRent / 4 * (occPct / 100);
+                    let totalOpEx = 0;
+                    (P.opexItems || []).forEach(item => {
+                        let amt = 0;
+                        if (item.mode === 'pct_egi')
+                            amt = egi * pct(item.value || 0);
+                        else if (item.mode === 'sqm')
+                            amt = (P.leasable_area || 0) * (item.value || 0) / 4;
+                        else
+                            amt = (item.value || 0) / 4;
+                        totalOpEx += amt;
+                    });
+                    qGrossSales[qi] += egi;
+                    qSellExp[qi] += totalOpEx * V;
+                }
+                // Exit disposition in last quarter
+                if (qi === nq - 1) {
+                    const lastOcc = (P.occupancySchedule && P.occupancySchedule[nq - 1]) || 0;
+                    const lastYear = Math.floor((nq - 1) / 4);
+                    const exitRent = (P.rent_per_sqm || 0) * Math.pow(1 + pct(P.rent_escalator_pct || 0), lastYear);
+                    const stabilizedEGI = (P.leasable_area || 0) * exitRent * (lastOcc / 100);
+                    let stabilizedOpEx = 0;
+                    (P.opexItems || []).forEach(item => {
+                        if (item.mode === 'pct_egi')
+                            stabilizedOpEx += stabilizedEGI * pct(item.value || 0);
+                        else if (item.mode === 'sqm')
+                            stabilizedOpEx += (P.leasable_area || 0) * (item.value || 0);
+                        else
+                            stabilizedOpEx += (item.value || 0);
+                    });
+                    const stabilizedNOI = stabilizedEGI - stabilizedOpEx;
+                    const exitVal = stabilizedNOI > 0 ? stabilizedNOI / pct(P.exit_cap_rate || 8) : 0;
+                    const sellingCosts = exitVal * pct(P.selling_cost_pct || 0);
+                    qGrossSales[qi] += exitVal;
+                    qSellExp[qi] += sellingCosts * V;
+                }
+            }
+            else {
+                // Sell project revenue
+                const sSale = (_sSl[qi] || 0) / 100;
+                const qProjSale = pRev * sSale;
+                qGrossSales[qi] += qProjSale;
+                qWafi[qi] += qProjSale * pct(P.wafi_pct || 0) * V;
+                qSellExp[qi] += qProjSale * pct(P.sell_exp_pct || 0) * V;
+                qIKDev[qi] += pct(A.ik_dev_pct) * pDevFee * ((_sDF[qi] || 0) / 100);
+                qIKCon[qi] += pct(A.ik_con_pct) * pBaseCon * sBC;
+                qIKSell[qi] += pct(A.ik_sell_pct) * pSellExpTotal * sSale;
+            }
+        }
+        qIKLand[0] += pct(A.ik_land_pct) * pLand;
+        qIKBrok[0] += pct(A.ik_brok_pct) * pBrokExVAT;
+    }
+    const brokerageVAT = totalBrokerageExVAT * pct(A.vat_rate);
+    const brokerageExVAT = totalBrokerageExVAT;
+    const brokerageIncVAT = brokerageExVAT + brokerageVAT;
+    const rettAmt = totalRettAmount;
+    const baseLand = totalLandPrice;
+    const tLand = baseLand + brokerageIncVAT + rettAmt;
+    // Construction totals ex-VAT (sum quarterly arrays / V to remove VAT)
+    const tConExVAT = (qBaseCon.reduce((a, b) => a + b, 0) + qDevFee.reduce((a, b) => a + b, 0) + qContingency.reduce((a, b) => a + b, 0) + qInsurance.reduce((a, b) => a + b, 0) + qLicensing.reduce((a, b) => a + b, 0) + qDesignFee.reduce((a, b) => a + b, 0) + qSupervision.reduce((a, b) => a + b, 0)) / V;
+    const tRev = qGrossSales.reduce((a, b) => a + b, 0);
+    const rate = (pct(A.saibor) + pct(A.margin));
+    // Interest day-count. Default 'actual/360' (matches the reference Excel: opening balance × rate × DAYS(quarter end, quarter start)/360).
+    // 'rate/4' is the legacy behaviour, kept for comparison only.
+    const qIntFactor = Array(nq).fill(0.25);
+    if ((A.day_count || 'actual/360') === 'actual/360') {
+        const sd = new Date(A.start_date || '2026-01-01');
+        for (let i = 0; i < nq; i++) {
+            const qs = new Date(Date.UTC(sd.getUTCFullYear(), sd.getUTCMonth() + 3 * i, sd.getUTCDate()));
+            const qe = new Date(Date.UTC(sd.getUTCFullYear(), sd.getUTCMonth() + 3 * (i + 1), sd.getUTCDate() - 1));
+            qIntFactor[i] = Math.round((qe - qs) / 86400000) / (A.days_in_year || 360);
+        }
+    }
+    const qCon = Array.from({ length: nq }, (_, i) => qBaseCon[i] + qDevFee[i] + qContingency[i] + qLicensing[i] + qDesignFee[i] + qInsurance[i] + qSupervision[i]);
+    // Marketing (fund-level, averaged schedule — rescaled)
+    const qMkt = Array(nq).fill(0);
+    if (projects.length > 0) {
+        // Rescale each project's marketing schedule, then average
+        const _mktSchArr = projects.map(p => rescaleSchedule(p.schMarketing || [], nq));
+        for (let qi = 0; qi < nq; qi++) {
+            let mktDist = 0;
+            for (let pi = 0; pi < projects.length; pi++)
+                mktDist += (_mktSchArr[pi][qi] || 0);
+            mktDist /= projects.length;
+            qMkt[qi] = A.marketing_cost * (mktDist / 100) * V;
+        }
+    }
+    const isFund = Number(A.is_fund);
+    const qCustody = Array(nq).fill(0), qSPV = Array(nq).fill(0), qFundSetup = Array(nq).fill(0);
+    const qAuditor = Array(nq).fill(0), qSharia = Array(nq).fill(0), qEngineering = Array(nq).fill(0);
+    const qBoard = Array(nq).fill(0), qFinAdvisor = Array(nq).fill(0);
+    const qMgmtFee = Array(nq).fill(0), qBankMgmt = Array(nq).fill(0), qVATAdvisor = Array(nq).fill(0);
+    const qPerfFee = Array(nq).fill(0), qArrFee = Array(nq).fill(0);
+    if (isFund) {
+        for (let qi = 0; qi < nq; qi++) {
+            qCustody[qi] = freqAmount(A.custody_annual, A.custody_freq, qi, nq) * V;
+            qAuditor[qi] = freqAmount(A.auditor_annual, A.auditor_freq, qi, nq) * V;
+            qSharia[qi] = freqAmount(A.sharia_annual, A.sharia_freq, qi, nq) * V;
+            qEngineering[qi] = freqAmount(A.engineering_annual, A.engineering_freq, qi, nq) * V;
+            qBoard[qi] = freqAmount(A.board_annual, A.board_freq, qi, nq) * V;
+        }
+        qSPV[0] = A.spv_setup * V;
+        qFundSetup[0] = A.fund_setup * V;
+        qFinAdvisor[0] = A.fin_advisor * V;
+    }
+    const qIKMkt = qMkt.map(v => v > 0 ? pct(A.ik_mkt_pct) * v / V : 0);
+    const qIKTotal = Array.from({ length: nq }, (_, i) => qIKLand[i] + qIKBrok[i] + qIKDev[i] + qIKCon[i] + qIKMkt[i] + qIKSell[i]);
+    // Snapshot base IK + GP commitment % — used to recompute qIKTotal each iter so debt sizing accounts for GP In-Kind
+    const qIKBase = [...qIKTotal];
+    const gpIKPct = pct(A.gp_commit_inkind_pct || 0);
+    const delayQ = Math.floor(A.vat_refund_months / 3), lastQ = nq - 1;
+    const qConVAT = qCon.map(c => c - c / V);
+    const qVATRefundCon = Array(nq).fill(0);
+    if (Number(A.vat_refund)) {
+        for (let i = delayQ; i < nq; i++)
+            qVATRefundCon[i] = qConVAT[i - delayQ];
+        for (let i = 0; i < nq; i++) {
+            if (i + delayQ >= nq)
+                qVATRefundCon[lastQ] += qConVAT[i];
+        }
+    }
+    const qBrokVATRefund = Array(nq).fill(0);
+    const qRETTRefund = Array(nq).fill(0);
+    if (totalBrokVATRefund > 0)
+        qBrokVATRefund[Math.min(delayQ, lastQ)] = totalBrokVATRefund;
+    if (totalRETTRefund > 0)
+        qRETTRefund[Math.min(delayQ, lastQ)] = totalRETTRefund;
+    const qExpVAT = Array(nq).fill(0), qVATRefundExp = Array(nq).fill(0), qVATNet = Array(nq).fill(0);
+    let drawdowns = Array(nq).fill(0);
+    const qLoanOpen = Array(nq).fill(0), qLoanClose = Array(nq).fill(0);
+    const qInterest = Array(nq).fill(0), qRepay = Array(nq).fill(0);
+    const gpCash = A.gp_commit_cash || 0;
+    const qEquity = Array(nq).fill(0);
+    qEquity[0] = A.equity + gpCash;
+    const qLandCF = Array(nq).fill(0);
+    qLandCF[0] = -tLand;
+    const qTotalAssets = Array(nq).fill(0), qNAV = Array(nq).fill(0), qDSCR = Array(nq).fill(0);
+    const qCashOpen = Array(nq).fill(0), qCashClose = Array(nq).fill(0);
+    const qDividends = Array(nq).fill(0), qTotalFundExp = Array(nq).fill(0);
+    const qNetOp = Array(nq).fill(0), qNetInv = Array(nq).fill(0), qNetFin = Array(nq).fill(0);
+    let cumCon = 0;
+    for (let iter = 0; iter < 100; iter++) {
+        cumCon = 0;
+        const iterDebt = drawdowns.reduce((a, b) => a + b, 0);
+        qArrFee[0] = iterDebt * pct(A.arr_fee_pct);
+        qBankMgmt.fill(0);
+        qBankMgmt[0] = iterDebt * pct(A.bank_mgmt_pct) * V; // VAT is charged on the bank fee (matches Excel)
+        for (let qi = 0; qi < nq; qi++) {
+            qLoanOpen[qi] = qi === 0 ? 0 : qLoanClose[qi - 1];
+            const bal = qLoanOpen[qi] + drawdowns[qi];
+            qInterest[qi] = qLoanOpen[qi] * rate * qIntFactor[qi];
+            qRepay[qi] = (qi === nq - 1) ? bal : 0;
+            qLoanClose[qi] = bal - qRepay[qi];
+        }
+        cumCon = 0;
+        for (let qi = 0; qi < nq; qi++) {
+            cumCon += qCon[qi];
+            const baseExp = qCustody[qi] + qSPV[qi] + qFundSetup[qi] + qAuditor[qi] + qSharia[qi] + qEngineering[qi] + qBoard[qi] + qFinAdvisor[qi] + qMkt[qi] + qBankMgmt[qi] + qWafi[qi] + qSellExp[qi] + qArrFee[qi]; /* VAT Advisor removed — netted in VAT Schedule */
+            const cash = qi > 0 ? qCashClose[qi - 1] : 0;
+            qTotalAssets[qi] = tLand + cumCon + cash;
+            qNAV[qi] = qTotalAssets[qi] - qLoanClose[qi];
+            if (isFund) {
+                if (A.mgmt_fee_mode === 'nav')
+                    qMgmtFee[qi] = qNAV[qi] * pct(A.mgmt_fee_pct) / 4 * V;
+                else if (A.mgmt_fee_mode === 'total_asset')
+                    qMgmtFee[qi] = qTotalAssets[qi] * pct(A.mgmt_fee_pct) / 4 * V;
+                else
+                    qMgmtFee[qi] = A.mgmt_fee_fixed / 4 * V;
+            }
+            qTotalFundExp[qi] = baseExp + qMgmtFee[qi];
+        }
+        // GP In-Kind = % of mgmt fee added back as in-kind. Reset qIKTotal so debt sizing accounts for it.
+        for (let qi = 0; qi < nq; qi++)
+            qIKTotal[qi] = qIKBase[qi] + (isFund ? qMgmtFee[qi] * gpIKPct : 0);
+        // Expense VAT — Interest EXCLUDED (bank loan interest is VAT-exempt in KSA)
+        for (let qi = 0; qi < nq; qi++)
+            qExpVAT[qi] = qTotalFundExp[qi] - qTotalFundExp[qi] / V;
+        qVATRefundExp.fill(0);
+        if (Number(A.vat_refund)) {
+            for (let i = delayQ; i < nq; i++)
+                qVATRefundExp[i] = qExpVAT[i - delayQ];
+            for (let i = 0; i < nq; i++) {
+                if (i + delayQ >= nq)
+                    qVATRefundExp[lastQ] += qExpVAT[i];
+            }
+        }
+        for (let qi = 0; qi < nq; qi++) {
+            const totalRef = qVATRefundCon[qi] + qVATRefundExp[qi] + qBrokVATRefund[qi] + qRETTRefund[qi];
+            qVATAdvisor[qi] = totalRef * pct(A.vat_advisor_pct);
+            qVATNet[qi] = totalRef - qVATAdvisor[qi];
+        }
+        for (let qi = 0; qi < nq; qi++) {
+            qNetOp[qi] = qGrossSales[qi] + qVATNet[qi] - qTotalFundExp[qi] - qInterest[qi];
+            qNetInv[qi] = qLandCF[qi] + (-qCon[qi]);
+            const netBorrow = drawdowns[qi] - qRepay[qi];
+            qNetFin[qi] = netBorrow + qEquity[qi] + qIKTotal[qi];
+            qCashOpen[qi] = qi === 0 ? 0 : qCashClose[qi - 1];
+            qCashClose[qi] = qCashOpen[qi] + qNetOp[qi] + qNetInv[qi] + qNetFin[qi];
+            // Cash sweep & interim dividends within iteration
+            if (qi < nq - 1 && qCashClose[qi] > A.min_cash) {
+                const futureCon = qCon.slice(qi + 1).reduce((a, b) => a + b, 0);
+                if (futureCon <= 0) {
+                    let surplus = qCashClose[qi] - A.min_cash;
+                    if (qLoanClose[qi] > 0 && surplus > 0) {
+                        const sweep = Math.min(surplus, qLoanClose[qi]);
+                        qRepay[qi] += sweep;
+                        qLoanClose[qi] -= sweep;
+                        qCashClose[qi] -= sweep;
+                        surplus -= sweep;
+                    }
+                    if (surplus > 0 && qLoanClose[qi] <= 0) {
+                        qDividends[qi] += surplus;
+                        qNetFin[qi] -= surplus;
+                        qCashClose[qi] -= surplus;
+                    }
+                }
+            }
+        }
+        const newDD = Array(nq).fill(0), tempCash = Array(nq).fill(0);
+        for (let qi = 0; qi < nq; qi++) {
+            const open = qi === 0 ? 0 : tempCash[qi - 1];
+            const netNoBorrow = qNetOp[qi] + qNetInv[qi] + qEquity[qi] + qIKTotal[qi] - (qi === nq - 1 ? qRepay[qi] : 0);
+            const raw = open + netNoBorrow;
+            if (raw < A.min_cash && qi < nq - 1)
+                newDD[qi] = A.min_cash - raw;
+            tempCash[qi] = raw + newDD[qi];
+        }
+        let delta = 0;
+        for (let qi = 0; qi < nq; qi++)
+            delta += Math.abs(newDD[qi] - drawdowns[qi]);
+        drawdowns = [...newDD];
+        if (delta < 1)
+            break;
+    }
+    cumCon = 0;
+    for (let qi = 0; qi < nq; qi++) {
+        qLoanOpen[qi] = qi === 0 ? 0 : qLoanClose[qi - 1];
+        const bal = qLoanOpen[qi] + drawdowns[qi];
+        qInterest[qi] = qLoanOpen[qi] * rate * qIntFactor[qi];
+        qRepay[qi] = (qi === nq - 1) ? bal : 0;
+        qLoanClose[qi] = bal - qRepay[qi];
+    }
+    const totalDebtDrawn = drawdowns.reduce((a, b) => a + b, 0);
+    qArrFee[0] = totalDebtDrawn * pct(A.arr_fee_pct);
+    qBankMgmt[0] = totalDebtDrawn * pct(A.bank_mgmt_pct) * V;
+    cumCon = 0;
+    for (let qi = 0; qi < nq; qi++) {
+        cumCon += qCon[qi];
+        const baseExp = qCustody[qi] + qSPV[qi] + qFundSetup[qi] + qAuditor[qi] + qSharia[qi] + qEngineering[qi] + qBoard[qi] + qFinAdvisor[qi] + qMkt[qi] + qBankMgmt[qi] + qWafi[qi] + qSellExp[qi] + qArrFee[qi]; /* VAT Advisor removed — netted in VAT Schedule */
+        const cash = qi > 0 ? qCashClose[qi - 1] : 0;
+        qTotalAssets[qi] = tLand + cumCon + cash;
+        qNAV[qi] = qTotalAssets[qi] - qLoanClose[qi];
+        if (isFund) {
+            if (A.mgmt_fee_mode === 'nav')
+                qMgmtFee[qi] = qNAV[qi] * pct(A.mgmt_fee_pct) / 4 * V;
+            else if (A.mgmt_fee_mode === 'total_asset')
+                qMgmtFee[qi] = qTotalAssets[qi] * pct(A.mgmt_fee_pct) / 4 * V;
+            else
+                qMgmtFee[qi] = A.mgmt_fee_fixed / 4 * V;
+        }
+        qTotalFundExp[qi] = baseExp + qMgmtFee[qi];
+    }
+    // Expense VAT — Interest EXCLUDED (bank loan interest is VAT-exempt in KSA)
+    for (let qi = 0; qi < nq; qi++) {
+        qExpVAT[qi] = qTotalFundExp[qi] - qTotalFundExp[qi] / V;
+    }
+    qVATRefundExp.fill(0);
+    if (Number(A.vat_refund)) {
+        for (let i = delayQ; i < nq; i++)
+            qVATRefundExp[i] = qExpVAT[i - delayQ];
+        for (let i = 0; i < nq; i++) {
+            if (i + delayQ >= nq)
+                qVATRefundExp[lastQ] += qExpVAT[i];
+        }
+    }
+    for (let qi = 0; qi < nq; qi++) {
+        const totalRef = qVATRefundCon[qi] + qVATRefundExp[qi] + qBrokVATRefund[qi] + qRETTRefund[qi];
+        qVATAdvisor[qi] = totalRef * pct(A.vat_advisor_pct);
+        qVATNet[qi] = totalRef - qVATAdvisor[qi];
+    }
+    // GP In-Kind in calcWith — gpIKPct already defined above. RESET to avoid double-counting (iter loop already added).
+    for (let qi = 0; qi < nq; qi++)
+        qIKTotal[qi] = qIKBase[qi] + (isFund ? qMgmtFee[qi] * gpIKPct : 0);
+    for (let qi = 0; qi < nq; qi++) {
+        qNetOp[qi] = qGrossSales[qi] + qVATNet[qi] - qTotalFundExp[qi] - qInterest[qi];
+        qNetInv[qi] = qLandCF[qi] + (-qCon[qi]);
+        const netBorrow = drawdowns[qi] - qRepay[qi];
+        qCashOpen[qi] = qi === 0 ? 0 : qCashClose[qi - 1];
+        if (qi === nq - 1) {
+            const cashBeforePerf = qCashOpen[qi] + qNetOp[qi] + qNetInv[qi] + netBorrow + qEquity[qi] + qIKTotal[qi];
+            const totalEquity = A.equity + gpCash + qIKTotal.reduce((a, b) => a + b, 0);
+            const interimDiv = qDividends.slice(0, nq - 1).reduce((a, b) => a + b, 0);
+            const totalReturn = cashBeforePerf + interimDiv;
+            const years = A.fund_period_months / 12;
+            const hurdleAmount = totalEquity * (Math.pow(1 + pct(A.hurdle_rate), years) - 1);
+            const profit = totalReturn - totalEquity;
+            if (isFund && profit > hurdleAmount)
+                qPerfFee[qi] = (profit - hurdleAmount) * pct(A.perf_fee_pct);
+            const cashAfterPerf = cashBeforePerf - qPerfFee[qi];
+            qDividends[qi] = Math.max(0, cashAfterPerf);
+            qNetFin[qi] = netBorrow + qEquity[qi] + qIKTotal[qi] - qDividends[qi];
+            qTotalFundExp[qi] += qPerfFee[qi];
+            qNetOp[qi] -= qPerfFee[qi];
+            qCashClose[qi] = 0;
+        }
+        else {
+            qNetFin[qi] = netBorrow + qEquity[qi] + qIKTotal[qi];
+            qCashClose[qi] = qCashOpen[qi] + qNetOp[qi] + qNetInv[qi] + qNetFin[qi];
+            // Cash sweep & interim dividends: (1) development funded first (futureCon check), (2) pay debt, (3) distribute
+            if (qCashClose[qi] > A.min_cash) {
+                const futureCon = qCon.slice(qi + 1).reduce((a, b) => a + b, 0);
+                if (futureCon <= 0) {
+                    let surplus = qCashClose[qi] - A.min_cash;
+                    // First: pay down debt
+                    if (qLoanClose[qi] > 0 && surplus > 0) {
+                        const sweep = Math.min(surplus, qLoanClose[qi]);
+                        qRepay[qi] += sweep;
+                        qLoanClose[qi] -= sweep;
+                        qCashClose[qi] -= sweep;
+                        qNetFin[qi] -= sweep;
+                        surplus -= sweep;
+                    }
+                    // Then: distribute remaining surplus as interim dividends
+                    if (surplus > 0 && qLoanClose[qi] <= 0) {
+                        qDividends[qi] += surplus;
+                        qNetFin[qi] -= surplus;
+                        qCashClose[qi] -= surplus;
+                    }
+                }
+            }
+        }
+    }
+    // Second pass: recalculate VAT refund after performance fee (matches calculate())
+    if (qPerfFee[nq - 1] > 0) {
+        qExpVAT[nq - 1] = qTotalFundExp[nq - 1] - qTotalFundExp[nq - 1] / V;
+        qVATRefundExp.fill(0);
+        if (Number(A.vat_refund)) {
+            for (let i = delayQ; i < nq; i++)
+                qVATRefundExp[i] = qExpVAT[i - delayQ];
+            for (let i = 0; i < nq; i++) {
+                if (i + delayQ >= nq)
+                    qVATRefundExp[nq - 1] += qExpVAT[i];
+            }
+        }
+        for (let qi = 0; qi < nq; qi++) {
+            const totalRef = qVATRefundCon[qi] + qVATRefundExp[qi] + qBrokVATRefund[qi] + qRETTRefund[qi];
+            qVATAdvisor[qi] = totalRef * pct(A.vat_advisor_pct);
+            qVATNet[qi] = totalRef - qVATAdvisor[qi];
+        }
+    }
+    for (let qi = 0; qi < nq; qi++) {
+        const debtService = qInterest[qi] + qRepay[qi];
+        qDSCR[qi] = debtService > 0 ? qNetOp[qi] / debtService : 0;
+    }
+    const totalFundExpS = qTotalFundExp.reduce((a, b) => a + b, 0);
+    const totalPerfFeeS = qPerfFee.reduce((a, b) => a + b, 0);
+    const totalFundExpExPerfS = totalFundExpS - totalPerfFeeS;
+    const totalIntS = qInterest.reduce((a, b) => a + b, 0);
+    const totalAdvisorFeeS = qVATAdvisor.reduce((a, b) => a + b, 0);
+    const tLandExVATS = baseLand + brokerageExVAT + rettAmt;
+    const tConIncVAT = tConExVAT * V;
+    // Conditional totalCost: inc-VAT when no refund, ex-VAT when refund (matches calculate())
+    // VAT Advisor fee added as an economic cost (settled via refund netting)
+    const _vr = Number(A.vat_refund);
+    const totalCostIncVAT = tLand + tConIncVAT + totalFundExpExPerfS + totalIntS + totalAdvisorFeeS;
+    const totalCostExVAT = tLandExVATS + tConExVAT + totalFundExpExPerfS / V + totalIntS + totalAdvisorFeeS;
+    const totalCost = _vr ? totalCostExVAT : totalCostIncVAT;
+    const grossProfit = tRev - totalCost;
+    const totalDiv = qDividends.reduce((a, b) => a + b, 0);
+    const totalIK = qIKTotal.reduce((a, b) => a + b, 0);
+    const totalUH = A.equity + gpCash + totalIK;
+    const roiUH = totalUH ? (totalDiv - totalUH) / totalUH : 0;
+    const eqMult = totalUH ? totalDiv / totalUH : 0;
+    const cfs = Array.from({ length: nq }, (_, i) => {
+        let cf = qNetOp[i] + qNetInv[i] + qNetFin[i];
+        if (i === 0)
+            cf -= (A.equity + gpCash);
+        if (i === nq - 1)
+            cf += qDividends[i];
+        return cf;
+    });
+    const invCF = Array(nq).fill(0);
+    invCF[0] = -(A.equity + gpCash) - qIKTotal[0];
+    for (let i = 1; i < nq; i++)
+        invCF[i] = -qIKTotal[i];
+    invCF[nq - 1] += totalDiv;
+    // XIRR: date-based IRR using actual calendar dates
+    // Q1 = start_date, each Q = +3 months, last CF at start_date + fund_period_months
+    const sd = new Date(A.start_date || '2026-01-01');
+    const qDates = [];
+    for (let i = 0; i < nq; i++) {
+        const d = new Date(sd);
+        d.setMonth(d.getMonth() + i * 3);
+        qDates.push(d);
+    }
+    // Last cash flow at fund end (start + fund_period_months), not Q8 start
+    const fundEnd = new Date(sd);
+    fundEnd.setMonth(fundEnd.getMonth() + A.fund_period_months);
+    qDates[nq - 1] = fundEnd;
+    // Year fractions from start date
+    const msPerDay = 86400000;
+    const tFrac = qDates.map(d => (d - sd) / msPerDay / 365.0);
+    // Robust XIRR: Newton-Raphson with clamping + bisection fallback
+    function xirrNPV(rate) {
+        let npv = 0;
+        for (let i = 0; i < nq; i++) {
+            const t = tFrac[i];
+            if (1 + rate <= 0)
+                return NaN;
+            const disc = Math.pow(1 + rate, t);
+            if (!isFinite(disc) || disc === 0)
+                return NaN;
+            npv += invCF[i] / disc;
+        }
+        return npv;
+    }
+    // Edge case: if all cash flows are zero or same sign, IRR is undefined
+    let hasPos = false, hasNeg = false;
+    for (let i = 0; i < nq; i++) {
+        if (invCF[i] > 0)
+            hasPos = true;
+        if (invCF[i] < 0)
+            hasNeg = true;
+    }
+    let irrAnn = 0;
+    if (!hasPos || !hasNeg) {
+        irrAnn = 0; // no sign change = no IRR
+    }
+    else {
+        // Newton-Raphson with upper/lower clamping
+        irrAnn = 0.12;
+        let converged = false;
+        for (let it = 0; it < 300; it++) {
+            let npv = 0, dnpv = 0;
+            for (let i = 0; i < nq; i++) {
+                const t = tFrac[i];
+                if (1 + irrAnn <= 0) {
+                    irrAnn = 0.01;
+                    break;
+                }
+                const disc = Math.pow(1 + irrAnn, t);
+                if (!isFinite(disc) || disc === 0)
+                    break;
+                npv += invCF[i] / disc;
+                if (t > 0)
+                    dnpv += -t * invCF[i] / Math.pow(1 + irrAnn, t + 1);
+            }
+            if (Math.abs(dnpv) < 1e-12)
+                break;
+            const step = npv / dnpv;
+            irrAnn -= step;
+            if (!isFinite(irrAnn)) {
+                irrAnn = -1;
+                break;
+            }
+            // Clamp to reasonable range
+            if (irrAnn < -0.99)
+                irrAnn = -0.99;
+            if (irrAnn > 10.0)
+                irrAnn = 10.0; // cap at 1000%
+            if (Math.abs(step) < 1e-10) {
+                converged = true;
+                break;
+            }
+        }
+        // Bisection fallback if Newton didn't converge or result looks suspicious
+        if (!converged || !isFinite(irrAnn) || irrAnn >= 10.0 || irrAnn <= -0.99) {
+            // Try multiple brackets to find sign change
+            let lo = -0.5, hi = 5.0, bracketed = false;
+            const brackets = [[-0.5, 5], [-0.5, 10], [-0.5, 50], [-0.5, 100]];
+            for (const [bLo, bHi] of brackets) {
+                const nLo = xirrNPV(bLo), nHi = xirrNPV(bHi);
+                if (isFinite(nLo) && isFinite(nHi) && nLo * nHi < 0) {
+                    lo = bLo;
+                    hi = bHi;
+                    bracketed = true;
+                    break;
+                }
+            }
+            if (bracketed) {
+                for (let it = 0; it < 200; it++) {
+                    const mid = (lo + hi) / 2;
+                    const nMid = xirrNPV(mid);
+                    if (!isFinite(nMid) || Math.abs(nMid) < 1e-8) {
+                        irrAnn = mid;
+                        break;
+                    }
+                    if (nMid * xirrNPV(lo) < 0)
+                        hi = mid;
+                    else
+                        lo = mid;
+                    if (hi - lo < 1e-10) {
+                        irrAnn = (lo + hi) / 2;
+                        break;
+                    }
+                }
+                irrAnn = (lo + hi) / 2;
+            }
+            else {
+                irrAnn = 0; // cannot bracket — return 0
+            }
+        }
+    }
+    if (!isFinite(irrAnn))
+        irrAnn = 0;
+    // Final clamp: cap display to ±999%
+    if (irrAnn > 9.99)
+        irrAnn = 9.99;
+    if (irrAnn < -0.99)
+        irrAnn = -0.99;
+    const avgDSCR = qDSCR.reduce((a, b) => a + b, 0) / nq;
+    // Final safety: ensure IRR is always a bounded number
+    const safeIRR = isFinite(irrAnn) ? Math.max(-0.99, Math.min(9.99, irrAnn)) : 0;
+    return { irr: safeIRR, eqMult, netProfit: grossProfit, roiUH, totalDiv, totalCost, tRev, grossProfit, profitMargin: totalCost ? grossProfit / totalCost : 0, avgDSCR,
+        qNetOp, qNetInv, qNetFin, qCashClose, labels: Array.from({ length: nq }, (_, i) => 'Q' + (i + 1)), nq,
+        // Per-line quarterly detail (signs as computed: costs positive, see lines[] for cash-flow sign convention)
+        lines: { sales: qGrossSales, wafi: qWafi, sellExp: qSellExp, vatNet: qVATNet, vatRefundCon: qVATRefundCon, vatAdvisor: qVATAdvisor, expVAT: qExpVAT,
+            custody: qCustody, spv: qSPV, fundSetup: qFundSetup, auditor: qAuditor, sharia: qSharia, engineering: qEngineering, board: qBoard, mgmtFee: qMgmtFee,
+            finAdvisor: qFinAdvisor, marketing: qMkt, bankMgmt: qBankMgmt, arrFee: qArrFee, perfFee: qPerfFee, totalFundExp: qTotalFundExp, interest: qInterest,
+            land: qLandCF, construction: qCon, drawdowns, repay: qRepay, loanClose: qLoanClose, equity: qEquity, inKind: qIKTotal, dividends: qDividends },
+        totals: { totalCostExVAT, totalCostIncVAT, totalDebtDrawn } };
+}
+const _helpers = { freqAmount, pct, rescaleSchedule };
+
+return {run, _helpers};
+});
+__def('engine/defaults', function(){
+// Default fund-level assumptions (D) and default project list — copied verbatim from legacy/index.html.
+// Percentages are in PERCENT units (15 = 15%), months are integers, dates are 'YYYY-MM-DD'.
+const DEFAULT_FUND = {
+    fund_name: 'صندوق تطوير عقاري', is_fund: 1, project_location: '', project_type: 'residential', fund_period_months: 24, start_date: '2026-01-01',
+    num_projects: 1,
+    custody_annual: 110000, custody_freq: 'annual',
+    spv_setup: 20000,
+    fund_setup: 1267262,
+    auditor_annual: 90000, auditor_freq: 'quarterly',
+    sharia_annual: 11000, sharia_freq: 'quarterly',
+    engineering_annual: 494166, engineering_freq: 'quarterly',
+    board_annual: 40000, board_freq: 'semiannual',
+    fin_advisor: 0,
+    mgmt_fee_mode: 'total_asset', mgmt_fee_pct: 1.25, mgmt_fee_fixed: 0,
+    marketing_cost: 4592526, marketing_date: '2026-06-30',
+    vat_rate: 15, vat_refund: 0, vat_refund_months: 6, vat_advisor_pct: 3,
+    hurdle_rate: 15, perf_fee_pct: 35, bank_mgmt_pct: 1,
+    ik_land_pct: 60, ik_brok_pct: 0, ik_dev_pct: 0, ik_mkt_pct: 0, ik_con_pct: 0, ik_sell_pct: 0,
+    equity: 17470731, gp_commit_cash: 0, gp_commit_inkind_pct: 0,
+    saibor: 6.8, margin: 2, day_count: 'actual/360', days_in_year: 360, arr_fee_pct: 1, min_cash: 500000,
+};
+const DEFAULT_PROJECTS = [{
+        name: 'Project 1',
+        strategy: 'sell',
+        land_area: 204624, land_price_sqm: 900, brokerage_pct: 2.5, rett_pct: 2,
+        rett_refund: 0,
+        build_area: 204624, dev_cost_sqm: 138, dev_fee_pct: 12.7, contingency_pct: 5, insurance_pct: 5,
+        design_fee_mode: 'fixed', design_fee: 564762, design_fee_pct: 2,
+        supervision_fee_mode: 'fixed', supervision_fee: 0, supervision_fee_pct: 0,
+        licensing_fee: 564762, con_period_months: 24,
+        sale_price_sqm: 2375, sell_area: 128913, wafi_pct: 1, sell_exp_pct: 2.5,
+        leasable_area: 0, rent_per_sqm: 400, rent_escalator_pct: 2, hold_period_months: 36, exit_cap_rate: 8, selling_cost_pct: 2,
+        occupancySchedule: [0, 0, 0, 0, 0, 0, 40, 50, 60, 70, 80, 90],
+        opexItems: [
+            { name: 'Property Management', nameAr: 'إدارة العقار', mode: 'pct_egi', value: 2 },
+            { name: 'Maintenance', nameAr: 'الصيانة', mode: 'fixed', value: 100000 },
+            { name: 'Utilities', nameAr: 'المرافق', mode: 'fixed', value: 0 },
+            { name: 'Insurance', nameAr: 'التأمين', mode: 'sqm', value: 0 },
+            { name: 'Major Repairs', nameAr: 'إصلاحات رئيسية', mode: 'fixed', value: 0 }
+        ],
+        conComponents: [{ name: 'المساحة المطورة وسعر التطوير بنية تحتية', nameEn: 'Developed Area & Infrastructure', gfa: 204624, cost: 120 }],
+        salesComponents: [{ name: 'سكني', nameEn: 'Residential', area: 128913, price: 2375 }],
+        schBaseCon: [0, 5, 10, 15, 20, 20, 20, 10], schDevFee: [0, 5, 10, 15, 20, 20, 20, 10], schContingency: [0, 0, 0, 25, 0, 25, 25, 25], schLicensing: [0, 100, 0, 0, 0, 0, 0, 0],
+        schDesign: [0, 100, 0, 0, 0, 0, 0, 0], schInsurance: [0, 0, 0, 25, 0, 25, 25, 25], schSupervision: [3, 7, 13, 19, 20, 18, 12, 8], schMarketing: [0, 100, 0, 0, 0, 0, 0, 0],
+        salesSchedule: [0, 0, 0, 0, 0, 5, 5, 90]
+    }];
+
+return {DEFAULT_FUND, DEFAULT_PROJECTS};
+});
+__def('i18n/index', function(){
+// All UI strings. Add keys here, never inline text in components.
+const dict = {
+    en: {
+        appTitle: 'RE Fund Platform', signIn: 'Sign in', email: 'Email', sendCode: 'Send login code', code: '6–8 digit code from the email',
+        verify: 'Verify', codeSent: 'Code sent — check your inbox.', signOut: 'Sign out', guest: 'Guest',
+        projects: 'Projects', newProject: 'New', save: 'Save', saveVersion: 'Save version', versions: 'Versions', delete: 'Delete', load: 'Load',
+        unsaved: '— unsaved —', projectName: 'Project name', saved: 'Saved', deleted: 'Deleted', confirmDelete: 'Delete this project and all its versions and actuals?',
+        tabAssumptions: 'Assumptions', tabResults: 'Results', tabActuals: 'Actuals vs Budget',
+        fund: 'Fund', project: 'Project', fundPeriod: 'Fund period (months)', startDate: 'Start date', equity: 'Cash equity (SAR)', minCash: 'Minimum cash balance (SAR)',
+        saibor: 'SAIBOR %', margin: 'Bank margin %', bankMgmt: 'Bank management fee %', vatRate: 'VAT %', vatRefund: 'VAT refund', hurdle: 'Hurdle rate %', perfFee: 'Performance fee %',
+        mgmtFeeFixed: 'Management fee (fixed, annual SAR)', fundSetup: 'Fund setup (SAR)', marketing: 'Marketing (SAR)', ikLand: 'In-kind land %',
+        landArea: 'Land area (sqm)', landPrice: 'Land price / sqm', buildArea: 'Built-up area (sqm)', devCost: 'Dev cost / sqm', devFee: 'Developer fee %', contingency: 'Contingency %',
+        conPeriod: 'Construction period (months)', sellArea: 'Sellable area (sqm)', salePrice: 'Sale price / sqm', wafi: 'WAFI %', sellExp: 'Selling expenses %',
+        irr: 'IRR', eqMult: 'Equity multiple', totalCost: 'Total cost', revenue: 'Revenue', netProfit: 'Net profit', debtDrawn: 'Debt drawn', quarter: 'Quarter',
+        netOp: 'Net operating', netInv: 'Net investing', netFin: 'Net financing', cashClose: 'Closing cash', invalid: 'Fund period must be at least 6 months.',
+        cutoff: 'Closed quarters (cutoff)', defaultState: 'Closed quarter with no actual', keep: 'Keep assumption', rephase: 'Push forward', actual: 'Actual',
+        line: 'Line', budget: 'Budget', variance: 'Variance', reforecast: 'Reforecast total', addPayment: 'Add payment', date: 'Date', amount: 'Amount', category: 'Category',
+        payee: 'Payee', description: 'Description', add: 'Add', log: 'Payment log', noActuals: 'No payments logged yet.', signedInAs: 'Signed in as', lang: 'العربية',
+        loading: 'Loading…', error: 'Error',
+    },
+    ar: {
+        appTitle: 'منصة الصناديق العقارية', signIn: 'تسجيل الدخول', email: 'البريد الإلكتروني', sendCode: 'إرسال رمز الدخول', code: 'الرمز المرسل إلى بريدك',
+        verify: 'تحقق', codeSent: 'تم إرسال الرمز — راجع بريدك.', signOut: 'تسجيل الخروج', guest: 'زائر',
+        projects: 'المشاريع', newProject: 'جديد', save: 'حفظ', saveVersion: 'حفظ نسخة', versions: 'النسخ', delete: 'حذف', load: 'تحميل',
+        unsaved: '— غير محفوظ —', projectName: 'اسم المشروع', saved: 'تم الحفظ', deleted: 'تم الحذف', confirmDelete: 'حذف هذا المشروع وكل نسخه وبياناته الفعلية؟',
+        tabAssumptions: 'الافتراضات', tabResults: 'النتائج', tabActuals: 'الفعلي مقابل الميزانية',
+        fund: 'الصندوق', project: 'المشروع', fundPeriod: 'مدة الصندوق (أشهر)', startDate: 'تاريخ البداية', equity: 'رأس المال النقدي (ريال)', minCash: 'الحد الأدنى للرصيد النقدي (ريال)',
+        saibor: 'سايبور %', margin: 'هامش البنك %', bankMgmt: 'رسوم الإدارة البنكية %', vatRate: 'ضريبة القيمة المضافة %', vatRefund: 'استرداد الضريبة', hurdle: 'العائد المطلوب %', perfFee: 'رسوم الأداء %',
+        mgmtFeeFixed: 'رسوم الإدارة (مبلغ ثابت سنوي)', fundSetup: 'تأسيس الصندوق (ريال)', marketing: 'التسويق (ريال)', ikLand: 'حصة عينية أرض %',
+        landArea: 'مساحة الأرض (م²)', landPrice: 'سعر المتر للأرض', buildArea: 'مساحة البناء (م²)', devCost: 'تكلفة التطوير / م²', devFee: 'أتعاب المطور %', contingency: 'الاحتياطي %',
+        conPeriod: 'فترة التطوير (أشهر)', sellArea: 'المساحة القابلة للبيع (م²)', salePrice: 'سعر البيع / م²', wafi: 'رسوم وافي %', sellExp: 'مصاريف البيع %',
+        irr: 'العائد الداخلي', eqMult: 'مضاعف رأس المال', totalCost: 'إجمالي التكاليف', revenue: 'الإيرادات', netProfit: 'صافي الربح', debtDrawn: 'التمويل المسحوب', quarter: 'الربع',
+        netOp: 'صافي التشغيل', netInv: 'صافي الاستثمار', netFin: 'صافي التمويل', cashClose: 'النقد آخر الفترة', invalid: 'مدة الصندوق يجب ألا تقل عن 6 أشهر.',
+        cutoff: 'الأرباع المقفلة', defaultState: 'ربع مقفل بدون فعلي', keep: 'إبقاء الافتراض', rephase: 'ترحيل للأمام', actual: 'فعلي',
+        line: 'البند', budget: 'الميزانية', variance: 'الانحراف', reforecast: 'إجمالي إعادة التوقع', addPayment: 'إضافة دفعة', date: 'التاريخ', amount: 'المبلغ', category: 'الفئة',
+        payee: 'المستفيد', description: 'الوصف', add: 'إضافة', log: 'سجل الدفعات', noActuals: 'لا توجد دفعات مسجلة.', signedInAs: 'مسجل الدخول باسم', lang: 'English',
+        loading: 'جارٍ التحميل…', error: 'خطأ',
+    },
+};
+const makeT = lang => key => dict[lang]?.[key] ?? dict.en[key] ?? key;
+const dirOf = lang => (lang === 'ar' ? 'rtl' : 'ltr');
+const fmt = n => (n == null || isNaN(n) ? '—' : Math.round(n).toLocaleString('en-US'));
+const pctf = n => (n == null || isNaN(n) ? '—' : (n * 100).toFixed(2) + '%');
+
+return {makeT, dirOf, fmt, pctf};
+});
+__def('components/Login', function(){
+
+
+const {supabase} = __req('lib/supabase');
+// Email + one-time code. No passwords, no usernames.
+function Login({ t }) {
+    const [email, setEmail] = useState(''), [code, setCode] = useState(''), [sent, setSent] = useState(false), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
+    const send = async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setErr('');
+        const { error } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false } });
+        setBusy(false);
+        if (error)
+            setErr(error.message);
+        else
+            setSent(true);
+    };
+    const verify = async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setErr('');
+        const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: 'email' });
+        setBusy(false);
+        if (error)
+            setErr(error.message);
+    };
+    return (_jsxs("div", { className: "login", children: [_jsx("h1", { children: t('appTitle') }), _jsxs("form", { onSubmit: sent ? verify : send, children: [_jsxs("label", { children: [t('email'), _jsx("input", { type: "email", required: true, value: email, onChange: e => setEmail(e.target.value), disabled: sent })] }), sent && _jsxs("label", { children: [t('code'), _jsx("input", { inputMode: "numeric", required: true, value: code, onChange: e => setCode(e.target.value), autoFocus: true })] }), sent && _jsx("p", { className: "ok", children: t('codeSent') }), err && _jsx("p", { className: "err", children: err }), _jsx("button", { disabled: busy, children: sent ? t('verify') : t('sendCode') })] })] }));
+}
+
+return {default: Login};
+});
+__def('lib/store', function(){
+// Data access for saved work. Every function takes the supabase client so it can be tested with a fake.
+// Schema: supabase/schema.sql. One shape only: { name, fund, projects, reforecast }.
+async function listProjects(sb) {
+    const { data, error } = await sb.from('projects').select('id,name,updated_at').order('updated_at', { ascending: false });
+    if (error)
+        throw error;
+    return data;
+}
+async function loadProject(sb, id) {
+    const { data, error } = await sb.from('projects').select('*').eq('id', id).single();
+    if (error)
+        throw error;
+    return data;
+}
+async function saveProject(sb, userId, { id, name, fund, projects, reforecast }) {
+    const row = { owner: userId, name, fund, projects, reforecast: reforecast || {}, updated_at: new Date().toISOString() };
+    const q = id ? sb.from('projects').update(row).eq('id', id) : sb.from('projects').insert(row);
+    const { data, error } = await q.select('id,name,updated_at').single();
+    if (error)
+        throw error;
+    return data;
+}
+async function deleteProject(sb, id) {
+    const { error } = await sb.from('projects').delete().eq('id', id);
+    if (error)
+        throw error;
+}
+async function saveVersion(sb, projectId, label, { fund, projects, reforecast }) {
+    const { data, error } = await sb.from('project_versions').insert({ project_id: projectId, label, fund, projects, reforecast: reforecast || {} }).select('id,label,created_at').single();
+    if (error)
+        throw error;
+    return data;
+}
+async function listVersions(sb, projectId) {
+    const { data, error } = await sb.from('project_versions').select('id,label,created_at').eq('project_id', projectId).order('created_at', { ascending: false });
+    if (error)
+        throw error;
+    return data;
+}
+async function loadVersion(sb, id) {
+    const { data, error } = await sb.from('project_versions').select('*').eq('id', id).single();
+    if (error)
+        throw error;
+    return data;
+}
+async function listActuals(sb, projectId) {
+    const { data, error } = await sb.from('actuals').select('*').eq('project_id', projectId).order('paid_on', { ascending: false });
+    if (error)
+        throw error;
+    return data;
+}
+async function addActual(sb, projectId, a) {
+    const { data, error } = await sb.from('actuals').insert({ project_id: projectId, ...a }).select('*').single();
+    if (error)
+        throw error;
+    return data;
+}
+async function deleteActual(sb, id) {
+    const { error } = await sb.from('actuals').delete().eq('id', id);
+    if (error)
+        throw error;
+}
+// Quarter index for a payment date, relative to the fund start. Stored on the row, never recomputed from "today".
+function quarterIndex(paidOn, startDate) {
+    const s = new Date(startDate), d = new Date(paidOn);
+    const months = (d.getUTCFullYear() - s.getUTCFullYear()) * 12 + (d.getUTCMonth() - s.getUTCMonth()) - (d.getUTCDate() < s.getUTCDate() ? 1 : 0);
+    return Math.max(0, Math.floor(months / 3));
+}
+// Fold a payment log into { [category]: (number|null)[nq] } for reforecast(): null = nothing logged that quarter.
+function actualsByLine(rows, nq) {
+    const out = {};
+    for (const r of rows) {
+        if (r.quarter_idx < 0 || r.quarter_idx >= nq)
+            continue;
+        out[r.category] ||= Array(nq).fill(null);
+        out[r.category][r.quarter_idx] = (out[r.category][r.quarter_idx] || 0) + Number(r.amount);
+    }
+    return out;
+}
+
+return {listProjects, loadProject, saveProject, deleteProject, saveVersion, listVersions, loadVersion, listActuals, addActual, deleteActual, quarterIndex, actualsByLine};
+});
+__def('components/ProjectBar', function(){
+
+
+const {supabase} = __req('lib/supabase');
+const store = __req('lib/store');
+// Project list + save / version / delete. The only component that writes to Supabase (besides Actuals).
+function ProjectBar({ t, user, state, setState, notify }) {
+    const [list, setList] = useState([]), [versions, setVersions] = useState([]), [name, setName] = useState(state.name || '');
+    const refresh = async () => { try {
+        setList(await store.listProjects(supabase));
+    }
+    catch (e) {
+        notify(e.message, true);
+    } };
+    useEffect(() => { refresh(); }, []);
+    useEffect(() => { setName(state.name || ''); if (state.id)
+        store.listVersions(supabase, state.id).then(setVersions).catch(() => setVersions([]));
+    else
+        setVersions([]); }, [state.id, state.name]);
+    const load = async (id) => {
+        if (!id) {
+            setState({ ...state, id: null, name: '' });
+            return;
+        }
+        try {
+            const p = await store.loadProject(supabase, id);
+            setState({ id: p.id, name: p.name, fund: p.fund, projects: p.projects, reforecast: p.reforecast || {} });
+        }
+        catch (e) {
+            notify(e.message, true);
+        }
+    };
+    const save = async () => {
+        const n = name.trim() || state.fund.fund_name || 'Untitled';
+        if (!n)
+            return;
+        try {
+            const r = await store.saveProject(supabase, user.id, { ...state, name: n });
+            setState({ ...state, id: r.id, name: r.name });
+            await refresh();
+            notify(t('saved'));
+        }
+        catch (e) {
+            notify(e.message, true);
+        }
+    };
+    const saveVersion = async () => {
+        if (!state.id) {
+            await save();
+        }
+        const label = window.prompt(t('saveVersion'), new Date().toISOString().slice(0, 10));
+        if (label === null)
+            return;
+        try {
+            await store.saveVersion(supabase, state.id, label, state);
+            setVersions(await store.listVersions(supabase, state.id));
+            notify(t('saved'));
+        }
+        catch (e) {
+            notify(e.message, true);
+        }
+    };
+    const loadVersion = async (id) => {
+        if (!id)
+            return;
+        try {
+            const v = await store.loadVersion(supabase, id);
+            setState({ ...state, fund: v.fund, projects: v.projects, reforecast: v.reforecast || {} });
+        }
+        catch (e) {
+            notify(e.message, true);
+        }
+    };
+    const remove = async () => {
+        if (!state.id || !window.confirm(t('confirmDelete')))
+            return;
+        try {
+            await store.deleteProject(supabase, state.id);
+            setState({ ...state, id: null, name: '' });
+            await refresh();
+            notify(t('deleted'));
+        }
+        catch (e) {
+            notify(e.message, true);
+        }
+    };
+    return (_jsxs("div", { className: "bar", children: [_jsxs("label", { children: [t('projects'), _jsxs("select", { value: state.id || '', onChange: e => load(e.target.value), children: [_jsx("option", { value: "", children: t('unsaved') }), list.map(p => _jsx("option", { value: p.id, children: p.name }, p.id))] })] }), _jsx("input", { placeholder: t('projectName'), value: name, onChange: e => setName(e.target.value) }), _jsx("button", { onClick: save, children: t('save') }), _jsx("button", { onClick: saveVersion, children: t('saveVersion') }), versions.length > 0 && _jsxs("select", { defaultValue: "", onChange: e => loadVersion(e.target.value), children: [_jsxs("option", { value: "", children: [t('versions'), " (", versions.length, ")"] }), versions.map(v => _jsxs("option", { value: v.id, children: [v.label, " \u00B7 ", new Date(v.created_at).toLocaleString()] }, v.id))] }), _jsx("button", { onClick: () => setState({ ...state, id: null, name: '' }), children: t('newProject') }), state.id && _jsx("button", { className: "danger", onClick: remove, children: t('delete') })] }));
+}
+
+return {default: ProjectBar};
+});
+__def('components/Assumptions', function(){
+
+
+// Minimal assumptions form: the fields that drive the Excel reconciliation. Extend FUND/PROJ lists — never add logic here.
+const FUND = [['fund_period_months', 'fundPeriod'], ['start_date', 'startDate', 'date'], ['equity', 'equity'], ['min_cash', 'minCash'], ['saibor', 'saibor'], ['margin', 'margin'],
+    ['bank_mgmt_pct', 'bankMgmt'], ['vat_rate', 'vatRate'], ['vat_refund', 'vatRefund', 'bool'], ['hurdle_rate', 'hurdle'], ['perf_fee_pct', 'perfFee'],
+    ['mgmt_fee_fixed', 'mgmtFeeFixed'], ['fund_setup', 'fundSetup'], ['marketing_cost', 'marketing'], ['ik_land_pct', 'ikLand']];
+const PROJ = [['land_area', 'landArea'], ['land_price_sqm', 'landPrice'], ['build_area', 'buildArea'], ['dev_cost_sqm', 'devCost'], ['dev_fee_pct', 'devFee'],
+    ['contingency_pct', 'contingency'], ['con_period_months', 'conPeriod'], ['sell_area', 'sellArea'], ['sale_price_sqm', 'salePrice'], ['wafi_pct', 'wafi'], ['sell_exp_pct', 'sellExp']];
+function Field({ t, spec: [key, label, kind], obj, onChange }) {
+    const v = obj[key];
+    if (kind === 'bool')
+        return _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: !!Number(v), onChange: e => onChange(key, e.target.checked ? 1 : 0) }), " ", t(label)] });
+    if (kind === 'date')
+        return _jsxs("label", { children: [t(label), _jsx("input", { type: "date", value: v || '', onChange: e => onChange(key, e.target.value) })] });
+    return _jsxs("label", { children: [t(label), _jsx("input", { type: "number", step: "any", value: v ?? '', onChange: e => onChange(key, e.target.value === '' ? 0 : Number(e.target.value)) })] });
+}
+function Assumptions({ t, state, setState }) {
+    const setFund = (k, v) => setState({ ...state, fund: { ...state.fund, [k]: v } });
+    const setProj = (k, v) => setState({ ...state, projects: [{ ...state.projects[0], [k]: v }, ...state.projects.slice(1)] });
+    return (_jsxs("div", { className: "two-col", children: [_jsxs("section", { children: [_jsx("h2", { children: t('fund') }), FUND.map(s => _jsx(Field, { t: t, spec: s, obj: state.fund, onChange: setFund }, s[0]))] }), _jsxs("section", { children: [_jsx("h2", { children: t('project') }), PROJ.map(s => _jsx(Field, { t: t, spec: s, obj: state.projects[0], onChange: setProj }, s[0]))] })] }));
+}
+
+return {default: Assumptions};
+});
+__def('components/Results', function(){
+
+
+const {fmt,pctf} = __req('i18n/index');
+function Results({ t, r }) {
+    if (!r)
+        return _jsx("p", { className: "err", children: t('invalid') });
+    const tiles = [[t('irr'), pctf(r.irr)], [t('eqMult'), r.eqMult.toFixed(2) + 'x'], [t('revenue'), fmt(r.tRev)], [t('totalCost'), fmt(r.totalCost)], [t('netProfit'), fmt(r.netProfit)], [t('debtDrawn'), fmt(r.totals.totalDebtDrawn)]];
+    const rows = [['netOp', r.qNetOp], ['netInv', r.qNetInv], ['netFin', r.qNetFin], ['cashClose', r.qCashClose]];
+    return (_jsxs("div", { children: [_jsx("div", { className: "tiles", children: tiles.map(([k, v]) => _jsxs("div", { className: "tile", children: [_jsx("span", { children: k }), _jsx("strong", { children: v })] }, k)) }), _jsx("div", { className: "scroll", children: _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: t('quarter') }), r.labels.map(l => _jsx("th", { children: l }, l))] }) }), _jsx("tbody", { children: rows.map(([k, arr]) => _jsxs("tr", { children: [_jsx("th", { children: t(k) }), arr.map((v, i) => _jsx("td", { className: v < 0 ? 'neg' : '', children: fmt(v) }, i))] }, k)) })] }) })] }));
+}
+
+return {default: Results};
+});
+__def('engine/reforecast', function(){
+// Actuals vs Budget — the explicit three-state model.
+// For every budget line and quarter up to the user-chosen cutoff, the state is one of:
+//   'actual'  — replace the budget with the logged actual amount (0 if nothing was logged AND the user said so)
+//   'keep'    — no actual logged; keep the original assumption for that quarter as-is
+//   'rephase' — no actual logged; treat the quarter as unspent and push the amount into the remaining quarters
+// Nothing is inferred from today's date. The cutoff quarter is an input.
+//
+// budget:   { [line]: number[nq] }            original quarterly budget per line (from engine output / assumptions)
+// actuals:  { [line]: (number|null)[nq] }     logged actuals; null = nothing logged
+// states:   { [line]: ('actual'|'keep'|'rephase')[nq] }  decision per cell; default rule below fills gaps
+// cutoffQ:  number  — quarters 0..cutoffQ-1 are "closed"
+// defaultState: what to do for a closed quarter with no logged actual ('keep' | 'rephase')
+function reforecast({ budget, actuals = {}, states = {}, cutoffQ, defaultState = 'keep', rephaseMode = 'proportional' }) {
+    const out = {}, audit = {};
+    for (const line of Object.keys(budget)) {
+        const b = budget[line], nq = b.length;
+        const a = actuals[line] || Array(nq).fill(null);
+        const st = states[line] || Array(nq).fill(null);
+        const row = b.slice(), why = Array(nq).fill('forecast');
+        let carry = 0;
+        for (let q = 0; q < Math.min(cutoffQ, nq); q++) {
+            const logged = a[q] !== null && a[q] !== undefined;
+            const s = st[q] || (logged ? 'actual' : defaultState);
+            if (s === 'actual') {
+                row[q] = logged ? a[q] : 0;
+                why[q] = logged ? 'actual' : 'actual:none';
+                carry += b[q] - row[q];
+            }
+            else if (s === 'rephase') {
+                row[q] = 0;
+                why[q] = 'rephase';
+                carry += b[q];
+            }
+            else {
+                row[q] = b[q];
+                why[q] = 'keep';
+            }
+        }
+        // Redistribute the carry (budget not spent in closed quarters) into open quarters.
+        const open = [];
+        for (let q = cutoffQ; q < nq; q++)
+            open.push(q);
+        if (open.length && carry !== 0) {
+            const base = open.map(q => b[q]), tot = base.reduce((x, y) => x + y, 0);
+            open.forEach((q, i) => {
+                const w = rephaseMode === 'proportional' && tot !== 0 ? base[i] / tot : rephaseMode === 'front' ? (i === 0 ? 1 : 0) : 1 / open.length;
+                row[q] = b[q] + carry * w;
+                why[q] = 'forecast+carry';
+            });
+        }
+        else if (carry !== 0) {
+            why.push(`unallocated carry ${carry}`); // fund ended before the carry could be placed — surface it, never drop it
+        }
+        out[line] = row;
+        audit[line] = { why, carry };
+    }
+    return { series: out, audit };
+}
+// Variance per line for closed quarters: actual - budget (negative = under budget for costs).
+function variance(budget, series, cutoffQ) {
+    const r = {};
+    for (const line of Object.keys(budget)) {
+        const b = budget[line].slice(0, cutoffQ), a = series[line].slice(0, cutoffQ);
+        r[line] = { budget: b.reduce((x, y) => x + y, 0), actual: a.reduce((x, y) => x + y, 0) };
+        r[line].variance = r[line].actual - r[line].budget;
+    }
+    return r;
+}
+
+return {reforecast, variance};
+});
+__def('components/Actuals', function(){
+
+
+const {supabase} = __req('lib/supabase');
+const store = __req('lib/store');
+const {reforecast,variance} = __req('engine/reforecast');
+const {fmt} = __req('i18n/index');
+// Budget lines exposed by the engine (costs, positive numbers) that a payment can be logged against.
+const LINES = ['land', 'construction', 'custody', 'spv', 'fundSetup', 'auditor', 'sharia', 'engineering', 'board', 'mgmtFee', 'finAdvisor', 'marketing', 'bankMgmt', 'interest'];
+function Actuals({ t, r, state, setState, notify }) {
+    const [rows, setRows] = useState([]), [form, setForm] = useState({ paid_on: '', amount: '', category: 'construction', payee: '', description: '' });
+    const rf = state.reforecast || {};
+    const cutoffQ = rf.cutoffQ ?? 0, defaultState = rf.defaultState || 'keep';
+    const setRf = patch => setState({ ...state, reforecast: { ...rf, ...patch } });
+    useEffect(() => { if (state.id)
+        store.listActuals(supabase, state.id).then(setRows).catch(e => notify(e.message, true));
+    else
+        setRows([]); }, [state.id]);
+    const nq = r?.nq || 0;
+    const budget = useMemo(() => Object.fromEntries(LINES.map(k => [k, (r?.lines[k] || []).map(v => Math.abs(v))])), [r]);
+    const actuals = useMemo(() => store.actualsByLine(rows, nq), [rows, nq]);
+    const out = useMemo(() => (nq ? reforecast({ budget, actuals, states: rf.states || {}, cutoffQ, defaultState }) : null), [budget, actuals, rf.states, cutoffQ, defaultState, nq]);
+    const vr = out ? variance(budget, out.series, cutoffQ) : {};
+    const add = async (e) => {
+        e.preventDefault();
+        if (!state.id) {
+            notify(t('save') + ' → ' + t('project'), true);
+            return;
+        }
+        const a = { ...form, amount: Number(form.amount), quarter_idx: store.quarterIndex(form.paid_on, state.fund.start_date), source: 'manual' };
+        try {
+            const row = await store.addActual(supabase, state.id, a);
+            setRows([row, ...rows]);
+            setForm({ ...form, amount: '', payee: '', description: '' });
+        }
+        catch (err) {
+            notify(err.message, true);
+        }
+    };
+    const del = async (id) => { try {
+        await store.deleteActual(supabase, id);
+        setRows(rows.filter(x => x.id !== id));
+    }
+    catch (err) {
+        notify(err.message, true);
+    } };
+    if (!r)
+        return _jsx("p", { className: "err", children: t('invalid') });
+    return (_jsxs("div", { children: [_jsxs("div", { className: "bar", children: [_jsxs("label", { children: [t('cutoff'), _jsx("select", { value: cutoffQ, onChange: e => setRf({ cutoffQ: Number(e.target.value) }), children: Array.from({ length: nq + 1 }, (_, i) => _jsx("option", { value: i, children: i }, i)) })] }), _jsxs("label", { children: [t('defaultState'), _jsxs("select", { value: defaultState, onChange: e => setRf({ defaultState: e.target.value }), children: [_jsx("option", { value: "keep", children: t('keep') }), _jsx("option", { value: "rephase", children: t('rephase') })] })] })] }), _jsx("div", { className: "scroll", children: _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: t('line') }), _jsx("th", { children: t('budget') }), _jsx("th", { children: t('actual') }), _jsx("th", { children: t('variance') }), _jsx("th", { children: t('reforecast') })] }) }), _jsx("tbody", { children: LINES.map(k => _jsxs("tr", { children: [_jsx("th", { children: k }), _jsx("td", { children: fmt(vr[k]?.budget) }), _jsx("td", { children: fmt(vr[k]?.actual) }), _jsx("td", { className: vr[k]?.variance > 0 ? 'neg' : '', children: fmt(vr[k]?.variance) }), _jsx("td", { children: fmt(out?.series[k]?.reduce((a, b) => a + b, 0)) })] }, k)) })] }) }), _jsx("h2", { children: t('addPayment') }), _jsxs("form", { className: "bar", onSubmit: add, children: [_jsx("input", { type: "date", required: true, value: form.paid_on, onChange: e => setForm({ ...form, paid_on: e.target.value }) }), _jsx("input", { type: "number", step: "any", required: true, placeholder: t('amount'), value: form.amount, onChange: e => setForm({ ...form, amount: e.target.value }) }), _jsx("select", { value: form.category, onChange: e => setForm({ ...form, category: e.target.value }), children: LINES.map(k => _jsx("option", { children: k }, k)) }), _jsx("input", { placeholder: t('payee'), value: form.payee, onChange: e => setForm({ ...form, payee: e.target.value }) }), _jsx("input", { placeholder: t('description'), value: form.description, onChange: e => setForm({ ...form, description: e.target.value }) }), _jsx("button", { children: t('add') })] }), _jsx("h2", { children: t('log') }), rows.length === 0 ? _jsx("p", { children: t('noActuals') }) : _jsx("div", { className: "scroll", children: _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: t('date') }), _jsx("th", { children: t('quarter') }), _jsx("th", { children: t('category') }), _jsx("th", { children: t('amount') }), _jsx("th", { children: t('payee') }), _jsx("th", { children: t('description') }), _jsx("th", {})] }) }), _jsx("tbody", { children: rows.map(x => _jsxs("tr", { children: [_jsx("td", { children: x.paid_on }), _jsxs("td", { children: ["Q", x.quarter_idx + 1] }), _jsx("td", { children: x.category }), _jsx("td", { children: fmt(x.amount) }), _jsx("td", { children: x.payee }), _jsx("td", { children: x.description }), _jsx("td", { children: _jsx("button", { className: "danger", onClick: () => del(x.id), children: "\u00D7" }) })] }, x.id)) })] }) })] }));
+}
+
+return {default: Actuals};
+});
+__def('App', function(){
+
+
+const {supabase} = __req('lib/supabase');
+const {run} = __req('engine/index');
+const {DEFAULT_FUND,DEFAULT_PROJECTS} = __req('engine/defaults');
+const {makeT,dirOf} = __req('i18n/index');
+const Login = __req('components/Login').default;
+const ProjectBar = __req('components/ProjectBar').default;
+const Assumptions = __req('components/Assumptions').default;
+const Results = __req('components/Results').default;
+const Actuals = __req('components/Actuals').default;
+const fresh = () => ({ id: null, name: '', fund: { ...DEFAULT_FUND }, projects: JSON.parse(JSON.stringify(DEFAULT_PROJECTS)), reforecast: {} });
+function App() {
+    const [lang, setLang] = useState(() => { try {
+        return localStorage.getItem('lang') || 'ar';
+    }
+    catch {
+        return 'ar';
+    } });
+    const t = useMemo(() => makeT(lang), [lang]);
+    const [session, setSession] = useState(undefined);
+    const [state, setState] = useState(fresh);
+    const [tab, setTab] = useState('assumptions');
+    const [msg, setMsg] = useState(null);
+    const notify = (text, isErr) => { setMsg({ text, isErr }); setTimeout(() => setMsg(null), 4000); };
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data }) => setSession(data.session));
+        const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+        return () => sub.subscription.unsubscribe();
+    }, []);
+    useEffect(() => { document.documentElement.dir = dirOf(lang); document.documentElement.lang = lang; try {
+        localStorage.setItem('lang', lang);
+    }
+    catch { } }, [lang]);
+    const r = useMemo(() => run(state.fund, state.projects), [state.fund, state.projects]);
+    const langBtn = _jsx("button", { className: "link", onClick: () => setLang(lang === 'ar' ? 'en' : 'ar'), children: t('lang') });
+    if (session === undefined)
+        return _jsx("p", { className: "center", children: t('loading') });
+    if (!session)
+        return _jsxs("div", { children: [langBtn, _jsx(Login, { t: t })] });
+    return (_jsxs("div", { className: "app", children: [_jsxs("header", { children: [_jsx("h1", { children: t('appTitle') }), _jsxs("span", { children: [t('signedInAs'), " ", session.user.email] }), langBtn, _jsx("button", { className: "link", onClick: () => supabase.auth.signOut(), children: t('signOut') })] }), _jsx(ProjectBar, { t: t, user: session.user, state: state, setState: setState, notify: notify }), _jsx("nav", { children: ['assumptions', 'results', 'actuals'].map(k => _jsx("button", { className: tab === k ? 'active' : '', onClick: () => setTab(k), children: t('tab' + k[0].toUpperCase() + k.slice(1)) }, k)) }), msg && _jsx("p", { className: msg.isErr ? 'err' : 'ok', children: msg.text }), tab === 'assumptions' && _jsx(Assumptions, { t: t, state: state, setState: setState }), tab === 'results' && _jsx(Results, { t: t, r: r }), tab === 'actuals' && _jsx(Actuals, { t: t, r: r, state: state, setState: setState, notify: notify })] }));
+}
+
+return {default: App};
+});
+__def('main', function(){
+
+
+
+const App = __req('App').default;
+createRoot(document.getElementById('root')).render(_jsx(App, {}));
+
+return {};
+});
+__req('main');
+</script></body></html>
