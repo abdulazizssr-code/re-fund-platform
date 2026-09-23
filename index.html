@@ -136,6 +136,34 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .es-note{font-size:.72rem;color:var(--on-surface-vl);margin-top:6px;font-style:italic}
 .tip-h{position:relative;cursor:help;border-bottom:1px dotted currentColor}.tip-h i{font-style:normal;font-size:.75em;opacity:.7}.tip-h .tip-box{display:none;position:absolute;z-index:50;inset-inline-start:0;top:120%;min-width:260px;background:#14213d;color:#fff;border-radius:8px;padding:8px 10px;font-size:.78rem;font-weight:400;text-align:start;box-shadow:0 8px 24px rgba(0,0,0,.25)}.tip-h:hover .tip-box{display:block}.tip-h .tip-box div{display:flex;justify-content:space-between;gap:16px;padding:2px 0}.tip-h .tip-box b{font-variant-numeric:tabular-nums}
 @media print{.tip-h .tip-box{display:none!important}.tip-h{border:none}.tip-h i{display:none}}
+/* ── Operations control room ── */
+.ops-period{position:sticky;top:122px;z-index:88;background:#fff;border-bottom:1px solid var(--outline);padding:12px 40px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:-32px -40px 0;box-shadow:0 2px 8px rgba(27,28,25,.05)}
+.ops-asof{display:flex;align-items:center;gap:10px}.ops-asof .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--on-surface-vl);font-weight:700}.ops-asof select{font:inherit;font-weight:700;padding:6px 10px;border:1.5px solid var(--outline);border-radius:8px;background:#fff}.ops-sub{font-size:.8rem;color:var(--on-surface-vl)}
+.ops-view{display:flex;gap:2px;background:var(--surface-ch);border-radius:8px;padding:2px}.ops-view span{padding:4px 10px;border-radius:6px;font-size:.78rem;font-weight:700;color:var(--on-surface-vl);cursor:pointer}.ops-view span.on{background:#fff;color:var(--primary);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ops-chips{display:flex;gap:8px;flex-wrap:wrap;margin-inline-start:auto}.ops-chip{display:flex;flex-direction:column;padding:6px 12px;border-radius:9px;background:var(--surface-cl);min-width:132px;border-inline-start:3px solid #9aa79f}.ops-chip small{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface-vl);font-weight:700}.ops-chip b{font-size:.92rem;font-variant-numeric:tabular-nums}.ops-chip.good{border-color:var(--success)}.ops-chip.warn{border-color:#b7791f}.ops-chip.bad{border-color:var(--error)}.ops-chip i{font-style:normal;font-size:.72rem;color:var(--on-surface-vl);font-weight:500}
+.ops-close{background:var(--secondary);color:#fff;border:none;border-radius:8px;padding:8px 14px;font:inherit;font-weight:700;font-size:.82rem;cursor:pointer}
+.ops-nav{display:flex;gap:2px;background:#fff;padding:0 40px;border-bottom:1px solid var(--outline);overflow-x:auto;margin:0 -40px 24px}.ops-nav button{background:none;border:none;border-bottom:2.5px solid transparent;padding:13px 18px;font:inherit;font-weight:600;font-size:.86rem;color:var(--on-surface-vl);cursor:pointer;white-space:nowrap}.ops-nav button.on{color:var(--primary);border-color:var(--secondary);font-weight:800}.ops-nav button em{font-style:normal;background:var(--error);color:#fff;border-radius:99px;font-size:.66rem;padding:1px 6px;margin-inline-start:6px}
+.ops-grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}@media(max-width:900px){.ops-grid2{grid-template-columns:1fr}}
+.ops-card{background:#fff;border-radius:12px;padding:20px 22px;box-shadow:var(--shadow-l);border:1px solid rgba(27,28,25,.04)}.ops-card h3{font-family:'Noto Serif',serif;font-size:.95rem;color:var(--primary);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;font-weight:600}.ops-card h3 span{font-family:inherit;font-size:.72rem;font-weight:600;color:var(--on-surface-vl)}
+.ops-svg{width:100%;height:auto;display:block}.ops-ax{font-size:10.5px;fill:var(--on-surface-vl);font-family:'Manrope',sans-serif}.ops-grd{stroke:var(--outline)}.ops-legend{display:flex;gap:14px;font-size:.76rem;color:var(--on-surface-vl);margin-top:8px}.ops-legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-inline-end:6px;border-radius:2px}
+.ops-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}.ops-kpi{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-l)}.ops-kpi small{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--on-surface-vl);font-weight:700}.ops-kpi b{font-size:1.3rem;font-variant-numeric:tabular-nums;display:block;margin-top:2px}.ops-kpi i{font-style:normal;font-size:.76rem;color:var(--on-surface-vl)}.ops-kpi i.up{color:var(--success)}.ops-kpi i.dn{color:var(--error)}
+.ops-alerts{display:flex;flex-direction:column;gap:8px}.ops-al{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:9px;background:var(--surface-cl);font-size:.86rem}.ops-al .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}.ops-al .dot.bad{background:var(--error)}.ops-al .dot.warn{background:#b7791f}.ops-al a{margin-inline-start:auto;color:var(--primary);font-weight:700;font-size:.78rem;white-space:nowrap;cursor:pointer}
+.ops-muted{color:var(--on-surface-vl);font-size:.85rem;margin:0}
+.ops-line{background:#fff;border-radius:12px;box-shadow:var(--shadow-l);padding:14px 20px;margin-bottom:10px}.ops-line .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.ops-line .nm{font-weight:800;min-width:190px}.ops-line .nm small{display:block;font-weight:500;color:var(--on-surface-vl);font-size:.76rem}
+.ops-bar{flex:1;min-width:220px}.ops-bar .trk{height:12px;border-radius:6px;background:var(--surface-ch);overflow:hidden;display:flex}.ops-bar .trk i{display:block;height:100%}.ops-bar .trk .a{background:var(--primary)}.ops-bar .trk .c{background:repeating-linear-gradient(45deg,#775a19 0 4px,#a88a44 4px 8px)}.ops-bar .trk .r{background:#d9d4c7}.ops-bar .lbls{display:flex;justify-content:space-between;font-size:.74rem;color:var(--on-surface-vl);margin-top:4px;font-variant-numeric:tabular-nums;gap:8px;align-items:center}
+.ops-stat{min-width:110px;text-align:end}.ops-stat small{display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface-vl);font-weight:700}.ops-stat b{font-variant-numeric:tabular-nums}
+.ops-pill{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--surface-cl);color:var(--on-surface-v);white-space:nowrap}.ops-pill.good{background:#e6f2ea;color:var(--success)}.ops-pill.warn{background:#fbf0d9;color:#7a4f0d}.ops-pill.bad{background:#fbe5e5;color:var(--error)}
+.ops-treat{display:flex;gap:6px;align-items:center;font-size:.78rem;color:var(--on-surface-vl)}.ops-treat select,.ops-mini{font:inherit;font-size:.8rem;padding:4px 8px;border:1.5px solid var(--outline);border-radius:7px;background:#fff;width:110px}.ops-treat select{width:150px}
+.ops-more{background:none;border:1px solid var(--outline);border-radius:7px;padding:2px 10px;cursor:pointer;color:var(--on-surface-vl)}.ops-line .detail{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--outline)}.ops-line.open .detail{display:block}.ops-line .top.sub{gap:10px;margin-bottom:8px}.ops-line .top.sub .nm{min-width:170px;font-weight:600;font-size:.84rem;padding-inline-start:12px}
+.ops-phase-wrap{margin-top:8px}.ops-phase{display:flex;gap:6px;align-items:flex-end;height:70px;padding:8px 10px;background:var(--surface-cl);border-radius:8px}.ops-phase div{flex:1;background:var(--secondary);border-radius:3px 3px 0 0;position:relative;opacity:.85;min-width:28px}.ops-phase div.past{background:var(--primary);opacity:.4}.ops-phase div span{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:9.5px;color:var(--on-surface-vl)}.ops-ph{position:absolute;top:-26px;left:0;right:0;width:100%;font-size:.66rem;padding:1px 2px;border:1px solid var(--outline);border-radius:4px;background:#fff;text-align:center}
+.ops-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.ops-fields label,.ops-field{display:flex;flex-direction:column;font-size:.74rem;color:var(--on-surface-vl);gap:3px}.ops-fields .ops-mini{width:100%}
+.ops-chg{display:flex;flex-direction:column;gap:8px}.ops-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface-cl);border-radius:9px;font-size:.86rem;flex-wrap:wrap}.ops-row b:first-child{min-width:160px}.ops-row s{color:var(--on-surface-vl)}.ops-row .arrow{color:var(--on-surface-vl)}.ops-row .why{margin-inline-start:auto;font-size:.76rem;color:var(--on-surface-vl);font-style:italic}
+.ops-add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}.ops-add .ops-mini{width:150px}.ops-link{color:var(--primary);font-weight:700;font-size:.8rem;cursor:pointer;text-decoration:none}
+.ops-packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.ops-pack{background:var(--surface-cl);border-radius:10px;padding:14px 16px}.ops-pack h4{margin:0 0 6px;font-family:'Noto Serif',serif;font-size:.9rem;color:var(--primary)}.ops-pack p{font-size:.8rem;color:var(--on-surface-v);margin:0 0 10px}
+.ops-comm{width:100%;font:inherit;font-size:.86rem;padding:10px 12px;border:1.5px solid var(--outline);border-radius:8px;background:#fff;resize:vertical}
+.ops-drawer-btn{position:fixed;inset-inline-end:24px;bottom:24px;background:var(--primary);color:#fff;border:none;border-radius:99px;padding:12px 18px;font:inherit;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:.86rem;cursor:pointer;z-index:95}
+.ops-drawer{position:fixed;top:0;bottom:0;inset-inline-end:0;width:min(920px,96vw);background:var(--surface);box-shadow:-12px 0 40px rgba(0,0,0,.25);transform:translateX(110%);transition:transform .3s ease;z-index:200;display:flex;flex-direction:column}[dir=rtl] .ops-drawer{transform:translateX(-110%)}.ops-drawer.open{transform:none}.ops-drawer-head{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#fff;border-bottom:1px solid var(--outline)}.ops-drawer-body{overflow:auto;padding:20px;flex:1}.ops-drawer-body .pnl{display:block}
+.rfcs-tbl tr.tot td{background:var(--surface-cl)}
 .baseline-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#eef6f2;border:1px solid #cfe5da;border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:.88rem}
 .baseline-bar.locked{background:#fff6e5;border-color:#f3d9a4}
 .baseline-bar button{padding:6px 12px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;white-space:nowrap}
@@ -725,8 +753,10 @@ canvas{max-width:100%;display:block}
   <div class="pnl" id="p-summary"></div>
   <div class="pnl" id="p-actuals"></div>
   <div class="pnl" id="p-forecast"></div>
+  <div class="pnl" id="p-ops"></div>
   <div id="reforecastPanel" style="display:none"></div>
 </main>
+<div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span>💳</span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
 <div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only</div>
 </div><!-- end appMain -->
 
@@ -1460,12 +1490,12 @@ function compLabel(comp){
 // =============================================
 // i18n
 // =============================================
-const tabIcons=['⚙','📅','📊','💰','🏦','🔬','📋','✅','🎯'];
+const tabIcons=['⚙','📅','📊','💰','🏦','🔬','📋','✅','🎯','🏛'];
 const TX={
   en:{title:'Real Estate Fund Financial Study',sub:'Professional Fund Modeling Platform',calc:'Calculate',dl:'Excel',langB:'العربية',
     projLbl:'Project:',projSave:'💾 Save',projSaveShared:'💾 Save to My Projects',projSaveSharedPrompt:'Save this shared project to your account as:',projSavedShared:'Project "%name%" saved to your account!',projOverwrite:'A project named "%name%" already exists. Overwrite?',projNew:'+ New',projDel:'🗑 Delete',projShare:'🔗 Share',pdf:'PDF',
     shareTitle:'Share Projects',shareDesc:'Select one or more projects to share via a unique link. Recipients can view the financial model.',shareProjHead:'Select Projects',shareToggle:'Allow recipient to modify assumptions',shareGenLink:'Generate Link',shareCopyLink:'Copy Link',shareClose:'Close',shareNoProj:'No saved projects to share. Save a project first.',shareCopied:'Link copied!',shareShortening:'Shortening link...',shareViewBadge:'SHARED VIEW',shareViewMsg:'You are viewing shared projects',shareViewMsgRO:' (read-only assumptions)',shareExit:'Exit Shared View',
-    tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast'],
+    tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast','Control room'],
     ws:{feasibility:'Feasibility',operations:'Operations'},
     roles:['Fund Manager','Developer','Financer'],
     roleKeys:['fund_manager','developer','financer'],
@@ -1551,7 +1581,7 @@ const TX={
   ar:{title:'الدراسة المالية للصندوق العقاري',sub:'منصة النمذجة المالية للصناديق',calc:'احسب',dl:'إكسل',langB:'English',
     projLbl:'المشروع:',projSave:'💾 حفظ',projSaveShared:'💾 حفظ في مشاريعي',projSaveSharedPrompt:'حفظ المشروع المشارك في حسابك باسم:',projSavedShared:'تم حفظ المشروع "%name%" في حسابك!',projOverwrite:'يوجد مشروع باسم "%name%" بالفعل. هل تريد استبداله؟',projNew:'+ جديد',projDel:'🗑 حذف',projShare:'🔗 مشاركة',pdf:'PDF',
     shareTitle:'مشاركة المشاريع',shareDesc:'اختر مشروعًا أو أكثر لمشاركته عبر رابط فريد. يمكن للمستلمين عرض النموذج المالي.',shareProjHead:'اختر المشاريع',shareToggle:'السماح للمستلم بتعديل الافتراضات',shareGenLink:'إنشاء رابط',shareCopyLink:'نسخ الرابط',shareClose:'إغلاق',shareNoProj:'لا توجد مشاريع محفوظة للمشاركة. احفظ مشروعًا أولًا.',shareCopied:'تم نسخ الرابط!',shareShortening:'جارٍ اختصار الرابط...',shareViewBadge:'عرض مشترك',shareViewMsg:'أنت تشاهد مشاريع مشتركة',shareViewMsgRO:' (الافتراضات للقراءة فقط)',shareExit:'خروج من العرض المشترك',
-    tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع'],
+    tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع','غرفة التحكم'],
     ws:{feasibility:'دراسة الجدوى',operations:'التشغيل والمتابعة'},
     roles:['مدير الصندوق','المطور','الممول'],
     roleKeys:['fund_manager','developer','financer'],
@@ -1639,9 +1669,10 @@ const TX={
 // =============================================
 // TAB NAVIGATION
 // =============================================
-const tabKeys=['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','actuals','forecast'];
+const tabKeys=['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','actuals','forecast','ops'];
 // Workspaces: Feasibility (new deal) vs Operations (a launched fund: actuals, reforecast, distributions). One engine, one project — different screens.
-const WORKSPACES={feasibility:['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary'],operations:['actuals','forecast','dashboard','cashflow','debt','summary']};
+const WORKSPACES={feasibility:['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary'],operations:['ops','cashflow','debt','summary','forecast','actuals']};
+const OPS_HIDDEN_TABS=['forecast','actuals']; // reachable from the control room, not shown in the tab bar
 let workspace='feasibility';
 const RESULT_TABS=['dashboard','cashflow','debt','sensitivity','summary'];
 function buildTabs(){
@@ -1650,24 +1681,30 @@ function buildTabs(){
   const cur=document.querySelector('.pnl.act'); const curKey=cur?cur.id.slice(2):null;
   const active=keys.includes(curKey)?curKey:keys[0];
   const sw='<div class="ws-switch">'+['feasibility','operations'].map(w=>`<button class="${w===workspace?'act':''}" onclick="setWorkspace('${w}')">${t.ws[w]}</button>`).join('')+'</div>';
-  nav.innerHTML=sw+keys.map(k=>{const i=tabKeys.indexOf(k);return `<button class="tab${k===active?' act':''}" data-tab="${k}" onclick="showTab('${k}')"${RESULT_TABS.includes(k)&&!R?' disabled':''}><span class="tab-icon">${tabIcons[i]}</span>${t.tabs[i]}</button>`;}).join('');
-  const rb=document.getElementById('btnReforecast'); if(rb) rb.style.display=(R&&workspace==='operations')?'inline-block':'none';
+  nav.innerHTML=sw+keys.filter(k=>workspace!=='operations'||!OPS_HIDDEN_TABS.includes(k)).map(k=>{const i=tabKeys.indexOf(k);return `<button class="tab${k===active?' act':''}" data-tab="${k}" onclick="showTab('${k}')"${RESULT_TABS.includes(k)&&!R?' disabled':''}><span class="tab-icon">${tabIcons[i]}</span>${t.tabs[i]}</button>`;}).join('');
+  const rb=document.getElementById('btnReforecast'); if(rb) rb.style.display='none'; // superseded by the live control room
   if(curKey!==active) showTab(active);
 }
 function setWorkspace(w){
-  if(!WORKSPACES[w]) return; workspace=w; buildTabs();
+  if(!WORKSPACES[w]) return; workspace=w;
+  if(w==='feasibility'&&reforecastMode){reforecastMode=false;R2=null;if(R){renderCashFlow();}}
+  buildTabs();
 }
 function setRole(role){
   currentRole=role;
   if(R) renderDashboard();
 }
+let _silentCalc=false;
 function showTab(k){
+  if(_silentCalc) return;
   if(!WORKSPACES[workspace].includes(k)){workspace=WORKSPACES.operations.includes(k)?'operations':'feasibility';buildTabs();}
   document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('act'));
   document.getElementById('p-'+k).classList.add('act');
   document.querySelectorAll('.tab').forEach(t=>{t.classList.toggle('act',t.dataset.tab===k);});
   if(k==='actuals') buildActualsTab();
   if(k==='forecast') renderForecastTab();
+  if(k==='ops') renderOps();
+  if(workspace==='operations'&&(k==='cashflow'||k==='debt'||k==='summary')&&R&&!R2){reforecastMode=true;runReforecast();}
 }
 
 // =============================================
@@ -2665,7 +2702,7 @@ function calculate(){
   document.querySelectorAll('.tab').forEach(t=>t.disabled=false);
   document.getElementById('btnDL').classList.add('show');
   document.getElementById('btnPDF').classList.add('show');
-  document.getElementById('btnReforecast').style.display=workspace==='operations'?'inline-block':'none';
+  document.getElementById('btnReforecast').style.display='none';
   // Reset reforecast mode on new calculate
   reforecastMode=false;R2=null;
   document.getElementById('btnReforecast').style.background='#0d6efd';
@@ -2677,7 +2714,7 @@ function calculate(){
   renderDebt();
   renderSensitivity();
   renderSummary();
-  showTab('dashboard');
+  showTab(workspace==='operations'?'ops':'dashboard');
 }
 
 // =============================================
@@ -4622,12 +4659,14 @@ function runReforecast(){
 function calcFull(ov){
   const saveR=R, saveMode=reforecastMode, saveR2=R2, saved={}, curTab=(document.querySelector('.pnl.act')||{}).id;
   for(const k in ov){const el=document.getElementById(k); if(el){saved[k]={el,v:el.value}; el.value=ov[k];} else {saved[k]={v:D[k]}; D[k]=ov[k];}}
-  let out=null;
+  let out=null; _silentCalc=true;
   try{ calculate(); out=R; }catch(e){ console.error('calcFull:',e); }
   finally{
     for(const k in saved){ if(saved[k].el) saved[k].el.value=saved[k].v; else D[k]=saved[k].v; }
     try{ calculate(); }catch(e){}
-    R=saveR; reforecastMode=saveMode; R2=saveR2; if(curTab) showTab(curTab.slice(2));
+    _silentCalc=false;
+    R=saveR; reforecastMode=saveMode; R2=saveR2;
+    if(curTab){document.querySelectorAll('.pnl').forEach(p=>p.classList.toggle('act',p.id===curTab));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('act',t.dataset.tab===curTab.slice(2)));}
   }
   return out;
 }
@@ -4773,6 +4812,233 @@ function runForecast(){
   reforecastMode=true; const btn=document.getElementById('btnReforecast'); if(btn){btn.style.background='#dc3545';btn.textContent='✕ Exit Reforecast';}
   runReforecast(); renderForecastTab();
 }
+
+// ═══════════════════════════════════════════════
+// OPERATIONS CONTROL ROOM — period bar, overview, costs, sales, financing, scenarios, reports
+// All numbers come from R (baseline run) and R2 (current forecast via runReforecast). The forecast is live:
+// any change in this workspace calls opsRefresh(), which re-runs the forecast and re-renders the open section.
+// ═══════════════════════════════════════════════
+const OPS_SECTIONS=['overview','costs','sales','financing','scenarios','reports'];
+let opsSection='overview', opsView='forecast'; // opsView: baseline | forecast | both
+const OPS_T={
+  en:{overview:'Overview',costs:'Costs',sales:'Sales',financing:'Financing',scenarios:'Forecast & Scenarios',reports:'Reports',asof:'As of',closed:'closed',toEnd:'months to fund end',baseline:'Baseline',forecast:'Forecast',both:'Both',
+    spend:'Spend to date',plan:'plan',fac:'Forecast at completion',vsBase:'vs baseline',irr:'IRR',sales_:'Sales',sold:'sold',close:'Close',calcFirst:'Calculate the model first (Feasibility) to open Operations.',
+    costComplete:'Cost complete',timeElapsed:'time elapsed',committed:'Committed',ofFac:'of forecast at completion',cashLoan:'Cash & loan',atCut:'at cutoff',eqMult:'Equity multiple',dist:'Distributions',
+    scurve:'Cumulative cost — plan vs actual vs forecast',ssales:'Cumulative sales — plan vs actual vs forecast',decide:'What needs a decision',items:'items',nothing:'Nothing pending — all closed-quarter variances have a treatment.',
+    over:'over adjusted budget',unspent:'unspent in closed quarters — treatment defaults to push forward',unassigned:'payments not assigned to a component',confirmLoan:'Loan balance at the cutoff not confirmed (forecast value used)',review:'Review →',
+    bridge:'IRR bridge — baseline to current forecast',bBase:'Baseline IRR',bActual:'Actuals, budgets & phasing',bAssum:'Assumption changes',bCur:'Current IRR',
+    line:'Line',actual:'Actual',remaining:'Remaining',baselineB:'Baseline',facShort:'Forecast at completion',treat:'Unspent',push:'Push forward',saving:'Saving',keep:'Keep as planned',adj:'Adjusted total',commit:'Committed',phasing:'Phasing of the remaining amount over open quarters — type a weight per quarter (blank = proportional to plan)',
+    payments:'payments',components:'components',complete:'complete',onBudget:'on budget',
+    soldToDate:'Sold to date',achieved:'Achieved price',ofPlan:'plan',unsold:'Unsold stock',soldArea:'Sold area (sqm)',achPrice:'Achieved price / sqm',unsoldPrice:'Unsold price / sqm',pace:'Sales pace (sqm / quarter)',startQ:'Sales of unsold from quarter',fcRev:'Forecast revenue',planArea:'plan',
+    loanBal:'Loan balance',drawn:'Drawn to date',intToDate:'Interest to date',ltc:'LTC',peak:'Peak debt (forecast)',loanChart:'Loan balance — plan vs actual vs forecast',facility:'Facility',confirm:'Confirm balance at cutoff',statement:'Open the full cash-flow statement →',debtSched:'Open the debt schedule →',
+    changes:'Current assumptions — what differs from the baseline',noChanges:'No changes yet — the forecast uses the baseline assumptions.',addChange:'＋ Change an assumption',param:'Parameter',newVal:'New value',why:'Reason',apply:'Apply',remove:'remove',
+    scen:'Scenarios',scenName:'Scenario',mult:'Multiple',peakD:'Peak debt',addScen:'＋ New scenario',scenHint:'A scenario is a set of extra changes on top of the current forecast (e.g. saibor 9.5).',current:'Current forecast',
+    packs:'Reporting packs for',investor:'Investor pack',investorD:'Executive summary in teaser style — costs ex recoverable taxes, no internal detail.',ic:'IC pack',icD:'Baseline vs actual vs forecast, variances, IRR bridge, scenarios and commentary.',lender:'Financer pack',lenderD:'Sources & uses, quarterly cash-flow statement with actuals to date, loan schedule and covenant tests.',open:'Open',commentary:'Commentary (draft from the variances — edit before issuing)',
+    addPay:'＋ Add payments',closeDrawer:'Done'},
+  ar:{overview:'نظرة عامة',costs:'التكاليف',sales:'المبيعات',financing:'التمويل',scenarios:'التوقع والسيناريوهات',reports:'التقارير',asof:'كما في',closed:'مقفل',toEnd:'شهراً حتى نهاية الصندوق',baseline:'خط الأساس',forecast:'التوقع',both:'كلاهما',
+    spend:'المنفق حتى الآن',plan:'الخطة',fac:'التكلفة عند الاكتمال',vsBase:'مقابل خط الأساس',irr:'العائد الداخلي',sales_:'المبيعات',sold:'مباع',close:'إقفال',calcFirst:'احسب النموذج أولاً من دراسة الجدوى لفتح التشغيل.',
+    costComplete:'نسبة إنجاز التكلفة',timeElapsed:'الزمن المنقضي',committed:'الملتزم به',ofFac:'من التكلفة عند الاكتمال',cashLoan:'النقد والتمويل',atCut:'عند الإقفال',eqMult:'مضاعف رأس المال',dist:'التوزيعات',
+    scurve:'التكلفة التراكمية — الخطة مقابل الفعلي مقابل التوقع',ssales:'المبيعات التراكمية — الخطة مقابل الفعلي مقابل التوقع',decide:'ما يحتاج قراراً',items:'بنود',nothing:'لا يوجد معلق — كل انحرافات الأرباع المقفلة لها معالجة.',
+    over:'تجاوز الميزانية المعدلة',unspent:'غير منفق في الأرباع المقفلة — المعالجة الافتراضية ترحيل للأمام',unassigned:'دفعات غير مخصصة لمكوّن',confirmLoan:'رصيد التمويل عند الإقفال غير مؤكد (تم استخدام قيمة التوقع)',review:'مراجعة ←',
+    bridge:'جسر العائد الداخلي — من خط الأساس إلى التوقع الحالي',bBase:'عائد خط الأساس',bActual:'الفعلي والميزانيات والتوزيع',bAssum:'تغييرات الافتراضات',bCur:'العائد الحالي',
+    line:'البند',actual:'الفعلي',remaining:'المتبقي',baselineB:'خط الأساس',facShort:'التكلفة عند الاكتمال',treat:'غير المنفق',push:'ترحيل للأمام',saving:'وفر',keep:'إبقاء كما خُطط',adj:'الإجمالي المعدل',commit:'الملتزم به',phasing:'توزيع المبلغ المتبقي على الأرباع المفتوحة — اكتب وزناً لكل ربع (فارغ = نسبي حسب الخطة)',
+    payments:'دفعات',components:'مكوّنات',complete:'مكتمل',onBudget:'ضمن الميزانية',
+    soldToDate:'المباع حتى الآن',achieved:'السعر المحقق',ofPlan:'الخطة',unsold:'المخزون غير المباع',soldArea:'المساحة المباعة (م²)',achPrice:'السعر المحقق / م²',unsoldPrice:'سعر غير المباع / م²',pace:'وتيرة البيع (م² / ربع)',startQ:'بيع غير المباع ابتداءً من الربع',fcRev:'الإيرادات المتوقعة',planArea:'الخطة',
+    loanBal:'رصيد التمويل',drawn:'المسحوب حتى الآن',intToDate:'الأرباح حتى الآن',ltc:'الدين إلى التكلفة',peak:'ذروة التمويل (توقع)',loanChart:'رصيد التمويل — الخطة مقابل الفعلي مقابل التوقع',facility:'التسهيل',confirm:'تأكيد الرصيد عند الإقفال',statement:'فتح قائمة التدفقات النقدية الكاملة ←',debtSched:'فتح جدول الدين ←',
+    changes:'الافتراضات الحالية — ما يختلف عن خط الأساس',noChanges:'لا تغييرات بعد — التوقع يستخدم افتراضات خط الأساس.',addChange:'＋ تغيير افتراض',param:'البند',newVal:'القيمة الجديدة',why:'السبب',apply:'تطبيق',remove:'حذف',
+    scen:'السيناريوهات',scenName:'السيناريو',mult:'المضاعف',peakD:'ذروة التمويل',addScen:'＋ سيناريو جديد',scenHint:'السيناريو مجموعة تغييرات إضافية فوق التوقع الحالي (مثل سايبور 9.5).',current:'التوقع الحالي',
+    packs:'حزم التقارير لـ',investor:'حزمة المستثمرين',investorD:'ملخص تنفيذي بأسلوب النشرة — التكاليف بدون الضرائب القابلة للاسترداد وبدون تفاصيل داخلية.',ic:'حزمة لجنة الاستثمار',icD:'خط الأساس مقابل الفعلي مقابل التوقع، الانحرافات، جسر العائد، السيناريوهات والتعليق.',lender:'حزمة الممولين',lenderD:'المصادر والاستخدامات، قائمة التدفقات النقدية الربعية مع الفعلي، جدول التمويل واختبارات التعهدات.',open:'فتح',commentary:'التعليق (مسودة من الانحرافات — عدّلها قبل الإصدار)',
+    addPay:'＋ إضافة دفعات',closeDrawer:'تم'}
+};
+const ot=k=>(OPS_T[lang]||OPS_T.en)[k]||k;
+const M_=v=>{const a=Math.abs(v);return (a>=1e6?(v/1e6).toFixed(1)+' M':a>=1e3?(v/1e3).toFixed(0)+' K':Math.round(v).toString());};
+const sumA=a=>(a||[]).reduce((x,y)=>x+(y||0),0);
+function qEndDate(i){const sd=new Date(D.start_date||'2026-01-01');const d=new Date(Date.UTC(sd.getUTCFullYear(),sd.getUTCMonth()+3*(i+1),sd.getUTCDate()-1));return d;}
+function fmtDate(d){return d.toLocaleDateString(lang==='ar'?'ar-SA-u-nu-latn':'en-GB',{day:'numeric',month:'short',year:'numeric'});}
+
+// ---- state helpers ----
+function opsCats(){const isFund=Number(R.A.is_fund);return ACT_CATS.filter(c=>!c.fundOnly||isFund).filter(c=>!c.actualOnly);}
+function actualOf(key,q0,q1,comp){return actuals.filter(p=>p.category===key&&p.quarter>=q0&&p.quarter<q1&&(comp===undefined||p.component===comp)).reduce((s,p)=>s+p.amount,0);}
+function ensureForecast(){ if(!R) return false; _rfNorm(); if(!R2||!reforecastMode){reforecastMode=true; runReforecast();} return !!R2; }
+function opsRefresh(){ if(!R) return; reforecastMode=true; runReforecast(); renderOps(); }
+function baselineMetrics(){ const b=reforecastSettings.baseline; return (b&&b.irr!==undefined)?b:_baselineMetrics(); }
+
+// ---- IRR bridge: baseline → (actuals, budgets, phasing with baseline assumptions) → (assumption changes) → current ----
+function irrBridge(){
+  const b=baselineMetrics(); const cur=R2.irr;
+  const ov=reforecastSettings.assumptionOverrides; let mid=cur;
+  if(Object.keys(ov).length){ reforecastSettings.assumptionOverrides={}; const saveR2=R2; try{ runReforecast(); mid=R2.irr; } finally { reforecastSettings.assumptionOverrides=ov; R2=saveR2; } }
+  return [[ot('bBase'),b.irr,'t'],[ot('bActual'),mid-b.irr],[ot('bAssum'),cur-mid],[ot('bCur'),cur,'t']];
+}
+
+// ---- charts (SVG, no library) ----
+function svgLines(series,cut,nq,unitCap){
+  const W=640,H=250,M={l:48,r:14,t:14,b:26},x=i=>M.l+i*(W-M.l-M.r)/Math.max(1,nq-1);
+  const vals=series.flatMap(s=>s[0]).filter(v=>v!=null); const ymax=Math.max(1,...vals)*1.05, y=v=>M.t+(H-M.t-M.b)*(1-v/ymax);
+  let h='';const step=ymax/4; for(let k=0;k<=4;k++){const t=step*k;h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-6}" y="${y(t)+4}" text-anchor="end">${M_(t)}</text>`;}
+  if(cut>0) h+=`<rect x="${M.l}" y="${M.t}" width="${x(cut-1)-M.l}" height="${H-M.t-M.b}" fill="#1b1c19" opacity=".05"/><text class="ops-ax" x="${x(Math.max(0,cut-1))-4}" y="${M.t+12}" text-anchor="end">${ot('closed')}</text>`;
+  const every=Math.ceil(nq/12); for(let i=0;i<nq;i++) if(i%every===0) h+=`<text class="ops-ax" x="${x(i)}" y="${H-8}" text-anchor="middle">Q${i+1}</text>`;
+  for(const [d,c,dash] of series){const pts=d.map((v,i)=>v==null?null:`${x(i)},${y(v)}`).filter(Boolean);if(!pts.length)continue;h+=`<polyline fill="none" stroke="${c}" stroke-width="2.2" ${dash?'stroke-dasharray="5 4"':''} points="${pts.join(' ')}"/>`;const li=d.map((v,i)=>v==null?-1:i).filter(i=>i>=0).pop();h+=`<circle cx="${x(li)}" cy="${y(d[li])}" r="4" fill="${c}" stroke="#fff" stroke-width="2"/>`;}
+  return `<svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${h}</svg><div class="ops-legend"><span><i style="background:#9aa79f"></i>${ot('baseline')}</span><span><i style="background:#00322d"></i>${ot('actual')}</span><span><i style="background:#775a19"></i>${ot('forecast')}</span></div>`;
+}
+function svgBridge(steps){
+  const W=640,H=230,M={l:52,r:14,t:18,b:44};const pts=[];let run=0;steps.forEach(s=>{if(s[2]){run=s[1];pts.push(run);}else{pts.push(run);run+=s[1];pts.push(run);}});
+  const lo=Math.min(...pts)-0.01,hi=Math.max(...pts)+0.01,y=v=>M.t+(H-M.t-M.b)*(1-(v-lo)/(hi-lo||1)),bw=(W-M.l-M.r)/steps.length;let h='';run=0;
+  for(let k=0;k<=4;k++){const t=lo+(hi-lo)*k/4;h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-6}" y="${y(t)+4}" text-anchor="end">${(t*100).toFixed(1)}%</text>`;}
+  steps.forEach((st,i)=>{const x=M.l+i*bw+10,w=bw-20;let y0,y1,c;if(st[2]){y0=y(st[1]);y1=y(lo);c='#00322d';run=st[1];}else{const a=run,b=run+st[1];y0=y(Math.max(a,b));y1=y(Math.min(a,b));c=st[1]>=0?'#1a6b3c':'#ba1a1a';run=b;}
+    h+=`<rect x="${x}" y="${y0}" width="${w}" height="${Math.max(2,y1-y0)}" rx="3" fill="${c}"/><text class="ops-ax" x="${x+w/2}" y="${y0-5}" text-anchor="middle" style="font-weight:700;fill:${st[2]?'#1b1c19':c}">${st[2]?(st[1]*100).toFixed(2)+'%':(st[1]>=0?'+':'')+(st[1]*100).toFixed(2)}</text>`;
+    st[0].split(' ').slice(0,4).forEach((wd,k)=>{h+=`<text class="ops-ax" x="${x+w/2}" y="${H-M.b+14+k*11}" text-anchor="middle">${escH(wd)}</text>`;});});
+  return `<svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${h}</svg>`;
+}
+function cumul(a){let s=0;return a.map(v=>s+=(v||0));}
+
+// ---- shell: period bar + section nav ----
+function renderOps(){
+  const pnl=document.getElementById('p-ops'); if(!pnl) return;
+  if(!R){pnl.innerHTML=`<div class="sec"><p>${ot('calcFirst')}</p></div>`;return;}
+  if(!ensureForecast()){pnl.innerHTML=`<div class="sec"><p>${ot('calcFirst')}</p></div>`;return;}
+  const nq=R2.nq, cut=R2._cutoffQ, b=baselineMetrics();
+  const cats=opsCats(), costCats=cats.filter(c=>c.group==='cost');
+  let planToDate=0,actToDate=0; for(const c of costCats){for(let i=0;i<cut;i++) planToDate+=c.getQ(R,i); actToDate+=actualOf(c.key,0,cut);}
+  const planSoldPct=(()=>{const tot=sumA(R.qGrossSales);let s=0;for(let i=0;i<cut;i++)s+=R.qGrossSales[i];return tot?s/tot:0;})();
+  const soldPct=(()=>{const tot=sumA(R2.qGrossSales);return tot?actualOf('revenue',0,cut)/tot:0;})();
+  const dFac=R2.totalCost-b.totalCost, monthsLeft=Math.max(0,(nq-cut)*3);
+  const chip=(cls,l,v,sub)=>`<div class="ops-chip ${cls}"><small>${l}</small><b>${v} <i>${sub}</i></b></div>`;
+  const sp=actToDate<=planToDate*1.02?'good':actToDate<=planToDate*1.1?'warn':'bad', fc=dFac<=b.totalCost*0.005?'good':dFac<=b.totalCost*0.03?'warn':'bad', ir=R2.irr>=b.irr-0.002?'good':R2.irr>=b.irr-0.02?'warn':'bad', sl=soldPct>=planSoldPct?'good':'warn';
+  let h=`<div class="ops-period">
+    <div class="ops-asof"><span class="lbl">${ot('asof')}</span><select id="opsCut" onchange="reforecastSettings.cutoffQ=Number(this.value);opsRefresh()">${Array.from({length:nq},(_,i)=>`<option value="${i}"${cut===i?' selected':''}>Q${i} · ${fmtDate(qEndDate(i-1))}</option>`).join('')}</select><span class="ops-sub">${cut} / ${nq} ${ot('closed')} · ${monthsLeft} ${ot('toEnd')}</span></div>
+    <div class="ops-view">${['baseline','forecast','both'].map(v=>`<span class="${opsView===v?'on':''}" onclick="opsView='${v}';renderOps()">${ot(v)}</span>`).join('')}</div>
+    <div class="ops-chips">${chip(sp,ot('spend'),M_(actToDate),ot('plan')+' '+M_(planToDate))}${chip(fc,ot('fac'),M_(R2.totalCost),(dFac>=0?'+':'−')+M_(Math.abs(dFac))+' '+ot('vsBase'))}${chip(ir,ot('irr'),fP(b.irr)+' → '+fP(R2.irr),'')}${chip(sl,ot('sales_'),fP(soldPct)+' '+ot('sold'),ot('plan')+' '+fP(planSoldPct))}</div>
+    <button class="ops-close" onclick="reforecastSettings.cutoffQ=Math.min(${nq-1},${cut}+1);opsRefresh()">${ot('close')} Q${cut+1} →</button>
+  </div>
+  <nav class="ops-nav">${OPS_SECTIONS.map(s=>`<button class="${opsSection===s?'on':''}" onclick="opsSection='${s}';renderOps()">${ot(s)}${opsBadge(s)}</button>`).join('')}</nav>
+  <div class="ops-body">${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:opsFinancing,scenarios:opsScenarios,reports:opsReports})[opsSection]()}</div>
+  <button class="ops-drawer-btn" onclick="openPaymentsDrawer()">${ot('addPay')}</button>`;
+  pnl.innerHTML=h;
+}
+function opsAlerts(){
+  const cut=R2._cutoffQ, out=[];
+  (R2._budgetOverruns||[]).forEach(o=>out.push(['bad',(lang==='ar'?o.ar:o.en)+' — '+M_(o.overrun)+' '+ot('over'),'costs']));
+  const uns=[]; for(const c of opsCats()){ if(c.group!=='cost') continue; let cb=0;for(let i=0;i<cut;i++)cb+=c.getQ(R,i); const a=actualOf(c.key,0,cut); if(cb-a>0.5&&!reforecastSettings.lineMode[c.key]) uns.push([lang==='ar'?c.ar:c.en,cb-a]); }
+  if(uns.length===1) out.push(['warn',uns[0][0]+' — '+M_(uns[0][1])+' '+ot('unspent'),'costs']);
+  else if(uns.length>1) out.push(['warn',uns.length+(lang==='ar'?' بنود بميزانية غير منفقة في الأرباع المقفلة (':' lines with unspent closed-quarter budget (')+M_(uns.reduce((a,x)=>a+x[1],0))+(lang==='ar'?') — المعالجة الافتراضية ترحيل للأمام: ':') — treatment defaults to push forward: ')+uns.slice(0,4).map(x=>x[0]).join(', ')+(uns.length>4?'…':''),'costs']);
+  const un=actuals.filter(p=>(p.category==='base_con'||p.category==='revenue')&&!p.component&&lineComponents(p.category).length>1); if(un.length) out.push(['warn',un.length+' '+ot('unassigned')+' ('+M_(un.reduce((s,p)=>s+p.amount,0))+')','payments']);
+  if(cut>0&&reforecastSettings.actualLoanBalance===null&&sumA(R2.drawdowns.slice(0,cut))>0) out.push(['warn',ot('confirmLoan'),'financing']);
+  return out;
+}
+function opsBadge(s){const n=opsAlerts().filter(a=>a[2]===s).length;return n?`<em>${n}</em>`:'';}
+
+// ---- sections ----
+function opsOverview(){
+  const nq=R2.nq,cut=R2._cutoffQ,b=baselineMetrics(),costCats=opsCats().filter(c=>c.group==='cost');
+  const planQ=Array.from({length:R.nq},(_,i)=>costCats.reduce((s,c)=>s+c.getQ(R,i),0)), fcQ=Array.from({length:nq},(_,i)=>costCats.reduce((s,c)=>s+c.getQ(R2,i),0));
+  const actQ=Array.from({length:cut},(_,i)=>costCats.reduce((s,c)=>s+actualOf(c.key,i,i+1),0));
+  const cp=cumul(planQ),ca=cumul(actQ),cf=cumul(fcQ); const fcLine=cf.map((v,i)=>i>=cut-1?v:null); if(cut>0) fcLine[cut-1]=ca[cut-1];
+  const sp=cumul(R.qGrossSales),sa=cumul(Array.from({length:cut},(_,i)=>actualOf('revenue',i,i+1))),sf=cumul(R2.qGrossSales).map((v,i)=>i>=cut-1?v:null); if(cut>0) sf[cut-1]=sa[cut-1];
+  const totalFac=cf[nq-1]||1, committed=sumA(Object.values(reforecastSettings.committed||{})), cashAt=cut>0?R2.qCashClose[cut-1]:0, loanAt=cut>0?R2.qLoanClose[cut-1]:0;
+  const al=opsAlerts();
+  const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
+  const series=v=>({baseline:[[cp,'#9aa79f']],forecast:[[ca,'#00322d'],[fcLine,'#775a19',1]],both:[[cp,'#9aa79f'],[ca,'#00322d'],[fcLine,'#775a19',1]]})[opsView];
+  const sseries=({baseline:[[sp,'#9aa79f']],forecast:[[sa,'#00322d'],[sf,'#775a19',1]],both:[[sp,'#9aa79f'],[sa,'#00322d'],[sf,'#775a19',1]]})[opsView];
+  return `<div class="ops-kpis">${kpi(ot('costComplete'),fP((ca[cut-1]||0)/totalFac),ot('timeElapsed')+' '+fP(cut/nq),(ca[cut-1]||0)/totalFac<cut/nq-0.05?'dn':'')}${kpi(ot('committed'),M_(committed),fP(committed/totalFac)+' '+ot('ofFac'))}${kpi(ot('cashLoan'),M_(cashAt)+' / '+M_(loanAt),ot('atCut'))}${kpi(ot('eqMult'),R2.eqMult.toFixed(2)+'x',ot('baseline')+' '+b.eqMult.toFixed(2)+'x',R2.eqMult<b.eqMult?'dn':'up')}${kpi(ot('dist'),M_(R2.totalDiv),ot('baseline')+' '+M_(sumA(R.qDividends)),R2.totalDiv<sumA(R.qDividends)?'dn':'up')}</div>
+  <div class="ops-grid2"><div class="ops-card"><h3>${ot('scurve')}<span>SAR</span></h3>${svgLines(series(),cut,nq)}</div>
+  <div class="ops-card"><h3>${ot('decide')}<span>${al.length} ${ot('items')}</span></h3><div class="ops-alerts">${al.length?al.map(a=>`<div class="ops-al"><span class="dot ${a[0]}"></span><div>${escH(a[1])}</div><a onclick="${a[2]==='payments'?'openPaymentsDrawer()':`opsSection='${a[2]}';renderOps()`}">${ot('review')}</a></div>`).join(''):`<p class="ops-muted">${ot('nothing')}</p>`}</div></div></div>
+  <div class="ops-grid2"><div class="ops-card"><h3>${ot('bridge')}</h3>${svgBridge(irrBridge())}</div><div class="ops-card"><h3>${ot('ssales')}<span>SAR</span></h3>${svgLines(sseries,cut,nq)}</div></div>`;
+}
+function setCommitted(key,v){_rfNorm();reforecastSettings.committed=reforecastSettings.committed||{};if(v==='')delete reforecastSettings.committed[key];else reforecastSettings.committed[key]=Number(v);renderOps();}
+function costCard(c,cut,nq){
+  const orig=sumA(Array.from({length:R.nq},(_,i)=>c.getQ(R,i))), fac=sumA(Array.from({length:nq},(_,i)=>c.getQ(R2,i))), act=actualOf(c.key,0,cut), com=(reforecastSettings.committed||{})[c.key]||0;
+  let cb=0;for(let i=0;i<cut;i++)cb+=c.getQ(R,i); const unspent=cb-act, adj=reforecastSettings.budgetOverrides[c.key], mode=reforecastSettings.lineMode[c.key]||'rephase', base=Math.max(fac,act+com,1);
+  const rem=Math.max(0,fac-act-com), pct=v=>Math.min(100,v/base*100).toFixed(1)+'%';
+  const d=fac-orig, pill=act>fac+0.5?`<span class="ops-pill bad">+${M_(act-fac)} ${ot('over')}</span>`:Math.abs(d)<0.5?`<span class="ops-pill good">${ot('onBudget')}</span>`:`<span class="ops-pill ${d>0?'bad':'good'}">${d>0?'+':'−'}${M_(Math.abs(d))}</span>`;
+  const n=actuals.filter(p=>p.category===c.key).length, comps=(c.key==='base_con'||c.key==='revenue')?lineComponents(c.key):[], ct=comps.reduce((a,x)=>a+x.value,0);
+  const fq=nq-cut, ph=reforecastSettings.manualRedist[c.key]||[];
+  let h=`<div class="ops-line"><div class="top"><div class="nm">${lang==='ar'?c.ar:c.en}<small>${n} ${ot('payments')}${comps.length?' · '+comps.length+' '+ot('components'):''}</small></div>
+    <div class="ops-bar"><div class="trk"><i class="a" style="width:${pct(act)}"></i><i class="c" style="width:${pct(com)}"></i><i class="r" style="width:${pct(rem)}"></i></div><div class="lbls"><span>${ot('actual')} ${M_(act)}</span><span>${ot('commit')} <input type="number" class="ops-mini" value="${(reforecastSettings.committed||{})[c.key]??''}" placeholder="0" onchange="setCommitted('${c.key}',this.value)"></span><span>${ot('remaining')} ${M_(rem)}</span></div></div>
+    <div class="ops-stat"><small>${ot('baselineB')}</small><b>${M_(orig)}</b></div><div class="ops-stat"><small>${ot('facShort')}</small><b>${M_(fac)}</b></div>${pill}
+    <div class="ops-stat"><small>${ot('adj')}</small><input type="number" class="ops-mini" placeholder="${M_(orig)}" value="${adj??''}" onchange="setLineBudget('${c.key}',this.value);opsRefresh()"></div>
+    ${unspent>0.5?`<div class="ops-treat">${ot('treat')} ${M_(unspent)}: <select onchange="setLineMode('${c.key}',this.value);opsRefresh()"><option value="rephase"${mode==='rephase'?' selected':''}>${ot('push')}</option><option value="saving"${mode==='saving'?' selected':''}>${ot('saving')}</option><option value="keep"${mode==='keep'?' selected':''}>${ot('keep')}</option></select></div>`:''}
+    <button class="ops-more" onclick="this.closest('.ops-line').classList.toggle('open')">⋯</button></div>
+    <div class="detail">`;
+  for(const cp of comps){const share=ct>0?cp.value/ct:0,cOrig=orig*share,cAct=actualOf(c.key,0,cut,cp.key),cAdj=reforecastSettings.budgetOverrides[cp.key],cFac=cAdj??cOrig,cb2=Math.max(cFac,cAct,1);
+    h+=`<div class="top sub"><div class="nm">↳ ${escH(cp.label)}</div><div class="ops-bar"><div class="trk"><i class="a" style="width:${Math.min(100,cAct/cb2*100)}%"></i><i class="r" style="width:${Math.max(0,100-cAct/cb2*100)}%"></i></div><div class="lbls"><span>${M_(cAct)}</span><span>${M_(Math.max(0,cFac-cAct))}</span></div></div><div class="ops-stat"><small>${ot('facShort')}</small><input type="number" class="ops-mini" placeholder="${M_(cOrig)}" value="${cAdj??''}" onchange="setLineBudget('${cp.key}',this.value);opsRefresh()"></div></div>`;}
+  if(fq>0&&rem>0){const w=Array.from({length:fq},(_,j)=>Number(ph[j])||c.getQ(R2,cut+j)); const mx=Math.max(1,...w);
+    h+=`<div class="ops-phase-wrap"><div class="ops-phase">${Array.from({length:cut},(_,i)=>`<div class="past" style="height:${Math.max(4,c.getQ(R2,i)/Math.max(mx,...Array.from({length:cut},(_,k)=>c.getQ(R2,k)))*100)}%"><span>Q${i+1}</span></div>`).join('')}${w.map((v,j)=>`<div style="height:${Math.max(4,v/mx*100)}%"><span>Q${cut+j+1}</span><input type="number" class="ops-ph" placeholder="${(c.getQ(R2,cut+j)/Math.max(1,sumA(w))*100).toFixed(0)}" value="${ph[j]??''}" onchange="setPhasing('${c.key}',${j},this.value);opsRefresh()"></div>`).join('')}</div><div class="ops-muted" style="font-size:.78rem;margin-top:22px">${ot('phasing')}</div></div>`;}
+  return h+`</div></div>`;
+}
+function opsCosts(){const cut=R2._cutoffQ,nq=R2.nq;return `<div>${opsCats().filter(c=>c.group==='cost').filter(c=>sumA(Array.from({length:R.nq},(_,i)=>c.getQ(R,i)))>0.5||actualOf(c.key,0,nq)>0).map(c=>costCard(c,cut,nq)).join('')}</div>`;}
+
+// Sales: per sales component — sold area, achieved price, unsold price, pace, start quarter → drives revenue component override + revenue phasing
+function setSales(key,field,v){_rfNorm();reforecastSettings.sales=reforecastSettings.sales||{};const s=reforecastSettings.sales[key]=reforecastSettings.sales[key]||{};if(v==='')delete s[field];else s[field]=Number(v);applySalesToForecast();opsRefresh();}
+function applySalesToForecast(){
+  const comps=lineComponents('revenue'), S=reforecastSettings.sales||{}, cut=getCutoffQ(R), nq=(R2||R).nq; let any=false; const phase=Array(Math.max(1,nq-cut)).fill(0);
+  for(const cp of comps){const [,pi,ci]=cp.key.split(':');const c=projects[+pi].salesComponents[+ci];const s=S[cp.key];if(!s||!Object.keys(s).length)continue;any=true;
+    const area=Number(c.area)||0,sold=Math.min(area,s.soldArea||0),ach=s.achPrice||c.price,unp=s.unsoldPrice||c.price,pace=s.pace||0,start=Math.max(cut,(s.startQ||cut+1)-1);
+    reforecastSettings.budgetOverrides[cp.key]=sold*ach+(area-sold)*unp;
+    const remArea=area-sold; if(remArea>0){const per=pace>0?pace:remArea/Math.max(1,nq-start); let left=remArea; for(let q=start;q<nq&&left>0;q++){const a=Math.min(per,left);phase[q-cut]+=a*unp;left-=a;} if(left>0) phase[phase.length-1]+=left*unp;}}
+  if(any&&phase.some(v=>v>0)) reforecastSettings.manualRedist['revenue']=phase.map(v=>Math.round(v));
+}
+function opsSales(){
+  const cut=R2._cutoffQ,nq=R2.nq,comps=lineComponents('revenue'),S=reforecastSettings.sales||{};
+  const totArea=comps.reduce((a,c)=>{const [,pi,ci]=c.key.split(':');return a+(Number(projects[+pi].salesComponents[+ci].area)||0);},0);
+  const soldArea=comps.reduce((a,c)=>a+((S[c.key]||{}).soldArea||0),0), contracted=actualOf('revenue',0,cut);
+  const planSold=(()=>{const t=sumA(R.qGrossSales);let s=0;for(let i=0;i<cut;i++)s+=R.qGrossSales[i];return t?s/t:0;})();
+  const kpi=(l,v,s)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i>${s}</i></div>`;
+  let h=`<div class="ops-kpis">${kpi(ot('soldToDate'),fP(totArea?soldArea/totArea:0),fN(soldArea)+' / '+fN(totArea)+' sqm · '+ot('ofPlan')+' '+fP(planSold))}${kpi(ot('achieved'),M_(soldArea?comps.reduce((a,c)=>a+((S[c.key]||{}).soldArea||0)*((S[c.key]||{}).achPrice||0),0)/soldArea:0)+' /sqm','')}${kpi(lang==='ar'?'المحصّل':'Collected',M_(contracted),ot('actual'))}${kpi(ot('unsold'),fN(totArea-soldArea)+' sqm',ot('fcRev')+' '+M_(sumA(R2.qGrossSales)))}</div>`;
+  for(const cp of comps){const [,pi,ci]=cp.key.split(':');const c=projects[+pi].salesComponents[+ci];const s=S[cp.key]||{};const area=Number(c.area)||0,sold=Math.min(area,s.soldArea||0),fcRev=reforecastSettings.budgetOverrides[cp.key]??area*c.price,d=fcRev-area*c.price;
+    h+=`<div class="ops-line open"><div class="top"><div class="nm">${escH(cp.label)}<small>${fN(area)} sqm · ${ot('ofPlan')} ${fN(c.price)} /sqm</small></div>
+      <div class="ops-bar"><div class="trk"><i class="a" style="width:${area?sold/area*100:0}%"></i><i class="r" style="width:${area?(area-sold)/area*100:100}%"></i></div><div class="lbls"><span>${lang==='ar'?'مباع':'Sold'} ${fN(sold)}</span><span>${ot('unsold')} ${fN(area-sold)}</span></div></div>
+      <div class="ops-stat"><small>${ot('fcRev')}</small><b>${M_(fcRev)}</b></div><span class="ops-pill ${d>=0?'good':'warn'}">${d>=0?'+':'−'}${M_(Math.abs(d))} ${ot('vsBase')}</span></div>
+      <div class="detail"><div class="ops-fields">${[['soldArea',ot('soldArea'),''],['achPrice',ot('achPrice'),c.price],['unsoldPrice',ot('unsoldPrice'),c.price],['pace',ot('pace'),''],['startQ',ot('startQ'),cut+1]].map(([f,l,ph])=>`<label>${l}<input type="number" class="ops-mini" placeholder="${ph}" value="${s[f]??''}" onchange="setSales('${cp.key}','${f}',this.value)"></label>`).join('')}</div></div></div>`;}
+  return h;
+}
+function opsFinancing(){
+  const cut=R2._cutoffQ,nq=R2.nq,b=R,loanAt=cut>0?R2.qLoanClose[cut-1]:0,planAt=cut>0?(R.qLoanClose[cut-1]||0):0,drawn=sumA(R2.drawdowns.slice(0,cut)),intTo=sumA(R2.qInterest.slice(0,cut)),intPlan=sumA(R.qInterest.slice(0,cut));
+  const ltc=R2.totalCost?sumA(R2.drawdowns)/R2.totalCost:0,peak=R2.peakDebt,peakQ=R2.qLoanClose.indexOf(peak)+1;
+  const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
+  const lp=R.qLoanClose.slice(), la=R2.qLoanClose.slice(0,cut), lf=R2.qLoanClose.map((v,i)=>i>=cut-1?v:null); if(cut>0) lf[cut-1]=la[cut-1];
+  const series=({baseline:[[lp,'#9aa79f']],forecast:[[la,'#00322d'],[lf,'#775a19',1]],both:[[lp,'#9aa79f'],[la,'#00322d'],[lf,'#775a19',1]]})[opsView];
+  const ov=reforecastSettings.assumptionOverrides, blF=(reforecastSettings.baseline&&reforecastSettings.baseline.fund)||D;
+  const row=(l,bv,cv)=>`<tr><td>${l}</td><td class="rfcs-num">${bv}</td><td class="rfcs-num">${cv}</td></tr>`;
+  return `<div class="ops-kpis">${kpi(ot('loanBal'),M_(loanAt),ot('plan')+' '+M_(planAt)+(reforecastSettings.actualLoanBalance!==null?' · ✓':''),loanAt>planAt*1.05?'dn':'')}${kpi(ot('drawn'),M_(drawn),'')}${kpi(ot('intToDate'),M_(intTo),ot('plan')+' '+M_(intPlan),intTo>intPlan*1.05?'dn':'')}${kpi(ot('ltc'),fP(ltc),'')}${kpi(ot('peak'),M_(peak),'Q'+peakQ)}</div>
+  <div class="ops-grid2"><div class="ops-card"><h3>${ot('loanChart')}<span>SAR</span></h3>${svgLines(series,cut,nq)}</div>
+  <div class="ops-card"><h3>${ot('facility')}</h3><table class="rfcs-tbl"><thead><tr><th></th><th>${ot('baseline')}</th><th>${ot('forecast')}</th></tr></thead><tbody>${row('SAIBOR',blF.saibor+'%',(ov.saibor??blF.saibor)+'%')}${row(lang==='ar'?'الهامش':'Margin',blF.margin+'%',(ov.margin??blF.margin)+'%')}${row(lang==='ar'?'الحد الأدنى للنقد':'Minimum cash',fN(blF.min_cash),fN(ov.min_cash??blF.min_cash))}${row(lang==='ar'?'إجمالي الأرباح':'Total interest',M_(sumA(R.qInterest)),M_(R2.totalInterest))}</tbody></table>
+  <label class="ops-field" style="margin-top:12px">${ot('confirm')} Q${cut}<input type="number" class="ops-mini" style="width:160px" value="${reforecastSettings.actualLoanBalance??''}" placeholder="${M_(loanAt)}" onchange="reforecastSettings.actualLoanBalance=this.value===''?null:Number(this.value);opsRefresh()"></label>
+  <div style="margin-top:14px;display:flex;gap:16px;flex-wrap:wrap"><a class="ops-link" onclick="showTab('cashflow')">${ot('statement')}</a><a class="ops-link" onclick="showTab('debt')">${ot('debtSched')}</a></div></div></div>`;
+}
+function addChange(){const sel=document.getElementById('chgParam'),v=document.getElementById('chgVal').value,why=document.getElementById('chgWhy').value; if(!sel.value||v==='')return; setOpsOverride(sel.value,v); reforecastSettings.reasons=reforecastSettings.reasons||{}; if(why) reforecastSettings.reasons[sel.value]=why; opsRefresh();}
+function removeChange(k){delete reforecastSettings.assumptionOverrides[k]; if(reforecastSettings.reasons) delete reforecastSettings.reasons[k]; opsRefresh();}
+function evalScenario(extra){const save=JSON.parse(JSON.stringify(reforecastSettings.assumptionOverrides)),saveR2=R2;Object.assign(reforecastSettings.assumptionOverrides,extra);let out=null;try{runReforecast();out={irr:R2.irr,eq:R2.eqMult,peak:R2.peakDebt,div:R2.totalDiv,cost:R2.totalCost};}catch(e){}finally{reforecastSettings.assumptionOverrides=save;R2=saveR2;}return out;}
+function addScenario(){const name=document.getElementById('scName').value.trim(),txt=document.getElementById('scDef').value.trim();if(!name||!txt)return;const ov={};txt.split(',').forEach(p=>{const [k,v]=p.split('=').map(x=>x.trim());if(k&&v!==undefined&&!isNaN(Number(v)))ov[k]=Number(v);});reforecastSettings.scenarios=reforecastSettings.scenarios||[];reforecastSettings.scenarios.push({name,ov});renderOps();}
+function opsScenarios(){
+  const ov=reforecastSettings.assumptionOverrides,blF=(reforecastSettings.baseline&&reforecastSettings.baseline.fund)||D,rs=reforecastSettings.reasons||{},b=baselineMetrics();
+  const lbl=k=>{const f=OPS_FIELDS.find(x=>x[0]===k);return f?(lang==='ar'?f[2]:f[1]):k;};
+  const chg=Object.keys(ov).map(k=>`<div class="ops-row"><b>${lbl(k)}</b><s>${blF[k]}</s><span class="arrow">→</span><b>${ov[k]}</b><span class="why">${escH(rs[k]||'')}</span><a class="ops-link" onclick="removeChange('${k}')">${ot('remove')}</a></div>`).join('');
+  const sc=(reforecastSettings.scenarios||[]).map((s,i)=>{const r=evalScenario(s.ov);return r?`<tr><td>${escH(s.name)} <a class="ops-link" onclick="reforecastSettings.scenarios.splice(${i},1);renderOps()">×</a></td><td>${fP(r.irr)}</td><td>${r.eq.toFixed(2)}x</td><td>${M_(r.peak)}</td><td>${M_(r.div)}</td></tr>`:'';}).join('');
+  return `<div class="ops-grid2"><div class="ops-card"><h3>${ot('changes')}<span>${Object.keys(ov).length}</span></h3><div class="ops-chg">${chg||`<p class="ops-muted">${ot('noChanges')}</p>`}
+    <div class="ops-add"><select id="chgParam" class="ops-mini" style="width:auto"><option value="">${ot('param')}</option>${OPS_FIELDS.map(([k,en,ar])=>`<option value="${k}">${lang==='ar'?ar:en} (${blF[k]})</option>`).join('')}</select><input id="chgVal" type="number" class="ops-mini" placeholder="${ot('newVal')}"><input id="chgWhy" class="ops-mini" placeholder="${ot('why')}"><button class="act-btn act-btn-add" onclick="addChange()">${ot('apply')}</button></div></div></div>
+  <div class="ops-card"><h3>${ot('scen')}</h3><table class="rfcs-tbl"><thead><tr><th>${ot('scenName')}</th><th>${ot('irr')}</th><th>${ot('mult')}</th><th>${ot('peakD')}</th><th>${ot('dist')}</th></tr></thead><tbody>
+    <tr><td>${ot('baseline')}</td><td>${fP(b.irr)}</td><td>${b.eqMult.toFixed(2)}x</td><td>${M_(Math.max(0,...R.qLoanClose))}</td><td>${M_(sumA(R.qDividends))}</td></tr><tr class="tot"><td><b>${ot('current')}</b></td><td><b>${fP(R2.irr)}</b></td><td><b>${R2.eqMult.toFixed(2)}x</b></td><td><b>${M_(R2.peakDebt)}</b></td><td><b>${M_(R2.totalDiv)}</b></td></tr>${sc}</tbody></table>
+    <div class="ops-add" style="margin-top:12px"><input id="scName" class="ops-mini" placeholder="${ot('scenName')}"><input id="scDef" class="ops-mini" style="flex:1" placeholder="saibor=9.5, fund_period_months=30"><button class="act-btn act-btn-add" onclick="addScenario()">${ot('addScen')}</button></div><p class="ops-muted" style="font-size:.78rem">${ot('scenHint')}</p></div></div>`;
+}
+function draftCommentary(){
+  const cut=R2._cutoffQ,nq=R2.nq,b=baselineMetrics(),ar=lang==='ar',costCats=opsCats().filter(c=>c.group==='cost');
+  let plan=0,act=0;for(const c of costCats){for(let i=0;i<cut;i++)plan+=c.getQ(R,i);act+=actualOf(c.key,0,cut);}
+  const facD=R2.totalCost-b.totalCost, over=(R2._budgetOverruns||[]).map(o=>ar?o.ar:o.en);
+  const s1=ar?`كما في ${fmtDate(qEndDate(cut-1))}، بلغ المنفق ${M_(act)} ريال مقابل خطة ${M_(plan)} ريال (${fP(plan?act/plan:0)} من الخطة) بعد إقفال ${cut} من ${nq} أرباع. التكلفة المتوقعة عند الاكتمال ${M_(R2.totalCost)} ريال، ${facD>=0?'أعلى':'أقل'} من خط الأساس بمقدار ${M_(Math.abs(facD))} ريال${over.length?' ويعود ذلك أساساً إلى: '+over.join('، '):''}.`
+    :`As of ${fmtDate(qEndDate(cut-1))}, spend to date is SAR ${M_(act)} against a plan of ${M_(plan)} (${fP(plan?act/plan:0)} of plan) with ${cut} of ${nq} quarters closed. Cost at completion is forecast at SAR ${M_(R2.totalCost)}, ${facD>=0?'above':'below'} the baseline by ${M_(Math.abs(facD))}${over.length?', driven mainly by '+over.join(', '):''}.`;
+  const s2=ar?`العائد الداخلي المتوقع ${fP(R2.irr)} مقابل ${fP(b.irr)} في خط الأساس، ومضاعف رأس المال ${R2.eqMult.toFixed(2)}x. ذروة التمويل المتوقعة ${M_(R2.peakDebt)} ريال وإجمالي التوزيعات ${M_(R2.totalDiv)} ريال.`
+    :`The forecast IRR is ${fP(R2.irr)} against ${fP(b.irr)} at baseline, with an equity multiple of ${R2.eqMult.toFixed(2)}x. Peak debt is forecast at SAR ${M_(R2.peakDebt)} and total distributions at SAR ${M_(R2.totalDiv)}.`;
+  return s1+'\n\n'+s2;
+}
+function opsReports(){
+  const cut=R2._cutoffQ; const pack=(t,d,fn)=>`<div class="ops-pack"><h4>${t}</h4><p>${d}</p><button class="act-btn act-btn-add" onclick="${fn}">${ot('open')}</button></div>`;
+  return `<div class="ops-card"><h3>${ot('packs')} Q${cut} · ${fmtDate(qEndDate(cut-1))}</h3><div class="ops-packs">${pack(ot('investor'),ot('investorD'),"showTab('summary')")}${pack(ot('ic'),ot('icD'),"showTab('forecast')")}${pack(ot('lender'),ot('lenderD'),"showTab('cashflow')")}</div>
+  <h3 style="margin-top:20px">${ot('commentary')}</h3><textarea class="ops-comm" rows="6" onchange="reforecastSettings.commentary=this.value">${escH(reforecastSettings.commentary||draftCommentary())}</textarea></div>`;
+}
+// Payments drawer — the existing Actuals tab content, shown as a slide-over
+function openPaymentsDrawer(){const d=document.getElementById('opsDrawer');const p=document.getElementById('p-actuals');d.querySelector('.ops-drawer-body').appendChild(p);p.classList.add('act');buildActualsTab();d.classList.add('open');}
+function closePaymentsDrawer(){const d=document.getElementById('opsDrawer');const p=document.getElementById('p-actuals');document.querySelector('main.main').appendChild(p);p.classList.remove('act');d.classList.remove('open');opsRefresh();}
 
 function _saveReforecastCopy(){
   if(!R2){alert(lang==='ar'?'لا يوجد توقع محسوب':'No reforecast calculated');return;}
