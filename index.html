@@ -133,6 +133,9 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .ws-switch button{border:none;background:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;color:var(--on-surface-vl)}
 .ws-switch button.act{background:var(--primary);color:#fff}
 [dir=rtl] .ws-switch{margin:9px 0 9px 14px}
+.es-note{font-size:.72rem;color:var(--on-surface-vl);margin-top:6px;font-style:italic}
+.tip-h{position:relative;cursor:help;border-bottom:1px dotted currentColor}.tip-h i{font-style:normal;font-size:.75em;opacity:.7}.tip-h .tip-box{display:none;position:absolute;z-index:50;inset-inline-start:0;top:120%;min-width:260px;background:#14213d;color:#fff;border-radius:8px;padding:8px 10px;font-size:.78rem;font-weight:400;text-align:start;box-shadow:0 8px 24px rgba(0,0,0,.25)}.tip-h:hover .tip-box{display:block}.tip-h .tip-box div{display:flex;justify-content:space-between;gap:16px;padding:2px 0}.tip-h .tip-box b{font-variant-numeric:tabular-nums}
+@media print{.tip-h .tip-box{display:none!important}.tip-h{border:none}.tip-h i{display:none}}
 .baseline-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#eef6f2;border:1px solid #cfe5da;border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:.88rem}
 .baseline-bar.locked{background:#fff6e5;border-color:#f3d9a4}
 .baseline-bar button{padding:6px 12px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;white-space:nowrap}
@@ -2603,11 +2606,13 @@ function calculate(){
   const totalIntAmt=qInterest.reduce((a,b)=>a+b,0);
   const totalVATNet=qVATNet.reduce((a,b)=>a+b,0);
   const totalAdvisorFee=qVATAdvisor.reduce((a,b)=>a+b,0);
-  const tLandExVAT=baseLand+brokerageExVAT+rettAmount;
+  // Recoverable RETT is a bridge item, not a cost — excluded from the cost basis (cash timing is still in the cash flow)
+  const rettRecoverable=totalRETTRefund;
+  const tLandExVAT=baseLand+brokerageExVAT+rettAmount-rettRecoverable;
   // Total cost: inc-VAT when no refund, ex-VAT when refund is ON
   // VAT Advisor fee added as an economic cost (settled via refund netting, but still a real expense)
   const _vr=Number(A.vat_refund);
-  const totalCostIncVAT=tLand+tCon+totalFundExpExPerf+totalIntAmt+totalAdvisorFee;
+  const totalCostIncVAT=tLand-rettRecoverable+tCon+totalFundExpExPerf+totalIntAmt+totalAdvisorFee;
   const totalCostExVAT=tLandExVAT+tConExVAT+totalFundExpExPerf/V+totalIntAmt+totalAdvisorFee;
   const totalCost=_vr?totalCostExVAT:totalCostIncVAT;
   const vatInCost=totalCostIncVAT-totalCostExVAT;
@@ -2644,7 +2649,7 @@ function calculate(){
     qInterest,qNetOp,qLandCF,qNetInv,qDSCR,
     drawdowns,qRepay,qEquity,qIKLand,qIKBrok,qIKDev,qIKCon,qIKMkt,qIKSell,qIKTotal,qDividends,qNetFin,
     qCashOpen,qCashClose,qLoanOpen,qLoanClose,qNAV,qTotalAssets,qEqNAV,qTermAdj,
-    qVATRefundCon,qVATRefundExp,qBrokVATRefund,qRETTRefund,baseLand,brokerageIncVAT,rettAmount,conComponents:aggrConComponents,salesComponents:aggrSalesComponents,capCash,capInKind,capOffPlan,capDebt,capTotal,
+    qVATRefundCon,qVATRefundExp,qBrokVATRefund,qRETTRefund,baseLand,brokerageIncVAT,rettAmount,rettRecoverable,conComponents:aggrConComponents,salesComponents:aggrSalesComponents,capCash,capInKind,capOffPlan,capDebt,capTotal,
     gpCash,gpInKindAmt,baseCon,devFees,contingency,insurance,totalDesignFee,totalSupervisionFee,totalLicensingFee,totalLandArea,totalBuildArea,totalSellArea,
     avgLandPriceSqm:totalLandArea?totalLandPrice/totalLandArea:0,avgSalePriceSqm:totalSellArea?totalSalePrice/totalSellArea:0,
     perProjectRevenue,hasLeaseProjects:projects.some(p=>p.strategy==='lease')};
@@ -2722,7 +2727,10 @@ function renderDashboard(){
         [DH.capCash,fN(R.capCash)+' '+cur+' ('+fP(R.capTotal?R.capCash/R.capTotal:0)+')'],
         [DH.capInKind,fN(R.capInKind)+' '+cur+' ('+fP(R.capTotal?R.capInKind/R.capTotal:0)+')'],
         [DH.capOffPlan,fN(R.capOffPlan)+' '+cur+' ('+fP(R.capTotal?R.capOffPlan/R.capTotal:0)+')'],
-        [DH.capDebt,fN(R.capDebt)+' '+cur+' ('+fP(R.capTotal?R.capDebt/R.capTotal:0)+')']]},
+        [DH.capDebt,fN(R.capDebt)+' '+cur+' ('+fP(R.capTotal?R.capDebt/R.capTotal:0)+')'],
+        ...(((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))>0.5?
+          [[tipLabel(lang==='ar'?'ضرائب قابلة للاسترداد (تمويل مؤقت)':'Recoverable taxes (bridge)',[[lang==='ar'?'ضريبة التصرفات العقارية':'RETT',R.rettRecoverable||0],[lang==='ar'?'ضريبة القيمة المضافة':'VAT',Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0]]),
+            fN((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))+' '+cur+' — '+(lang==='ar'?'تُسترد خلال المدة':'recovered within the term')]]:[])]},
     ];
     let kH='';
     kG.forEach(g=>{
@@ -3303,32 +3311,34 @@ function renderSummary(){
   const costItems=_vr?[
     [L('Land Cost','تكلفة الأرض'),R.baseLand],
     [L('Brokerage','السعي'),brokerageExVAT],
-    [L('RETT','رسوم التصرفات العقارية'),R.rettAmount],
+    [L('RETT','رسوم التصرفات العقارية'),R.rettAmount-(R.rettRecoverable||0)],
     [L('Base Construction','تكلفة البناء'),R.baseCon],
     [L('Developer Fee','أتعاب المطور'),devFees],
-    [L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),dsFeeExVAT],
-    [L('Contingency & Insurance','الاحتياطي والتأمين'),contInsExVAT],
+    [tipLabel(L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),[[L('Design','التصميم'),R.totalDesignFee],[L('Supervision','الإشراف'),R.totalSupervisionFee],[L('Licensing','الرخص'),(R.totalLicensingFee||0)]]),dsFeeExVAT],
+    [tipLabel(L('Contingency & Insurance','الاحتياطي والتأمين'),[[L('Contingency','الاحتياطي'),contingency],[L('Insurance','التأمين'),insurance]]),contInsExVAT],
     [L('Fund Mgmt Fee','رسوم الإدارة'),mgmtTotal],
-    [L('Other Fund Expenses','مصاريف أخرى'),otherExp],
+    [tipLabel(L('Other Fund Expenses','مصاريف أخرى'),otherExpBreakdown(R)),otherExp],
     [L('VAT Advisor','مستشار ضريبي'),advisorTotal],
     [L('Financing Cost','تكلفة التمويل'),R.totalInt]
   ]:[
     [L('Land Cost','تكلفة الأرض'),R.baseLand],
     [L('Brokerage','السعي'),R.brokerageIncVAT],
-    [L('RETT','رسوم التصرفات العقارية'),R.rettAmount],
+    [L('RETT','رسوم التصرفات العقارية'),R.rettAmount-(R.rettRecoverable||0)],
     [L('Base Construction','تكلفة البناء'),R.baseCon*V],
     [L('Developer Fee','أتعاب المطور'),devFees*V],
-    [L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),dsFeeExVAT*V],
-    [L('Contingency & Insurance','الاحتياطي والتأمين'),contInsExVAT*V],
+    [tipLabel(L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),[[L('Design','التصميم'),R.totalDesignFee*V],[L('Supervision','الإشراف'),R.totalSupervisionFee*V],[L('Licensing','الرخص'),(R.totalLicensingFee||0)*V]]),dsFeeExVAT*V],
+    [tipLabel(L('Contingency & Insurance','الاحتياطي والتأمين'),[[L('Contingency','الاحتياطي'),contingency*V],[L('Insurance','التأمين'),insurance*V]]),contInsExVAT*V],
     [L('Fund Mgmt Fee','رسوم الإدارة'),mgmtTotal],
-    [L('Other Fund Expenses','مصاريف أخرى'),otherExp],
+    [tipLabel(L('Other Fund Expenses','مصاريف أخرى'),otherExpBreakdown(R)),otherExp],
     [L('VAT Advisor','مستشار ضريبي'),advisorTotal],
     [L('Financing Cost','تكلفة التمويل'),R.totalInt]
   ];
   h+=`<table class="es-tbl es-tbl3" dir="${tblDir}">`;
   costItems.forEach(([l,v])=>{h+=`<tr><td class="es-lbl">${l}</td><td class="es-val" dir="${numDir}">${fmt(-v)}</td></tr>`;});
   h+=`</table>`;
-  h+=`<div class="es-total"><span>${_totalTitle}</span><span>${fmt(-R.totalCost)}</span></div>`;}
+  h+=`<div class="es-total"><span>${_totalTitle}</span><span>${fmt(-R.totalCost)}</span></div>`;
+  {const _rec=(R.rettRecoverable||0), _vatRec=_vr?(R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0)):0;
+   if(_rec>0||_vatRec>0) h+=`<div class="es-note">${L('Excludes recoverable taxes','لا يشمل الضرائب القابلة للاسترداد')}${_rec>0?` — ${L('RETT','ضريبة التصرفات العقارية')} ${fmt(_rec)}`:''}${_vatRec>0?` — ${L('VAT','ضريبة القيمة المضافة')} ${fmt(_vatRec)}`:''}${L(', financed temporarily and recovered within the fund term.','، تُموَّل مؤقتاً وتُسترد خلال مدة الصندوق.')}</div>`;}}
   h+=`<div class="es-gap"></div>`;
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Sales Components','مكونات المبيعات')}</div></div>`;
   h+=`<table class="es-tbl es-tbl3" dir="${tblDir}"><tr class="es-tbl-hdr"><td>${L('Type','النوع')}</td><td>${L('Area','المساحة')}</td><td>${L('Price/sqm','السعر/م²')}</td></tr>`;
@@ -4639,6 +4649,19 @@ function _actCompToggle(){
   const cat=document.getElementById('act_category')?.value, sel=document.getElementById('act_component'), wrap=document.getElementById('act_component_wrap');
   if(!sel||!wrap) return; const has=cat==='base_con'||cat==='revenue';
   sel.innerHTML=has?componentOptions(cat,sel.dataset.sel||''):''; wrap.style.display=(has&&sel.options.length)?'':'none';
+}
+// Hover breakdown for rolled-up lines (label ⓘ). rows: [[label, amount]]. Works in tables and KPI tiles; PDF gets a footnote instead.
+function tipLabel(label,rows){
+  const body=rows.filter(r=>Math.abs(r[1])>0.5).map(r=>`<div><span>${escH(r[0])}</span><b>${fN(r[1])}</b></div>`).join('');
+  if(!body) return label;
+  return `<span class="tip-h">${label} <i>ⓘ</i><span class="tip-box">${body}</span></span>`;
+}
+// Breakdown of "Other fund expenses" = all fund expenses except management and performance fees (ex-VAT when VAT refund is on)
+function otherExpBreakdown(RX){
+  const V=1+(Number(RX.A.vat_rate)||0)/100, d=Number(RX.A.vat_refund)?V:1, S=a=>(a||[]).reduce((x,y)=>x+y,0)/d, ar=lang==='ar';
+  return [[ar?'تأسيس الصندوق':'Fund setup',S(RX.qFundSetup)],[ar?'تأسيس الشركة ذات الغرض الخاص':'SPV setup',S(RX.qSPV)],[ar?'رسوم الحفظ':'Custody',S(RX.qCustody)],[ar?'المحاسب القانوني':'Auditor',S(RX.qAuditor)],
+    [ar?'اللجنة الشرعية':'Shariah committee',S(RX.qSharia)],[ar?'الاستشاري الهندسي':'Engineering consultant',S(RX.qEngineering)],[ar?'مكافآت مجلس الإدارة':'Board compensation',S(RX.qBoard)],[ar?'المستشار المالي':'Financial advisor',S(RX.qFinAdvisor)],
+    [ar?'التسويق':'Marketing',S(RX.qMkt)],[ar?'رسوم الإدارة البنكية':'Bank management fee',S(RX.qBankMgmt)],[ar?'رسوم الترتيب':'Arrangement fee',S(RX.qArrFee)],[ar?'رسوم وافي':'WAFI fees',S(RX.qWafi)],[ar?'عمولات البيع':'Selling commissions',S(RX.qSellExp)]];
 }
 function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null};}
 function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k]===undefined) reforecastSettings[k]=JSON.parse(JSON.stringify(d[k]));}
@@ -6489,12 +6512,13 @@ function calcWith(overrides){
   const totalFundExpExPerfS=totalFundExpS-totalPerfFeeS;
   const totalIntS=qInterest.reduce((a,b)=>a+b,0);
   const totalAdvisorFeeS=qVATAdvisor.reduce((a,b)=>a+b,0);
-  const tLandExVATS=baseLand+brokerageExVAT+rettAmt;
+  const rettRecoverable=totalRETTRefund; // recoverable RETT is a bridge item, not a cost
+  const tLandExVATS=baseLand+brokerageExVAT+rettAmt-rettRecoverable;
   const tConIncVAT=tConExVAT*V;
   // Conditional totalCost: inc-VAT when no refund, ex-VAT when refund (matches calculate())
   // VAT Advisor fee added as an economic cost (settled via refund netting)
   const _vr=Number(A.vat_refund);
-  const totalCostIncVAT=tLand+tConIncVAT+totalFundExpExPerfS+totalIntS+totalAdvisorFeeS;
+  const totalCostIncVAT=tLand-rettRecoverable+tConIncVAT+totalFundExpExPerfS+totalIntS+totalAdvisorFeeS;
   const totalCostExVAT=tLandExVATS+tConExVAT+totalFundExpExPerfS/V+totalIntS+totalAdvisorFeeS;
   const totalCost=_vr?totalCostExVAT:totalCostIncVAT;
   const grossProfit=tRev-totalCost;
