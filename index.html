@@ -3911,9 +3911,16 @@ function _actDelete(id){
 // Arabic keyword → category mapping rules
 const IMPORT_RULES=[
   // High-priority specific matches first
+  {keywords:['الإستحواذ على أرض','الاستحواذ على أرض','شراء الأرض','شراء أرض','land acquisition','land purchase','ثمن الأرض'],cat:'land'},
+  {keywords:['ضريبة التصرفات','التصرفات العقارية','rett','real estate transaction tax'],cat:'rett'},
+  {keywords:['سعي الأرض','سعي شراء','رسوم سعي','brokerage'],cat:'brokerage'},
+  {keywords:['الرسوم الإدارية للتمويل','رسوم إدارية للتمويل','bank management','إدارة البنك','رسوم البنك'],cat:'bank_mgmt'},
+  {keywords:['الأعمال الهندسية','أعمال هندسية','الاستشاري الهندسي','engineering'],cat:'engineering'},
+  {keywords:['فحص','soil test','geotechnical','مساحة أرض','رفع مساحي'],cat:'supervision'},
+  {keywords:['مراجعة','مراجع','audit','القوائم المالية','محاسب قانوني'],cat:'auditor'},
   {keywords:['رسوم الإدارة','رسوم إدارة','management fee'],cat:'mgmt_fee'},
   {keywords:['أمين الحفظ','حفظ','custody'],cat:'custody'},
-  {keywords:['ترتيب التمويل','اتعاب ترتيب','الرسوم الإدارية للتمويل','arrangement'],cat:'arr_fee'},
+  {keywords:['ترتيب التمويل','اتعاب ترتيب','arrangement'],cat:'arr_fee'},
   {keywords:['أرباح القروض','أرباح التمويل','فوائد','interest','profit on loan'],cat:'interest'},
   {keywords:['مخططات معمارية','المعمارية','architectural'],cat:'design'},
   {keywords:['فحص التربة','geotechnical','soil test'],cat:'supervision'},
@@ -4070,7 +4077,9 @@ function _importParseRows(rows){
   // Detect header row — look for keywords
   let headerIdx=0;
   const dateKW=['تاريخ','date','التاريخ'];
-  const amtKW=['مبلغ','amount','المبلغ'];
+  const amtKW=['مبلغ','amount','المبلغ','net'];
+  const totKW=['الإجمالي','اجمالي','إجمالي','total','gross','شامل'];
+  const vatKW=['الضريبة','ضريبة','vat'];
   const payeeKW=['مستفيد','payee','المستفيد','beneficiary'];
   const descKW=['وصف','description','الوصف','details','البيان'];
 
@@ -4082,19 +4091,23 @@ function _importParseRows(rows){
   const header=rows[headerIdx].map(c=>String(c||'').toLowerCase().trim());
 
   // Find column indices
-  let dateCol=-1,amtCol=-1,payeeCol=-1,descCol=-1;
+  let dateCol=-1,amtCol=-1,payeeCol=-1,descCol=-1,totCol=-1,vatCol=-1;
   header.forEach((h,i)=>{
     if(dateCol<0&&dateKW.some(k=>h.includes(k))) dateCol=i;
-    if(amtCol<0&&amtKW.some(k=>h.includes(k))) amtCol=i;
+    if(totCol<0&&totKW.some(k=>h.includes(k))) totCol=i;
+    else if(vatCol<0&&vatKW.some(k=>h.includes(k))) vatCol=i;
+    else if(amtCol<0&&amtKW.some(k=>h.includes(k))) amtCol=i;
     if(payeeCol<0&&payeeKW.some(k=>h.includes(k))) payeeCol=i;
     if(descCol<0&&descKW.some(k=>h.includes(k))) descCol=i;
   });
 
   // Fallback: if no header detected, assume columns 1=date, 2=amount, 4=payee, 5=description (based on sample)
+  const noHeader=dateCol<0&&amtCol<0&&totCol<0;
   if(dateCol<0) dateCol=1;
   if(amtCol<0) amtCol=2;
-  if(payeeCol<0) payeeCol=4;
+  if(payeeCol<0&&noHeader) payeeCol=4;   // only guess a payee column when there is no header at all
   if(descCol<0) descCol=5;
+  const numOf=v=>{if(typeof v==='number')return v;const m=String(v||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/-?[\d,]+\.?\d*/);return m?parseFloat(m[0].replace(/,/g,'')):0;};
 
   // Parse data rows
   _importPending=[];
@@ -4104,14 +4117,11 @@ function _importParseRows(rows){
     const row=rows[i];
     if(!row||row.length<3) continue;
 
-    const rawAmt=row[amtCol];
-    let amount=0;
-    if(typeof rawAmt==='number'){amount=rawAmt;}
-    else{
-      // Strip currency symbols (ر.س., SAR, $), spaces, commas — extract number
-      const m=String(rawAmt||'').match(/([\d,]+\.?\d*)/);
-      amount=m?parseFloat(m[1].replace(/,/g,'')):0;
-    }
+    // Skip total / footer rows
+    const c0=String(row[0]||'').trim().toLowerCase(); if(/^(total|الإجمالي|الاجمالي|المجموع)/.test(c0)) continue;
+    // Amount = gross total when the sheet has one; otherwise net + VAT; otherwise the amount column
+    const net=numOf(row[amtCol]), vat=vatCol>=0?numOf(row[vatCol]):0, tot=totCol>=0?numOf(row[totCol]):0;
+    let amount=tot>0?tot:(net>0?net+vat:0);
     if(amount<=0) continue;
 
     let rawDate=row[dateCol];
@@ -4134,15 +4144,16 @@ function _importParseRows(rows){
       }
     }
 
-    const payee=String(row[payeeCol]||'').trim();
+    let payee=payeeCol>=0?String(row[payeeCol]||'').trim():'';
     const description=String(row[descCol]||'').trim();
-
+    if(!payee) payee=description.substring(0,60);   // no payee column → use the description
     if(!payee&&!description) continue;
+    if(!date) continue;                              // a row without a usable date is not a payment
 
     const category=_importGuessCategory(description,payee);
     const qi=dateToQuarterIdx(date,D.start_date);
 
-    _importPending.push({date,amount,payee,description,category,include:qi<nq});
+    _importPending.push({date,amount,net:net||undefined,vat:vat||undefined,payee,description,category,include:qi<nq});
   }
 
   if(_importPending.length===0){
