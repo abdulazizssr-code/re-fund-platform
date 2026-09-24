@@ -4237,7 +4237,6 @@ function dateToQuarterIdx(dateStr,startDateStr){
 // Toggle reforecast mode
 function toggleReforecast(){
   if(!R){alert('Please Calculate first');return;}
-  if(actuals.length===0){alert(lang==='ar'?'لا توجد مدفوعات فعلية. يرجى إضافة مدفوعات في تبويب الفعلي أولاً.':'No actual payments found. Please add payments in the Actuals tab first.');return;}
   reforecastMode=!reforecastMode;
   const btn=document.getElementById('btnReforecast');
   if(reforecastMode){
@@ -4330,15 +4329,7 @@ function runReforecast(){
   const _ov=reforecastSettings.assumptionOverrides||{};
   const Rc=Object.keys(_ov).length?(calcFull(_ov)||R):R;
   const nq=Rc.nq;
-  const cutoffQ=getCutoffQ(Rc);
-  if(cutoffQ<1){
-    alert(lang==='ar'?'لا توجد أرباع فعلية مكتملة بعد':'No completed actual quarters yet');
-    reforecastMode=false;
-    document.getElementById('btnReforecast').style.background='#0d6efd';
-    document.getElementById('btnReforecast').textContent='🔄 Reforecast';
-    document.getElementById('reforecastPanel').style.display='none';
-    return;
-  }
+  const cutoffQ=getCutoffQ(Rc);   // 0 = nothing closed yet: the forecast simply equals the current-assumption plan
 
   const isFund=Number(R.A.is_fund);
   const cats=ACT_CATS.filter(c=>!c.fundOnly||isFund).filter(c=>!c.actualOnly);
@@ -4715,7 +4706,11 @@ function otherExpBreakdown(RX){
 }
 function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null};}
 function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k]===undefined) reforecastSettings[k]=JSON.parse(JSON.stringify(d[k]));}
-function getCutoffQ(RX){_rfNorm();const auto=getActualCutoffQ((RX||R).A.start_date);const c=reforecastSettings.cutoffQ;return Math.max(0,Math.min((RX||R).nq-1,(c===null||c===undefined)?auto:Number(c)));}
+function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings.cutoffQ;
+  if(c!==null&&c!==undefined) return Math.max(0,Math.min(nq-1,Number(c)));
+  const lastPaid=actuals.length?Math.max(...actuals.map(p=>Number(p.quarter)||0))+1:0;   // quarters that have payments count as closed
+  const byDate=getActualCutoffQ((RX||R).A.start_date);
+  return Math.max(0,Math.min(nq-1,Math.max(lastPaid,byDate)));}
 
 // Forward parameters that may change during the life of the fund (key, label en, label ar, kind)
 const OPS_FIELDS=[['fund_period_months','Fund term (months)','مدة الصندوق (أشهر)'],['saibor','SAIBOR %','سايبور %'],['margin','Bank margin %','هامش البنك %'],['min_cash','Minimum cash balance','الحد الأدنى للرصيد النقدي'],
@@ -4910,6 +4905,7 @@ function renderOps(){
   if(!ensureForecast()){pnl.innerHTML=`<div class="sec"><p>${ot('calcFirst')}</p></div>`;return;}
   const nq=R2.nq, cut=R2._cutoffQ, b=baselineMetrics();
   const cats=opsCats(), costCats=cats.filter(c=>c.group==='cost');
+  const hint=cut===0?`<div class="baseline-bar" style="margin:0 0 14px"><span>${lang==='ar'?'لا توجد أرباع مقفلة بعد — أضف الدفعات أو اختر آخر ربع مقفل من قائمة «كما في».':'No closed quarters yet — add payments, or pick the last closed quarter from the “As of” list.'}</span></div>`:'';
   let planToDate=0,actToDate=0; for(const c of costCats){for(let i=0;i<cut;i++) planToDate+=c.getQ(R,i); actToDate+=actualOf(c.key,0,cut);}
   const planSoldPct=(()=>{const tot=sumA(R.qGrossSales);let s=0;for(let i=0;i<cut;i++)s+=R.qGrossSales[i];return tot?s/tot:0;})();
   const soldPct=(()=>{const tot=sumA(R2.qGrossSales);return tot?actualOf('revenue',0,cut)/tot:0;})();
@@ -4923,7 +4919,7 @@ function renderOps(){
     <button class="ops-close" onclick="reforecastSettings.cutoffQ=Math.min(${nq-1},${cut}+1);opsRefresh()">${ot('close')} Q${cut+1} →</button>
   </div>
   <nav class="ops-nav">${OPS_SECTIONS.map(s=>`<button class="${opsSection===s?'on':''}" onclick="opsSection='${s}';renderOps()">${ot(s)}${opsBadge(s)}</button>`).join('')}</nav>
-  <div class="ops-body">${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:opsFinancing,scenarios:opsScenarios,reports:opsReports})[opsSection]()}</div>
+  <div class="ops-body">${hint}${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:opsFinancing,scenarios:opsScenarios,reports:opsReports})[opsSection]()}</div>
   <button class="ops-drawer-btn" onclick="openPaymentsDrawer()">${ot('addPay')}</button>`;
   pnl.innerHTML=h;
 }
