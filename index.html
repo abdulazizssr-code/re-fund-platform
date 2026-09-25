@@ -540,6 +540,11 @@ canvas{max-width:100%;display:block}
 }
 
 /* ── Print ── */
+  .view-stamp{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid #d9e0dc;background:#f4f6f5;color:#40514a}
+  .view-stamp.fc{background:#fbf6ea;border-color:#e6d6ad;color:#775a19}
+  .view-stamp .vs-sw a{cursor:pointer;padding:3px 10px;border-radius:999px;margin-inline-start:4px;color:#607068}
+  .view-stamp .vs-sw a.on{background:#00322d;color:#fff}
+  @media print{.view-stamp .vs-sw{display:none}}
 @media print{
   body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .hdr,.tabs,.project-bar,.login-overlay,.footer,.calc-bar{display:none!important}
@@ -1704,7 +1709,7 @@ function showTab(k){
   if(k==='actuals') buildActualsTab();
   if(k==='forecast') renderForecastTab();
   if(k==='ops') renderOps();
-  if(workspace==='operations'&&(k==='cashflow'||k==='debt'||k==='summary')&&R&&!R2){reforecastMode=true;runReforecast();}
+  if(workspace==='operations'&&(k==='cashflow'||k==='debt'||k==='summary')&&R){ensureForecast();if(k==='cashflow')renderCashFlow();if(k==='debt')renderDebt();if(k==='summary')renderSummary();}
 }
 
 // =============================================
@@ -2990,9 +2995,9 @@ function renderScenarioComparison(){
 // CASH FLOW TABLE
 // =============================================
 function renderCashFlow(){
-  const r=(reforecastMode&&R2)?R2:R, nq=r.nq;
+  const r=viewR(); if(!r) return; const nq=r.nq;
   const cutoffQ=r._cutoffQ||0;
-  const isRF=reforecastMode&&R2;
+  const isRF=r===R2&&!!r._isReforecast;
   const lb=lang==='ar'?r.labels.map(q=>q.replace('Q','ربع ')):r.labels;
   function tr(label,data,cls){
     const tot=data.reduce((a,b)=>a+b,0);
@@ -3090,7 +3095,7 @@ function renderCashFlow(){
   }
 
   h+=`</tbody></table></div>`;
-  document.getElementById('p-cashflow').innerHTML=h;
+  document.getElementById('p-cashflow').innerHTML=viewStamp()+h;
   // Wire up the scroll slider
   const cfSlider=document.getElementById('cfScrollSlider');
   const cfVal=document.getElementById('cfScrollVal');
@@ -3111,7 +3116,7 @@ function renderCashFlow(){
 // DEBT TABLE
 // =============================================
 function renderDebt(){
-  const r=R,nq=r.nq;
+  const r=viewR(); if(!r) return; const nq=r.nq;
   const lb=lang==='ar'?r.labels.map(q=>q.replace('Q','ربع ')):r.labels;
   function tr(label,data,cls){return `<tr class="${cls||''}"><td class="rl">${label}</td>${data.map(v=>`<td>${fN(v)}</td>`).join('')}</tr>`;}
 
@@ -3129,7 +3134,7 @@ function renderDebt(){
   h+=tr(DL.int,r.qInterest);
   h+=tr(DL.bankMgmt,r.qBankMgmt);
   h+=`</tbody></table></div>`;
-  document.getElementById('p-debt').innerHTML=h;
+  document.getElementById('p-debt').innerHTML=viewStamp()+h;
 }
 
 // =============================================
@@ -3241,10 +3246,11 @@ function drawPie(id,vals,labs,cols){
 // =============================================
 function renderSummary(){
   if(!R) return;
-  const AA=R.A||D, nq=R.nq;
+  const RS=viewR(); if(!RS) return;
+  const AA=RS.A||D, nq=RS.nq;
   function fmt(n){ if(n==null||Math.abs(n)<0.5) return '-'; const s=Math.abs(Math.round(n)).toLocaleString('en-US'); return n<0?'('+s+')':s; }
   function _fP(v){ return (v*100).toFixed(1)+'%'; }
-  const base=calcWith({}), irr=base?base.irr:0, eqMult=base?base.eqMult:0;
+  const _fcv=RS===R2&&RS._isReforecast; const base=_fcv?RS:calcWith({}), irr=base?base.irr:0, eqMult=base?base.eqMult:0;
   const isAr=lang==='ar';
   const dateStr=new Date().toLocaleDateString(isAr?'ar-SA':'en-US',{month:'long',year:'numeric'});
   const loc=escH(AA.project_location||D.project_location||(isAr?'الرياض، المملكة العربية السعودية':'Riyadh, KSA'));
@@ -3253,13 +3259,13 @@ function renderSummary(){
   const ptype=TX[lang].f[_ptMap[_ptKey]]||_ptKey;
   const yrP=(AA.fund_period_months/12).toFixed(1);
   const V=1+pct(AA.vat_rate);
-  const baseCon=R.baseCon||0;
-  const devFees=R.devFees||0;
-  const contingency=R.contingency||0;
-  const insurance=R.insurance||0;
-  const totalFundExp=R.qTotalFundExp.reduce((a,b)=>a+b,0);
-  const totalFundExpExPerf=R.totalFundExpExPerf;
-  const capPcts={cash:R.capTotal?R.capCash/R.capTotal:0,ik:R.capTotal?R.capInKind/R.capTotal:0,op:R.capTotal?R.capOffPlan/R.capTotal:0,debt:R.capTotal?R.capDebt/R.capTotal:0};
+  const baseCon=RS.baseCon||0;
+  const devFees=RS.devFees||0;
+  const contingency=RS.contingency||0;
+  const insurance=RS.insurance||0;
+  const totalFundExp=RS.qTotalFundExp.reduce((a,b)=>a+b,0);
+  const totalFundExpExPerf=RS.totalFundExpExPerf;
+  const capPcts={cash:RS.capTotal?RS.capCash/RS.capTotal:0,ik:RS.capTotal?RS.capInKind/RS.capTotal:0,op:RS.capTotal?RS.capOffPlan/RS.capTotal:0,debt:RS.capTotal?RS.capDebt/RS.capTotal:0};
   const cur=isAr?'<span class="icon-saudi_riyal_new"></span>':'SAR';
   const curText=isAr?'\u20C1':'SAR';
   const sqm=isAr?'م²':'sqm';
@@ -3274,7 +3280,7 @@ function renderSummary(){
   const numDir='ltr';
 
   const p=document.getElementById('p-summary');
-  let h='';
+  let h=viewStamp();
 
   // ═══ PAGE 1: EXECUTIVE SUMMARY ═══
   h+=`<div class="es-page" dir="${isAr?'rtl':'ltr'}" style="font-family:${fontF}">`;
@@ -3298,8 +3304,8 @@ function renderSummary(){
   h+=`<div class="es-value-strip">
     <div class="es-vcard gold"><div class="es-vcard-val">${_fP(irr)}</div><div class="es-vcard-lbl">${L('IRR','معدل العائد الداخلي')}</div></div>
     <div class="es-vcard gold"><div class="es-vcard-val">${eqMult.toFixed(2)}x</div><div class="es-vcard-lbl">${L('Equity Multiple','مضاعف رأس المال')}</div></div>
-    <div class="es-vcard dark"><div class="es-vcard-val">${fmt(R.grossProfit)}</div><div class="es-vcard-lbl">${L('Net Profit (SAR)','صافي الربح')}</div></div>
-    <div class="es-vcard dark"><div class="es-vcard-val">${_fP(R.annualROI)}</div><div class="es-vcard-lbl">${L('Annual Return','العائد السنوي')}</div></div>
+    <div class="es-vcard dark"><div class="es-vcard-val">${fmt(RS.grossProfit)}</div><div class="es-vcard-lbl">${L('Net Profit (SAR)','صافي الربح')}</div></div>
+    <div class="es-vcard dark"><div class="es-vcard-val">${_fP(RS.annualROI)}</div><div class="es-vcard-lbl">${L('Annual Return','العائد السنوي')}</div></div>
   </div>`;
 
   // 3-Column Body
@@ -3310,8 +3316,8 @@ function renderSummary(){
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Key Assumptions & Project Info','الافتراضات الرئيسية')}</div></div>`;
   h+=`<table class="es-tbl" dir="${tblDir}">`;
   [[L('Fund Name','اسم الصندوق'),escH(AA.fund_name||D.fund_name)],[L('Project Type','نوع المشروع'),ptype],[L('Location','الموقع'),loc],[L('Fund Period','مدة الصندوق'),(isAr?'<bdi>'+yrP+'</bdi> '+(parseFloat(yrP)>=3&&parseFloat(yrP)<=10?'سنوات':'سنة')+' / <bdi>'+nq+'</bdi> '+(nq>=3&&nq<=10?'أرباع':'ربع'):yrP+' yrs / '+nq+' Q')],
-   [L('Land Area','مساحة الأرض'),fU(fmt(R.totalLandArea),sqm)],[L('Land Price','سعر المتر'),fUr(fmt(R.avgLandPriceSqm||0),cur,sqm)],
-   [L('Total GFA','المساحة المبنية'),fU(fmt(R.totalBuildArea),sqm)],[L('Hurdle Rate','معدل العائد المستهدف'),AA.hurdle_rate+'%'],[L('Performance Fee','رسوم الأداء'),AA.perf_fee_pct+'%']
+   [L('Land Area','مساحة الأرض'),fU(fmt(RS.totalLandArea),sqm)],[L('Land Price','سعر المتر'),fUr(fmt(RS.avgLandPriceSqm||0),cur,sqm)],
+   [L('Total GFA','المساحة المبنية'),fU(fmt(RS.totalBuildArea),sqm)],[L('Hurdle Rate','معدل العائد المستهدف'),AA.hurdle_rate+'%'],[L('Performance Fee','رسوم الأداء'),AA.perf_fee_pct+'%']
   ].forEach(([l,v])=>{
     const vDir=(typeof v==='string'&&v.indexOf('bdi')>-1)?tblDir:numDir;
     h+=`<tr><td class="es-lbl">${l}</td><td class="es-val" dir="${vDir}">${v}</td></tr>`;
@@ -3321,65 +3327,65 @@ function renderSummary(){
   h+=`<div class="es-gap"></div>`;
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Bank Financing','التمويل البنكي')}</div></div>`;
   h+=`<table class="es-tbl" dir="${tblDir}">`;
-  [[L('Financing Amount','مبلغ التمويل'),fU(fmt(R.totalDebt),cur)],[L('% of Cost','% من التكاليف'),R.totalCost?_fP(R.totalDebt/R.totalCost):'0%'],
-   [L('SAIBOR + Margin','سايبور + الهامش'),(AA.saibor+AA.margin).toFixed(1)+'%'],[L('Total Interest','إجمالي الأرباح'),fU(fmt(R.totalInt),cur)]
+  [[L('Financing Amount','مبلغ التمويل'),fU(fmt(RS.totalDebt),cur)],[L('% of Cost','% من التكاليف'),RS.totalCost?_fP(RS.totalDebt/RS.totalCost):'0%'],
+   [L('SAIBOR + Margin','سايبور + الهامش'),(AA.saibor+AA.margin).toFixed(1)+'%'],[L('Total Interest','إجمالي الأرباح'),fU(fmt(RS.totalInt),cur)]
   ].forEach(([l,v])=>{h+=`<tr><td class="es-lbl">${l}</td><td class="es-val" dir="${numDir}">${v}</td></tr>`;});
   h+=`</table>`;
 
   h+=`<div class="es-gap"></div>`;
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Construction Components','مكونات التطوير')}</div></div>`;
   h+=`<table class="es-tbl es-tbl3" dir="${tblDir}"><tr class="es-tbl-hdr"><td>${L('Type','النوع')}</td><td>${L('GFA','المساحة')}</td><td>${L('Cost/sqm','التكلفة/م²')}</td></tr>`;
-  if(R.conComponents&&R.conComponents.length) R.conComponents.forEach(c=>{h+=`<tr><td class="es-lbl">${escH(compLabel(c).substring(0,26))}</td><td class="es-val" dir="${numDir}">${fmt(c.gfa)}</td><td class="es-val" dir="${numDir}">${fmt(c.cost)}</td></tr>`;});
+  if(RS.conComponents&&RS.conComponents.length) RS.conComponents.forEach(c=>{h+=`<tr><td class="es-lbl">${escH(compLabel(c).substring(0,26))}</td><td class="es-val" dir="${numDir}">${fmt(c.gfa)}</td><td class="es-val" dir="${numDir}">${fmt(c.cost)}</td></tr>`;});
   h+=`</table>`;
   h+=`</div>`;
 
   // ─── MIDDLE COLUMN: Costs ───
   h+=`<div>`;
-  {const _vr=Number(R.A.vat_refund);
+  {const _vr=Number(RS.A.vat_refund);
   const _costTitle=_vr?L('Costs & Expenses (ex-VAT)','التكاليف والمصروفات (بدون ضريبة)'):L('Costs & Expenses (Inclusive of VAT)','التكاليف والمصروفات (شامل الضريبة)');
   const _totalTitle=_vr?L('TOTAL COSTS (ex-VAT)','إجمالي التكاليف (بدون ضريبة)'):L('TOTAL COSTS (Inclusive of VAT)','إجمالي التكاليف (شامل الضريبة)');
   h+=`<div class="es-sec"><div class="es-sec-title">${_costTitle}</div></div>`;
-  const mgmtTotal=R.qMgmtFee.reduce((a,b)=>a+b,0)/(_vr?V:1);
+  const mgmtTotal=RS.qMgmtFee.reduce((a,b)=>a+b,0)/(_vr?V:1);
   const otherExp=totalFundExpExPerf/(_vr?V:1)-mgmtTotal;
-  const dsFeeExVAT=R.totalDesignFee+R.totalSupervisionFee+(R.totalLicensingFee||0);
+  const dsFeeExVAT=RS.totalDesignFee+RS.totalSupervisionFee+(RS.totalLicensingFee||0);
   const contInsExVAT=contingency+insurance;
-  const brokerageExVAT=R.brokerageIncVAT/V;
-  const advisorTotal=R.qVATAdvisor.reduce((a,b)=>a+b,0);
+  const brokerageExVAT=RS.brokerageIncVAT/V;
+  const advisorTotal=RS.qVATAdvisor.reduce((a,b)=>a+b,0);
   const costItems=_vr?[
-    [L('Land Cost','تكلفة الأرض'),R.baseLand],
+    [L('Land Cost','تكلفة الأرض'),RS.baseLand],
     [L('Brokerage','السعي'),brokerageExVAT],
-    [L('RETT','رسوم التصرفات العقارية'),R.rettAmount-(R.rettRecoverable||0)],
-    [L('Base Construction','تكلفة البناء'),R.baseCon],
+    [L('RETT','رسوم التصرفات العقارية'),RS.rettAmount-(RS.rettRecoverable||0)],
+    [L('Base Construction','تكلفة البناء'),RS.baseCon],
     [L('Developer Fee','أتعاب المطور'),devFees],
-    [tipLabel(L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),[[L('Design','التصميم'),R.totalDesignFee],[L('Supervision','الإشراف'),R.totalSupervisionFee],[L('Licensing','الرخص'),(R.totalLicensingFee||0)]]),dsFeeExVAT],
+    [tipLabel(L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),[[L('Design','التصميم'),RS.totalDesignFee],[L('Supervision','الإشراف'),RS.totalSupervisionFee],[L('Licensing','الرخص'),(RS.totalLicensingFee||0)]]),dsFeeExVAT],
     [tipLabel(L('Contingency & Insurance','الاحتياطي والتأمين'),[[L('Contingency','الاحتياطي'),contingency],[L('Insurance','التأمين'),insurance]]),contInsExVAT],
     [L('Fund Mgmt Fee','رسوم الإدارة'),mgmtTotal],
     [tipLabel(L('Other Fund Expenses','مصاريف أخرى'),otherExpBreakdown(R)),otherExp],
     [L('VAT Advisor','مستشار ضريبي'),advisorTotal],
-    [L('Financing Cost','تكلفة التمويل'),R.totalInt]
+    [L('Financing Cost','تكلفة التمويل'),RS.totalInt]
   ]:[
-    [L('Land Cost','تكلفة الأرض'),R.baseLand],
-    [L('Brokerage','السعي'),R.brokerageIncVAT],
-    [L('RETT','رسوم التصرفات العقارية'),R.rettAmount-(R.rettRecoverable||0)],
-    [L('Base Construction','تكلفة البناء'),R.baseCon*V],
+    [L('Land Cost','تكلفة الأرض'),RS.baseLand],
+    [L('Brokerage','السعي'),RS.brokerageIncVAT],
+    [L('RETT','رسوم التصرفات العقارية'),RS.rettAmount-(RS.rettRecoverable||0)],
+    [L('Base Construction','تكلفة البناء'),RS.baseCon*V],
     [L('Developer Fee','أتعاب المطور'),devFees*V],
-    [tipLabel(L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),[[L('Design','التصميم'),R.totalDesignFee*V],[L('Supervision','الإشراف'),R.totalSupervisionFee*V],[L('Licensing','الرخص'),(R.totalLicensingFee||0)*V]]),dsFeeExVAT*V],
+    [tipLabel(L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),[[L('Design','التصميم'),RS.totalDesignFee*V],[L('Supervision','الإشراف'),RS.totalSupervisionFee*V],[L('Licensing','الرخص'),(RS.totalLicensingFee||0)*V]]),dsFeeExVAT*V],
     [tipLabel(L('Contingency & Insurance','الاحتياطي والتأمين'),[[L('Contingency','الاحتياطي'),contingency*V],[L('Insurance','التأمين'),insurance*V]]),contInsExVAT*V],
     [L('Fund Mgmt Fee','رسوم الإدارة'),mgmtTotal],
     [tipLabel(L('Other Fund Expenses','مصاريف أخرى'),otherExpBreakdown(R)),otherExp],
     [L('VAT Advisor','مستشار ضريبي'),advisorTotal],
-    [L('Financing Cost','تكلفة التمويل'),R.totalInt]
+    [L('Financing Cost','تكلفة التمويل'),RS.totalInt]
   ];
   h+=`<table class="es-tbl es-tbl3" dir="${tblDir}">`;
   costItems.forEach(([l,v])=>{h+=`<tr><td class="es-lbl">${l}</td><td class="es-val" dir="${numDir}">${fmt(-v)}</td></tr>`;});
   h+=`</table>`;
-  h+=`<div class="es-total"><span>${_totalTitle}</span><span>${fmt(-R.totalCost)}</span></div>`;
-  {const _rec=(R.rettRecoverable||0), _vatRec=_vr?(R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0)):0;
+  h+=`<div class="es-total"><span>${_totalTitle}</span><span>${fmt(-RS.totalCost)}</span></div>`;
+  {const _rec=(RS.rettRecoverable||0), _vatRec=_vr?(RS.qVATRefundCon.reduce((a,b)=>a+b,0)+RS.qVATRefundExp.reduce((a,b)=>a+b,0)+RS.qBrokVATRefund.reduce((a,b)=>a+b,0)):0;
    if(_rec>0||_vatRec>0) h+=`<div class="es-note">${L('Excludes recoverable taxes','لا يشمل الضرائب القابلة للاسترداد')}${_rec>0?` — ${L('RETT','ضريبة التصرفات العقارية')} ${fmt(_rec)}`:''}${_vatRec>0?` — ${L('VAT','ضريبة القيمة المضافة')} ${fmt(_vatRec)}`:''}${L(', financed temporarily and recovered within the fund term.','، تُموَّل مؤقتاً وتُسترد خلال مدة الصندوق.')}</div>`;}}
   h+=`<div class="es-gap"></div>`;
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Sales Components','مكونات المبيعات')}</div></div>`;
   h+=`<table class="es-tbl es-tbl3" dir="${tblDir}"><tr class="es-tbl-hdr"><td>${L('Type','النوع')}</td><td>${L('Area','المساحة')}</td><td>${L('Price/sqm','السعر/م²')}</td></tr>`;
-  if(R.salesComponents&&R.salesComponents.length) R.salesComponents.forEach(c=>{h+=`<tr><td class="es-lbl">${escH(compLabel(c).substring(0,26))}</td><td class="es-val" dir="${numDir}">${fmt(c.area)}</td><td class="es-val" dir="${numDir}">${fmt(c.price)}</td></tr>`;});
+  if(RS.salesComponents&&RS.salesComponents.length) RS.salesComponents.forEach(c=>{h+=`<tr><td class="es-lbl">${escH(compLabel(c).substring(0,26))}</td><td class="es-val" dir="${numDir}">${fmt(c.area)}</td><td class="es-val" dir="${numDir}">${fmt(c.price)}</td></tr>`;});
   h+=`</table>`;
   h+=`</div>`;
 
@@ -3387,25 +3393,25 @@ function renderSummary(){
   h+=`<div>`;
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Revenue & Profitability','الإيرادات والربحية')}</div></div>`;
   h+=`<table class="es-tbl" dir="${tblDir}">`;
-  [[L('Total Revenue','إجمالي الإيرادات'),fU(fmt(R.tRev),cur),true],[L('Net Profit','صافي الربح'),fU(fmt(R.grossProfit),cur),true],
-   [L('Return on Project','عائد المشروع'),_fP(R.profitMargin),false],[L('ROE','عائد حملة الوحدات'),_fP(R.roiUH),false],
+  [[L('Total Revenue','إجمالي الإيرادات'),fU(fmt(RS.tRev),cur),true],[L('Net Profit','صافي الربح'),fU(fmt(RS.grossProfit),cur),true],
+   [L('Return on Project','عائد المشروع'),_fP(RS.profitMargin),false],[L('ROE','عائد حملة الوحدات'),_fP(RS.roiUH),false],
    [L('IRR','العائد الداخلي'),_fP(irr),true],[L('Equity Multiple','مضاعف رأس المال'),eqMult.toFixed(2)+'x',false],
-   [L('Annual Return','العائد السنوي'),_fP(R.annualROI),false]
+   [L('Annual Return','العائد السنوي'),_fP(RS.annualROI),false]
   ].forEach(([l,v,hl])=>{h+=`<tr${hl?' class="es-hl"':''}><td class="es-lbl">${l}</td><td class="es-val" dir="${numDir}">${v}</td></tr>`;});
   h+=`</table>`;
 
   // ─── Debt Ratios ───
-  const avgDSCR=R.qDSCR.reduce((a,b)=>a+b,0)/nq;
-  const totalDebtService=R.totalInt+R.drawdowns.reduce((a,b)=>a+b,0);
-  const dcrTotal=totalDebtService>0?R.tRev/totalDebtService:0;
-  const ltvEnd=R.qTotalAssets[nq-1]>0?R.totalDebt/R.qTotalAssets[nq-1]:0;
+  const avgDSCR=RS.qDSCR.reduce((a,b)=>a+b,0)/nq;
+  const totalDebtService=RS.totalInt+RS.drawdowns.reduce((a,b)=>a+b,0);
+  const dcrTotal=totalDebtService>0?RS.tRev/totalDebtService:0;
+  const ltvEnd=RS.qTotalAssets[nq-1]>0?RS.totalDebt/RS.qTotalAssets[nq-1]:0;
   h+=`<div class="es-gap"></div>`;
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Debt Ratios','نسب الدين')}</div></div>`;
   h+=`<table class="es-tbl" dir="${tblDir}">`;
-  const _debtRows=[[L('LTC Ratio','نسبة الدين للتكلفة'),_fP(R.ltc)],
+  const _debtRows=[[L('LTC Ratio','نسبة الدين للتكلفة'),_fP(RS.ltc)],
    [L('LTV Ratio','نسبة الدين للقيمة'),_fP(ltvEnd)],
    [L('Debt Coverage','تغطية الدين'),dcrTotal.toFixed(2)+'x']];
-  if(R.hasLeaseProjects){
+  if(RS.hasLeaseProjects){
     _debtRows.push([L('Avg DSCR','متوسط نسبة التغطية'),avgDSCR.toFixed(2)+'x']);
   }
   _debtRows.forEach(([l,v])=>{h+=`<tr><td class="es-lbl">${l}</td><td class="es-val" dir="${numDir}">${v}</td></tr>`;});
@@ -3414,17 +3420,17 @@ function renderSummary(){
   h+=`<div class="es-gap"></div>`;
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Capital Structure','هيكل رأس المال')}</div></div>`;
   h+=`<table class="es-tbl es-tbl3" dir="${tblDir}">`;
-  [[L('Equity (Cash)','نقد المستثمرين'),fU(fmt(R.capCash),cur),_fP(capPcts.cash)],
-   [L('In-Kind','حصص عينية'),fU(fmt(R.capInKind),cur),_fP(capPcts.ik)],
-   [L('Off-Plan Sales','مبيعات على الخارطة'),fU(fmt(R.capOffPlan),cur),_fP(capPcts.op)],
-   [L('Bank Debt','تمويل بنكي'),fU(fmt(R.capDebt),cur),_fP(capPcts.debt)]
+  [[L('Equity (Cash)','نقد المستثمرين'),fU(fmt(RS.capCash),cur),_fP(capPcts.cash)],
+   [L('In-Kind','حصص عينية'),fU(fmt(RS.capInKind),cur),_fP(capPcts.ik)],
+   [L('Off-Plan Sales','مبيعات على الخارطة'),fU(fmt(RS.capOffPlan),cur),_fP(capPcts.op)],
+   [L('Bank Debt','تمويل بنكي'),fU(fmt(RS.capDebt),cur),_fP(capPcts.debt)]
   ].forEach(([l,v,pc])=>{
     if(isAr) h+=`<tr><td class="es-lbl">${l}</td><td class="es-pct" dir="${numDir}">${pc}</td><td class="es-val" dir="${numDir}">${v}</td></tr>`;
     else h+=`<tr><td class="es-lbl">${l}</td><td class="es-val" dir="${numDir}">${v}</td><td class="es-pct" dir="${numDir}">${pc}</td></tr>`;
   });
   h+=`</table>`;
-  h+=`<div class="es-total"><span>${L('FUND CAPITAL','رأس مال الصندوق')}</span><span>${fmt(R.capCash+R.capInKind)}</span></div>`;
-  h+=`<div class="es-total-inv"><span>${L('TOTAL INVESTMENT','إجمالي الاستثمار')}</span><span>${fmt(R.capTotal)}</span></div>`;
+  h+=`<div class="es-total"><span>${L('FUND CAPITAL','رأس مال الصندوق')}</span><span>${fmt(RS.capCash+RS.capInKind)}</span></div>`;
+  h+=`<div class="es-total-inv"><span>${L('TOTAL INVESTMENT','إجمالي الاستثمار')}</span><span>${fmt(RS.capTotal)}</span></div>`;
   h+=`</div></div>`;
 
   // Footer
@@ -3448,12 +3454,12 @@ function renderSummary(){
 
   // KPI Strip — Ordered: total sales, total costs, net profit, project return, equity return, annual equity return, IRR
   h+=`<div class="es-kpi-strip">`;
-  [[fU(fmt(R.tRev),cur),L('Total Sales','إجمالي المبيعات'),'dark'],
-   [fU(fmt(R.totalCost),cur),L('Total Costs','إجمالي التكاليف'),'dark'],
-   [fU(fmt(R.grossProfit),cur),L('Net Profit','صافي الربح'),'gold'],
-   [_fP(R.profitMargin),L('Project Return','عائد المشروع'),'dark'],
-   [_fP(R.roiUH),L('Equity Return','عائد حملة الوحدات'),'dark'],
-   [_fP(R.annROIUH),L('Annual Equity Return','العائد السنوي للمستثمرين'),'dark'],
+  [[fU(fmt(RS.tRev),cur),L('Total Sales','إجمالي المبيعات'),'dark'],
+   [fU(fmt(RS.totalCost),cur),L('Total Costs','إجمالي التكاليف'),'dark'],
+   [fU(fmt(RS.grossProfit),cur),L('Net Profit','صافي الربح'),'gold'],
+   [_fP(RS.profitMargin),L('Project Return','عائد المشروع'),'dark'],
+   [_fP(RS.roiUH),L('Equity Return','عائد حملة الوحدات'),'dark'],
+   [_fP(RS.annROIUH),L('Annual Equity Return','العائد السنوي للمستثمرين'),'dark'],
    [_fP(irr),L('IRR','العائد الداخلي'),'gold']
   ].forEach(([val,lbl,cls])=>{
     const color=cls==='gold'?'var(--es-primary)':'var(--es-secondary)';
@@ -3462,27 +3468,27 @@ function renderSummary(){
   h+=`</div>`;
 
   // Sales Schedule Table — RTL in Arabic
-  const qLbl=R.labels.map(q=>isAr?q.replace('Q','ربع '):q);
+  const qLbl=RS.labels.map(q=>isAr?q.replace('Q','ربع '):q);
   h+=`<div class="es-sales-wrap"><div class="es-sec"><div class="es-sec-title">${L('Quarterly Sales Schedule (SAR)','جدول المبيعات الربعي')}</div></div>`;
   if(isAr){
     // Arabic: RTL table — label on right, quarters right-to-left
     h+=`<table class="es-sales" dir="rtl"><tr><th class="es-row-lbl"></th>`;
     qLbl.forEach(q=>{h+=`<th>${q}</th>`;});
     h+=`<th>${L('Total','المجموع')}</th></tr><tr><td class="es-row-lbl">${L('Revenue','الإيرادات')}</td>`;
-    R.qGrossSales.forEach(v=>{h+=`<td dir="ltr">${v>0?fmt(v):'-'}</td>`;});
-    h+=`<td class="es-row-total" dir="ltr">${fmt(R.tRev)}</td></tr><tr><td class="es-row-lbl">${L('Cumulative','التراكمي')}</td>`;
+    RS.qGrossSales.forEach(v=>{h+=`<td dir="ltr">${v>0?fmt(v):'-'}</td>`;});
+    h+=`<td class="es-row-total" dir="ltr">${fmt(RS.tRev)}</td></tr><tr><td class="es-row-lbl">${L('Cumulative','التراكمي')}</td>`;
     let cum2=0;
-    R.qGrossSales.forEach(v=>{cum2+=v;h+=`<td dir="ltr">${cum2>0?fmt(cum2):'-'}</td>`;});
-    h+=`<td class="es-row-total" dir="ltr">${fmt(R.tRev)}</td></tr></table></div>`;
+    RS.qGrossSales.forEach(v=>{cum2+=v;h+=`<td dir="ltr">${cum2>0?fmt(cum2):'-'}</td>`;});
+    h+=`<td class="es-row-total" dir="ltr">${fmt(RS.tRev)}</td></tr></table></div>`;
   } else {
     h+=`<table class="es-sales" dir="ltr"><tr><th class="es-row-lbl"></th>`;
     qLbl.forEach(q=>{h+=`<th>${q}</th>`;});
     h+=`<th>${L('Total','المجموع')}</th></tr><tr><td class="es-row-lbl">${L('Revenue','الإيرادات')}</td>`;
-    R.qGrossSales.forEach(v=>{h+=`<td>${v>0?fmt(v):'-'}</td>`;});
-    h+=`<td class="es-row-total">${fmt(R.tRev)}</td></tr><tr><td class="es-row-lbl">${L('Cumulative','التراكمي')}</td>`;
+    RS.qGrossSales.forEach(v=>{h+=`<td>${v>0?fmt(v):'-'}</td>`;});
+    h+=`<td class="es-row-total">${fmt(RS.tRev)}</td></tr><tr><td class="es-row-lbl">${L('Cumulative','التراكمي')}</td>`;
     let cum2=0;
-    R.qGrossSales.forEach(v=>{cum2+=v;h+=`<td>${cum2>0?fmt(cum2):'-'}</td>`;});
-    h+=`<td class="es-row-total">${fmt(R.tRev)}</td></tr></table></div>`;
+    RS.qGrossSales.forEach(v=>{cum2+=v;h+=`<td>${cum2>0?fmt(cum2):'-'}</td>`;});
+    h+=`<td class="es-row-total">${fmt(RS.tRev)}</td></tr></table></div>`;
   }
 
   // Charts
@@ -3523,7 +3529,7 @@ function renderSummary(){
       bCtx.fillText(qLbl[i],lx,cM.top+pH+12);
     }
     // Draw bars only for non-zero quarters
-    R.qGrossSales.forEach((v,i)=>{
+    RS.qGrossSales.forEach((v,i)=>{
       if(v<=0) return;
       const bi=isAr?(nq-1-i):i;
       const bh=(v/maxS)*pH, bx=cM.left+bi*bGap+bGap*0.12, bw=bGap*0.76, by=cM.top+pH-bh;
@@ -3547,10 +3553,10 @@ function renderSummary(){
     const dW2=dc.parentElement.offsetWidth||220, dH2=195;
     dc.style.width=dW2+'px'; dc.style.height=dH2+'px';
     dc.width=dW2*2; dc.height=dH2*2; dCtx.scale(2,2);
-    const capI=[{label:L('Equity','نقد المستثمرين'),val:R.capCash,color:'#3a3a32'},
-      {label:L('In-Kind','حصص عينية'),val:R.capInKind,color:'#735b23'},
-      {label:L('Off-Plan','على الخارطة'),val:R.capOffPlan,color:'#b5985a'},
-      {label:L('Debt','تمويل بنكي'),val:R.capDebt,color:'#d0c5b5'}].filter(c=>c.val>0);
+    const capI=[{label:L('Equity','نقد المستثمرين'),val:RS.capCash,color:'#3a3a32'},
+      {label:L('In-Kind','حصص عينية'),val:RS.capInKind,color:'#735b23'},
+      {label:L('Off-Plan','على الخارطة'),val:RS.capOffPlan,color:'#b5985a'},
+      {label:L('Debt','تمويل بنكي'),val:RS.capDebt,color:'#d0c5b5'}].filter(c=>c.val>0);
     const cS=capI.reduce((a,c)=>a+c.val,0)||1;
     const cx2=dW2/2, cy2=54, oR=42, iR=24;
     let sA=-Math.PI/2;
@@ -4642,13 +4648,51 @@ function runReforecast(){
   R2._actualOnlyExpense=catArrays.other_exp||Array(nq).fill(0);
 
   // Recalculate summary totals
-  R2.totalCost=R2.tLand+R2.tCon+(R2.qTotalFundExp||[]).reduce((a,b)=>a+b,0)+R2.qInterest.reduce((a,b)=>a+b,0);
-  R2.grossProfit=R2.tRev-R2.totalCost;
-  R2.profitMargin=R2.totalCost?R2.grossProfit/R2.totalCost:0;
+  _rfTotals(R2);
 
   _rfReturns(R2);
   renderCashFlow();
   if(document.getElementById('p-forecast')) renderForecastTab();
+}
+
+// Summary totals for a forecast run — mirrors the definitions in calculate() so Summary/Debt/Cash Flow
+// show the same total cost, capital structure and LTC whether they render the baseline or the forecast.
+function _rfTotals(RX){
+  const A=RX.A, V=1+pct(A.vat_rate), sum=a=>(a||[]).reduce((x,y)=>x+y,0);
+  const totalFundExp=sum(RX.qTotalFundExp), totalPerfFee=sum(RX.qPerfFee), totalIntAmt=sum(RX.qInterest), totalAdvisorFee=sum(RX.qVATAdvisor);
+  RX.totalFundExpExPerf=totalFundExp-totalPerfFee; RX.totalPerfFee=totalPerfFee; RX.totalInt=totalIntAmt; RX.totalVATNet=sum(RX.qVATNet);
+  RX.rettRecoverable=sum(RX.qRETTRefund);
+  const brokExVAT=(RX.brokerageIncVAT||0)/V;
+  RX.tLandExVAT=(RX.baseLand||0)+brokExVAT+(RX.rettAmount||0)-RX.rettRecoverable;
+  RX.tConExVAT=sum((RX.qCon||[]).map(c=>c/V));
+  RX.totalCostIncVAT=RX.tLand-RX.rettRecoverable+RX.tCon+RX.totalFundExpExPerf+totalIntAmt+totalAdvisorFee;
+  RX.totalCostExVAT=RX.tLandExVAT+RX.tConExVAT+RX.totalFundExpExPerf/V+totalIntAmt+totalAdvisorFee;
+  RX.totalCost=Number(A.vat_refund)?RX.totalCostExVAT:RX.totalCostIncVAT;
+  RX.vatInCost=RX.totalCostIncVAT-RX.totalCostExVAT;
+  RX.grossProfit=RX.tRev-RX.totalCost;
+  RX.profitMargin=RX.totalCost?RX.grossProfit/RX.totalCost:0;
+  RX.annualROI=A.fund_period_months?RX.profitMargin/(A.fund_period_months/12):0;
+  RX.totalDebt=sum(RX.drawdowns); RX.ltc=RX.totalCost?RX.totalDebt/RX.totalCost:0;
+  RX.totalDiv=sum(RX.qDividends);
+  const gpCash=Number(A.gp_commit_cash)||0, totalIK=sum(RX.qIKTotal);
+  RX.capCash=(Number(A.equity)||0)+gpCash; RX.capInKind=totalIK; RX.capDebt=RX.totalDebt;
+  RX.capOffPlan=Math.max(0,RX.totalCost-RX.capCash-RX.capInKind-RX.capDebt);
+  RX.capTotal=RX.capCash+RX.capInKind+RX.capOffPlan+RX.capDebt;
+  return RX;
+}
+
+// Which run the Cash Flow / Debt / Summary tabs render: in Operations the Baseline·Forecast toggle decides
+// (Both = forecast); in Feasibility the legacy reforecast switch decides.
+function viewR(){
+  if(!R) return null;
+  if(workspace==='operations'){ if(opsView==='baseline') return R; return ensureForecast()?R2:R; }
+  return (reforecastMode&&R2)?R2:R;
+}
+function viewStamp(){
+  const r=viewR(); if(!r||workspace!=='operations') return '';
+  const ar=lang==='ar', fc=r===R2&&r&&r._isReforecast, q=fc?(r._cutoffQ||0):0;
+  const txt=fc?(ar?`التوقع الحالي · حتى نهاية الربع ${q}`:`Current forecast · as of Q${q}`):(ar?'خط الأساس (الجدوى)':'Baseline (feasibility)');
+  return `<div class="view-stamp ${fc?'fc':'bl'}"><span>${txt}</span><span class="vs-sw">${['baseline','forecast'].map(v=>`<a class="${(fc?'forecast':'baseline')===v?'on':''}" onclick="opsView='${v}';renderCashFlow();renderDebt();renderSummary()">${ar?(v==='baseline'?'خط الأساس':'التوقع'):(v==='baseline'?'Baseline':'Forecast')}</a>`).join('')}</span></div>`;
 }
 
 // ═══════════════════════════════════════════════
