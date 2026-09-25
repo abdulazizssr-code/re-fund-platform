@@ -4683,9 +4683,12 @@ function _rfTotals(RX){
 
 // Which run the Cash Flow / Debt / Summary tabs render: in Operations the Baseline·Forecast toggle decides
 // (Both = forecast); in Feasibility the legacy reforecast switch decides.
+// Pure selector — never runs a forecast (showTab does that), otherwise the silent recalculation inside
+// runReforecast → calculate() → renderCashFlow would recurse and freeze the page.
 function viewR(){
   if(!R) return null;
-  if(workspace==='operations'){ if(opsView==='baseline') return R; return ensureForecast()?R2:R; }
+  if(_silentCalc) return R;
+  if(workspace==='operations'){ if(opsView==='baseline') return R; return (R2&&R2._isReforecast)?R2:R; }
   return (reforecastMode&&R2)?R2:R;
 }
 function viewStamp(){
