@@ -145,6 +145,14 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .ops-grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}@media(max-width:900px){.ops-grid2{grid-template-columns:1fr}}
 .ops-card{background:#fff;border-radius:12px;padding:20px 22px;box-shadow:var(--shadow-l);border:1px solid rgba(27,28,25,.04)}.ops-card h3{font-family:'Noto Serif',serif;font-size:.95rem;color:var(--primary);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;font-weight:600}.ops-card h3 span{font-family:inherit;font-size:.72rem;font-weight:600;color:var(--on-surface-vl)}
 .ops-svg{width:100%;height:auto;display:block}.ops-ax{font-size:10.5px;fill:var(--on-surface-vl);font-family:'Manrope',sans-serif}.ops-grd{stroke:var(--outline)}.ops-legend{display:flex;gap:14px;font-size:.76rem;color:var(--on-surface-vl);margin-top:8px}.ops-legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-inline-end:6px;border-radius:2px}
+.cx-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 16px}.cx-filters .ops-mini{width:auto;min-width:150px}.cx-filters .cx-q{min-width:220px}
+.cx-seg{display:inline-flex;background:#e8eeec;border-radius:999px;padding:3px}.cx-seg a{padding:5px 12px;border-radius:999px;font-size:.8rem;font-weight:700;cursor:pointer;color:#40514a}.cx-seg a.on{background:#00322d;color:#fff}
+.cx-wrap{overflow:auto}.cx-tbl td,.cx-tbl th{white-space:nowrap;padding:7px 10px}.cx-tbl th,.cx-tbl td:first-child{text-align:start!important;unicode-bidi:plaintext}.cx-r.lv1 td{background:#f4f6f5;font-weight:700}.cx-r.lv2 td{font-weight:600}.cx-r.lv4 td{font-size:.8rem;color:#40514a}.cx-r.tot td{background:var(--surface-cl);font-weight:800}
+.cx-ind{display:inline-block;width:calc(var(--lv,0)*18px)}.cx-tg{display:inline-block;width:18px;cursor:pointer;color:#775a19;font-weight:800}
+.cx-var.bad{color:var(--error);font-weight:700}.cx-var.warn{color:#8a5a00}.cx-var.good{color:var(--success);font-weight:700}
+.cx-edit select{margin-inline-end:6px;max-width:170px}
+.cx-donut{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.cx-donut-lg span{display:flex;gap:8px;align-items:center;font-size:.8rem;margin:4px 0}.cx-donut-lg i{width:10px;height:10px;border-radius:3px;display:inline-block}.cx-donut-lg b{margin-inline-start:auto;padding-inline-start:10px}
+.cx-details{margin-top:6px}.cx-details summary{cursor:pointer;font-weight:700;color:#00322d;padding:10px 0}
 .ops-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}.ops-kpi{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-l)}.ops-kpi small{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--on-surface-vl);font-weight:700}.ops-kpi b{font-size:1.3rem;font-variant-numeric:tabular-nums;display:block;margin-top:2px}.ops-kpi i{font-style:normal;font-size:.76rem;color:var(--on-surface-vl)}.ops-kpi i.up{color:var(--success)}.ops-kpi i.dn{color:var(--error)}
 .ops-alerts{display:flex;flex-direction:column;gap:8px}.ops-al{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:9px;background:var(--surface-cl);font-size:.86rem}.ops-al .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}.ops-al .dot.bad{background:var(--error)}.ops-al .dot.warn{background:#b7791f}.ops-al a{margin-inline-start:auto;color:var(--primary);font-weight:700;font-size:.78rem;white-space:nowrap;cursor:pointer}
 .ops-muted{color:var(--on-surface-vl);font-size:.85rem;margin:0}
@@ -3940,7 +3948,7 @@ function buildActualsTab(){
       <div><label>${t?'الربع':'Quarter'}</label><select id="act_quarter">${qOpts}</select></div>
       <div><label>${t?'البند':'Category'}</label><select id="act_category" onchange="_actCompToggle()">${catOpts}</select></div>
       <div id="act_component_wrap" style="display:none"><label>${t?'المكوّن':'Component'}</label><select id="act_component"></select></div>
-      <div><label>${t?'المستفيد':'Payee'}</label><input type="text" id="act_payee" placeholder="${t?'اسم المستفيد':'Payee name'}"></div>
+      <div><label>${t?'المستفيد':'Payee'}</label><input type="text" id="act_payee" list="vendorList" placeholder="${t?'اسم المستفيد':'Payee name'}"><datalist id="vendorList">${(reforecastSettings.vendors||[]).map(v=>`<option value="${escH(v.name)}">`).join('')}</datalist></div>
       <div><label>${t?'المبلغ (ريال)':'Amount (SAR)'}</label><input type="number" id="act_amount" step="any" placeholder="0"></div>
       <div><label>${t?'التاريخ':'Date'}</label><input type="date" id="act_date" onchange="_actAutoQ()"></div>
       <div><label>${t?'مرجع الفاتورة':'Invoice Ref'}</label><input type="text" id="act_invoice" placeholder="${t?'رقم الفاتورة':'INV-001'}"></div>
@@ -4062,12 +4070,12 @@ function _actSave(){
     // Update existing
     const idx=actuals.findIndex(p=>p.id===_actEditId);
     if(idx>=0){
-      actuals[idx]={...actuals[idx],quarter,category,payee,amount,date,invoiceRef,notes,component};
+      actuals[idx]={...actuals[idx],quarter,category,payee,amount,date,invoiceRef,notes,component,vendor:(ensureVendor(payee)||{}).id||null};
     }
     _actEditId=null;
   }else{
     // Add new
-    actuals.push({id:_actGenId(),quarter,category,payee,amount,date,invoiceRef,notes,component});
+    actuals.push({id:_actGenId(),quarter,category,payee,amount,date,invoiceRef,notes,component,vendor:(ensureVendor(payee)||{}).id||null});
   }
   buildActualsTab();
 }
@@ -4370,7 +4378,9 @@ function _importConfirm(){
       quarter:qi,
       category:r.category,
       payee:r.payee,
+      vendor:(ensureVendor(r.payee)||{}).id||null,
       amount:r.amount,
+      net:r.net,vat:r.vat,
       date:r.date,
       invoiceRef:'',
       notes:r.description
@@ -4951,7 +4961,7 @@ function otherExpBreakdown(RX){
     [ar?'اللجنة الشرعية':'Shariah committee',S(RX.qSharia)],[ar?'الاستشاري الهندسي':'Engineering consultant',S(RX.qEngineering)],[ar?'مكافآت مجلس الإدارة':'Board compensation',S(RX.qBoard)],[ar?'المستشار المالي':'Financial advisor',S(RX.qFinAdvisor)],
     [ar?'التسويق':'Marketing',S(RX.qMkt)],[ar?'رسوم الإدارة البنكية':'Bank management fee',S(RX.qBankMgmt)],[ar?'رسوم الترتيب':'Arrangement fee',S(RX.qArrFee)],[ar?'رسوم وافي':'WAFI fees',S(RX.qWafi)],[ar?'عمولات البيع':'Selling commissions',S(RX.qSellExp)]];
 }
-function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null};}
+function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,vendors:[]};}
 function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k]===undefined) reforecastSettings[k]=JSON.parse(JSON.stringify(d[k]));}
 function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings.cutoffQ;
   if(c!==null&&c!==undefined) return Math.max(0,Math.min(nq-1,Number(c)));
@@ -5078,7 +5088,7 @@ const OPS_T={
     spend:'Spend to date',plan:'plan',fac:'Forecast at completion',vsBase:'vs baseline',irr:'IRR',sales_:'Sales',sold:'sold',close:'Close',calcFirst:'Calculate the model first (Feasibility) to open Operations.',
     costComplete:'Cost complete',timeElapsed:'time elapsed',committed:'Committed',ofFac:'of forecast at completion',cashLoan:'Cash & loan',atCut:'at cutoff',eqMult:'Equity multiple',dist:'Distributions',
     scurve:'Cumulative cost — plan vs actual vs forecast',ssales:'Cumulative sales — plan vs actual vs forecast',decide:'What needs a decision',items:'items',nothing:'Nothing pending — all closed-quarter variances have a treatment.',
-    noFin:'No equity or debt recorded for the closed quarters — plan financing is assumed. Add equity injections and drawdowns to the payments log so cash and loan balances are real.',finFromLog:'from payments log',finConfirmed:'confirmed',eqCalled:'Equity called',commitment:'commitment',facilityUse:'Drawn vs facility',finMode:'Closed-quarter financing',finStrict:'from recorded payments',finLenient:'plan (nothing recorded yet)',over:'over adjusted budget',unspent:'unspent in closed quarters — treatment defaults to push forward',unassigned:'payments not assigned to a component',confirmLoan:'Loan balance at the cutoff not confirmed (forecast value used)',review:'Review →',
+    budget:'Budget',contractB:'Contract value',cxActual:'Actual spent',cxBudget:'Budgeted',cxVar:'Variance',cxVsBudget:'vs budget',cxClosedN:'payments in the {n} closed quarters',cxAllPay:'all payments',cxPlanTo:'plan through Q{n}',cxFullPlan:'full fund plan',cxToDate:'To date (closed quarters)',cxAll:'Whole fund',cxAllTypes:'All expense types',cxAllCats:'All categories',cxAllVendors:'All vendors',cxSearch:'Search description / vendor…',cxReset:'Reset',cxExport:'Export CSV',cxChTypeBA:'Actual vs budget by expense type',cxChTypeShare:'Actual spend by expense type',cxChVendorBA:'Actual vs contract by vendor',cxChTopVendors:'Top vendors by actual spend',cxTop10:'top 10',cxNoVendors:'No vendors yet — payments with a payee are linked to vendors automatically',cxDrill:'Total → expense type → category → vendor → payment',cxExpand:'expand all',cxCollapse:'collapse',cxLevel:'Level',cxVarCol:'Variance (SAR · %)',cxTotal:'Total expenses',cxVendorsN:'vendors',cxNoVendor:'— no vendor —',cxNote:'Budget = locked baseline plan for the analysed period. Each payment belongs to one category and each category to one expense type — nothing is counted twice. Bank management, arrangement fee and interest are shown under Banking / Financing here; the cash-flow statement keeps the bank fee inside fund expenses as the engine books it. Vendor budget = contract value you enter in the register. Red = significant overrun (≥10% and ≥1% of total budget), green = significant saving.',cxVendors:'Vendor register',cxNewVendor:'New vendor name',cxAdd:'Add',cxVendor:'Vendor',cxDefaultCat:'Default category',cxMergeInto:'Merge into…',cxTreatCards:'Forecast treatment per line (adjusted budget, committed, unspent treatment, phasing)',noFin:'No equity or debt recorded for the closed quarters — plan financing is assumed. Add equity injections and drawdowns to the payments log so cash and loan balances are real.',finFromLog:'from payments log',finConfirmed:'confirmed',eqCalled:'Equity called',commitment:'commitment',facilityUse:'Drawn vs facility',finMode:'Closed-quarter financing',finStrict:'from recorded payments',finLenient:'plan (nothing recorded yet)',over:'over adjusted budget',unspent:'unspent in closed quarters — treatment defaults to push forward',unassigned:'payments not assigned to a component',confirmLoan:'Loan balance at the cutoff not confirmed (forecast value used)',review:'Review →',
     bridge:'IRR bridge — baseline to current forecast',bBase:'Baseline IRR',bActual:'Actuals, budgets & phasing',bAssum:'Assumption changes',bCur:'Current IRR',
     line:'Line',actual:'Actual',remaining:'Remaining',baselineB:'Baseline',facShort:'Forecast at completion',treat:'Unspent',push:'Push forward',saving:'Saving',keep:'Keep as planned',adj:'Adjusted total',commit:'Committed',phasing:'Phasing of the remaining amount over open quarters — type a weight per quarter (blank = proportional to plan)',
     payments:'payments',components:'components',complete:'complete',onBudget:'on budget',
@@ -5092,7 +5102,7 @@ const OPS_T={
     spend:'المنفق حتى الآن',plan:'الخطة',fac:'التكلفة عند الاكتمال',vsBase:'مقابل خط الأساس',irr:'العائد الداخلي',sales_:'المبيعات',sold:'مباع',close:'إقفال',calcFirst:'احسب النموذج أولاً من دراسة الجدوى لفتح التشغيل.',
     costComplete:'نسبة إنجاز التكلفة',timeElapsed:'الزمن المنقضي',committed:'الملتزم به',ofFac:'من التكلفة عند الاكتمال',cashLoan:'النقد والتمويل',atCut:'عند الإقفال',eqMult:'مضاعف رأس المال',dist:'التوزيعات',
     scurve:'التكلفة التراكمية — الخطة مقابل الفعلي مقابل التوقع',ssales:'المبيعات التراكمية — الخطة مقابل الفعلي مقابل التوقع',decide:'ما يحتاج قراراً',items:'بنود',nothing:'لا يوجد معلق — كل انحرافات الأرباع المقفلة لها معالجة.',
-    noFin:'لم يُسجّل أي ضخ رأس مال أو سحب تمويل للأرباع المقفلة — يُفترض تمويل الخطة. أضف ضخ رأس المال والسحوبات إلى سجل المدفوعات لتكون أرصدة النقد والتمويل حقيقية.',finFromLog:'من سجل المدفوعات',finConfirmed:'مؤكد',eqCalled:'رأس المال المدفوع',commitment:'الالتزام',facilityUse:'المسحوب من التسهيل',finMode:'تمويل الأرباع المقفلة',finStrict:'من المدفوعات المسجلة',finLenient:'الخطة (لم يُسجّل شيء بعد)',over:'تجاوز الميزانية المعدلة',unspent:'غير منفق في الأرباع المقفلة — المعالجة الافتراضية ترحيل للأمام',unassigned:'دفعات غير مخصصة لمكوّن',confirmLoan:'رصيد التمويل عند الإقفال غير مؤكد (تم استخدام قيمة التوقع)',review:'مراجعة ←',
+    budget:'الميزانية',contractB:'قيمة العقد',cxActual:'المنفق فعلياً',cxBudget:'الميزانية',cxVar:'الفرق',cxVsBudget:'مقابل الميزانية',cxClosedN:'الدفعات في {n} أرباع مقفلة',cxAllPay:'كل الدفعات',cxPlanTo:'الخطة حتى الربع {n}',cxFullPlan:'خطة الصندوق كاملة',cxToDate:'حتى تاريخه (الأرباع المقفلة)',cxAll:'كامل الصندوق',cxAllTypes:'كل أنواع المصاريف',cxAllCats:'كل البنود',cxAllVendors:'كل المورّدين',cxSearch:'بحث في الوصف / المورّد…',cxReset:'إعادة ضبط',cxExport:'تصدير CSV',cxChTypeBA:'الفعلي مقابل الميزانية حسب نوع المصروف',cxChTypeShare:'المنفق الفعلي حسب نوع المصروف',cxChVendorBA:'الفعلي مقابل العقد حسب المورّد',cxChTopVendors:'أكبر المورّدين حسب المنفق',cxTop10:'أعلى 10',cxNoVendors:'لا يوجد مورّدون بعد — تُربط الدفعات التي لها مستفيد بالمورّدين تلقائياً',cxDrill:'الإجمالي ← نوع المصروف ← البند ← المورّد ← الدفعة',cxExpand:'فتح الكل',cxCollapse:'طي',cxLevel:'المستوى',cxVarCol:'الفرق (ريال · %)',cxTotal:'إجمالي المصاريف',cxVendorsN:'مورّد',cxNoVendor:'— بدون مورّد —',cxNote:'الميزانية = خطة خط الأساس المقفل للفترة المحللة. كل دفعة تنتمي لبند واحد وكل بند لنوع مصروف واحد — لا يُحسب شيء مرتين. رسوم إدارة البنك ورسوم الترتيب وتكاليف التمويل تظهر هنا تحت البنوك والتمويل؛ قائمة التدفقات النقدية تُبقي رسوم البنك ضمن مصاريف الصندوق كما يحتسبها المحرك. ميزانية المورّد = قيمة العقد التي تدخلها في السجل. أحمر = تجاوز جوهري (≥10% و≥1% من إجمالي الميزانية)، أخضر = وفر جوهري.',cxVendors:'سجل المورّدين',cxNewVendor:'اسم مورّد جديد',cxAdd:'إضافة',cxVendor:'المورّد',cxDefaultCat:'البند الافتراضي',cxMergeInto:'دمج في…',cxTreatCards:'معالجة التوقع لكل بند (الميزانية المعدلة، الملتزم به، معالجة غير المنفق، التوزيع الزمني)',noFin:'لم يُسجّل أي ضخ رأس مال أو سحب تمويل للأرباع المقفلة — يُفترض تمويل الخطة. أضف ضخ رأس المال والسحوبات إلى سجل المدفوعات لتكون أرصدة النقد والتمويل حقيقية.',finFromLog:'من سجل المدفوعات',finConfirmed:'مؤكد',eqCalled:'رأس المال المدفوع',commitment:'الالتزام',facilityUse:'المسحوب من التسهيل',finMode:'تمويل الأرباع المقفلة',finStrict:'من المدفوعات المسجلة',finLenient:'الخطة (لم يُسجّل شيء بعد)',over:'تجاوز الميزانية المعدلة',unspent:'غير منفق في الأرباع المقفلة — المعالجة الافتراضية ترحيل للأمام',unassigned:'دفعات غير مخصصة لمكوّن',confirmLoan:'رصيد التمويل عند الإقفال غير مؤكد (تم استخدام قيمة التوقع)',review:'مراجعة ←',
     bridge:'جسر العائد الداخلي — من خط الأساس إلى التوقع الحالي',bBase:'عائد خط الأساس',bActual:'الفعلي والميزانيات والتوزيع',bAssum:'تغييرات الافتراضات',bCur:'العائد الحالي',
     line:'البند',actual:'الفعلي',remaining:'المتبقي',baselineB:'خط الأساس',facShort:'التكلفة عند الاكتمال',treat:'غير المنفق',push:'ترحيل للأمام',saving:'وفر',keep:'إبقاء كما خُطط',adj:'الإجمالي المعدل',commit:'الملتزم به',phasing:'توزيع المبلغ المتبقي على الأرباع المفتوحة — اكتب وزناً لكل ربع (فارغ = نسبي حسب الخطة)',
     payments:'دفعات',components:'مكوّنات',complete:'مكتمل',onBudget:'ضمن الميزانية',
@@ -5220,7 +5230,158 @@ function costCard(c,cut,nq){
     h+=`<div class="ops-phase-wrap"><div class="ops-phase">${Array.from({length:cut},(_,i)=>`<div class="past" style="height:${Math.max(4,c.getQ(R2,i)/Math.max(mx,...Array.from({length:cut},(_,k)=>c.getQ(R2,k)))*100)}%"><span>Q${i+1}</span></div>`).join('')}${w.map((v,j)=>`<div style="height:${Math.max(4,v/mx*100)}%"><span>Q${cut+j+1}</span><input type="number" class="ops-ph" placeholder="${(c.getQ(R2,cut+j)/Math.max(1,sumA(w))*100).toFixed(0)}" value="${ph[j]??''}" onchange="setPhasing('${c.key}',${j},this.value);opsRefresh()"></div>`).join('')}</div><div class="ops-muted" style="font-size:.78rem;margin-top:22px">${ot('phasing')}</div></div>`;}
   return h+`</div></div>`;
 }
-function opsCosts(){const cut=R2._cutoffQ,nq=R2.nq;return `<div>${opsCats().filter(c=>c.group==='cost').filter(c=>sumA(Array.from({length:R.nq},(_,i)=>c.getQ(R,i)))>0.5||actualOf(c.key,0,nq)>0).map(c=>costCard(c,cut,nq)).join('')}</div>`;}
+// ═══════════════════════════════════════════════
+// COSTS: expense analysis — type → category → vendor → transaction, actual vs budget, vendor register, charts
+// Every payment carries ONE category; the category maps to ONE expense type (no double counting).
+// Bank management, arrangement fee and interest are Banking/Financing here even though the engine books
+// bank fees inside fund expenses for the cash flow — this is a reporting view, the engine is untouched.
+// ═══════════════════════════════════════════════
+const EXP_TYPES=[
+  {key:'fund',en:'Fund Expenses',ar:'مصاريف الصندوق',color:'#00322d',cats:['fund_setup','mgmt_fee','custody','spv','auditor','sharia','board','fin_advisor','perf_fee','marketing','selling','other_exp','vat_paid']},
+  {key:'dev', en:'Development / Construction',ar:'التطوير والإنشاء',color:'#775a19',cats:['land','brokerage','rett','base_con','dev_fee','contingency','licensing','design','insurance','supervision','engineering']},
+  {key:'fin', en:'Banking / Financing',ar:'البنوك والتمويل',color:'#4a6c8c',cats:['bank_mgmt','arr_fee','interest']}
+];
+function etypeOf(catKey){const t=EXP_TYPES.find(t=>t.cats.includes(catKey));return t?t.key:'fund';}
+function etypeLabel(k){const t=EXP_TYPES.find(x=>x.key===k);return t?(lang==='ar'?t.ar:t.en):k;}
+
+// ---- vendor register (reforecastSettings.vendors = [{id,name,cat,contract,note}]) ----
+function vendors(){_rfNorm();if(!Array.isArray(reforecastSettings.vendors))reforecastSettings.vendors=[];return reforecastSettings.vendors;}
+function _vnorm(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase();}
+function vendorById(id){return vendors().find(v=>v.id===id)||null;}
+function ensureVendor(name){const n=_vnorm(name);if(!n)return null;let v=vendors().find(x=>_vnorm(x.name)===n);if(!v){v={id:'v'+_actGenId(),name:String(name).trim(),cat:'',contract:null,note:''};vendors().push(v);}return v;}
+// Link every payment with a payee to a vendor (idempotent — runs before each render)
+function vendorSync(){let changed=false;for(const p of actuals){if(!p.vendor&&p.payee){const v=ensureVendor(p.payee);if(v){p.vendor=v.id;changed=true;}}if(p.vendor&&!vendorById(p.vendor)){const v=ensureVendor(p.payee||'—');p.vendor=v?v.id:null;changed=true;}}return changed;}
+function vendorAdd(){const el=document.getElementById('vndNew');const n=(el&&el.value||'').trim();if(!n)return;ensureVendor(n);el.value='';renderOps();}
+function vendorSet(id,field,val){const v=vendorById(id);if(!v)return;if(field==='contract'){v.contract=val===''?null:Number(val);}else if(field==='name'){const n=val.trim();if(!n)return;v.name=n;actuals.filter(p=>p.vendor===id).forEach(p=>p.payee=n);}else v[field]=val;renderOps();}
+function vendorMerge(id,into){if(!into||into===id)return;const src=vendorById(id),dst=vendorById(into);if(!src||!dst)return;actuals.filter(p=>p.vendor===id).forEach(p=>{p.vendor=into;p.payee=dst.name;});if(dst.contract==null&&src.contract!=null)dst.contract=src.contract;const i=vendors().findIndex(v=>v.id===id);if(i>=0)vendors().splice(i,1);renderOps();}
+function vendorRemove(id){if(actuals.some(p=>p.vendor===id)){alert(lang==='ar'?'المورّد مرتبط بدفعات — ادمجه في مورّد آخر بدلاً من حذفه':'This vendor has payments — merge it into another vendor instead');return;}const i=vendors().findIndex(v=>v.id===id);if(i>=0)vendors().splice(i,1);renderOps();}
+function paymentSetVendor(pid,vid){const p=actuals.find(x=>x.id===pid);if(!p)return;const v=vendorById(vid);p.vendor=v?v.id:null;if(v)p.payee=v.name;renderOps();}
+function paymentSetCat(pid,cat){const p=actuals.find(x=>x.id===pid);if(!p)return;p.category=cat;opsRefresh();}
+
+// ---- analysis state ----
+let opsCostF={type:'',vendor:'',cat:'',period:'closed',q:'',open:{}};
+function cxSet(k,v){opsCostF[k]=v;renderOps();}
+function cxToggle(id){opsCostF.open[id]=!opsCostF.open[id];renderOps();}
+function cxOpenAll(on){opsCostF.open={};if(on){opsCostF._all=true;}else{opsCostF._all=false;}renderOps();}
+function _cxIsOpen(id){return !!(opsCostF._all||opsCostF.open[id]);}
+
+// Budget per category over the analysed period (baseline plan), actual = included payments in that period
+function costModel(){
+  const cut=R2._cutoffQ,nq=R.nq,F=opsCostF,closed=F.period==='closed';
+  const qEnd=closed?cut:nq;
+  const cats=opsCats().filter(c=>c.group==='cost').concat(ACT_CATS.filter(c=>c.actualOnly&&c.group==='cost'));
+  const pays=actuals.filter(p=>p.include!==false&&cats.some(c=>c.key===p.category)&&(closed?p.quarter<cut:true));
+  const catBudget=k=>{const c=ACT_CATS.find(x=>x.key===k);if(!c||c.actualOnly)return 0;let s=0;for(let i=0;i<qEnd;i++)s+=c.getQ(R,i);return s;};
+  const q=_vnorm(F.q);
+  const match=p=>(!F.type||etypeOf(p.category)===F.type)&&(!F.vendor||p.vendor===F.vendor)&&(!F.cat||p.category===F.cat)&&(!q||_vnorm(p.payee+' '+(p.notes||'')+' '+(p.description||'')+' '+(p.invoiceRef||'')).includes(q));
+  // tree: type → category → vendor → payments
+  const tree={budget:0,actual:0,types:[]};
+  for(const t of EXP_TYPES){
+    if(F.type&&F.type!==t.key)continue;
+    const tn={key:t.key,label:etypeLabel(t.key),color:t.color,budget:0,actual:0,cats:[]};
+    for(const c of cats){
+      if(!t.cats.includes(c.key))continue; if(F.cat&&F.cat!==c.key)continue;
+      const cb=(F.vendor||q)?0:catBudget(c.key); // a vendor/search filter has no plan line → budget shown only at vendor contract level
+      const cp=pays.filter(p=>p.category===c.key&&match(p));
+      if(cb<0.5&&!cp.length)continue;
+      const cn={key:c.key,label:lang==='ar'?c.ar:c.en,budget:cb,actual:0,vendors:[]};
+      const byV={};for(const p of cp){const k=p.vendor||'_none';(byV[k]=byV[k]||[]).push(p);}
+      for(const vid in byV){const v=vendorById(vid),ps=byV[vid],a=ps.reduce((s,p)=>s+p.amount,0);
+        cn.vendors.push({key:vid,label:v?v.name:(lang==='ar'?'بدون مورّد':'No vendor'),contract:v&&v.contract!=null&&(!v.cat||v.cat===c.key)?v.contract:null,actual:a,pays:ps.sort((x,y)=>(x.date||'').localeCompare(y.date||''))});cn.actual+=a;}
+      cn.vendors.sort((a,b)=>b.actual-a.actual);
+      tn.cats.push(cn);tn.budget+=cn.budget;tn.actual+=cn.actual;
+    }
+    tn.cats.sort((a,b)=>b.actual-a.actual||b.budget-a.budget);
+    tree.types.push(tn);tree.budget+=tn.budget;tree.actual+=tn.actual;
+  }
+  // vendor totals (over the filtered payments)
+  const vt={};for(const p of pays.filter(match)){const k=p.vendor||'_none';vt[k]=vt[k]||{key:k,actual:0,n:0,types:{}};vt[k].actual+=p.amount;vt[k].n++;const e=etypeOf(p.category);vt[k].types[e]=(vt[k].types[e]||0)+p.amount;}
+  const vendorTotals=Object.values(vt).map(x=>{const v=vendorById(x.key);return {...x,label:v?v.name:(lang==='ar'?'بدون مورّد':'No vendor'),contract:v&&v.contract!=null?v.contract:null};}).sort((a,b)=>b.actual-a.actual);
+  return {tree,vendorTotals,pays,qEnd,cut,closed};
+}
+function _varCls(b,a,tot){if(b<0.5)return a>0.5?'bad':'';const d=a-b,pc=d/b;const sig=Math.abs(pc)>=0.10&&Math.abs(d)>=Math.max(1e5,(tot||0)*0.01);return d>0.5?(sig?'bad':'warn'):d<-0.5?(sig?'good':''):'';}
+function _varTxt(b,a){if(b<0.5)return a>0.5?'—':'';const d=a-b;return (d>=0?'+':'−')+M_(Math.abs(d))+' · '+(d>=0?'+':'−')+Math.abs(d/b*100).toFixed(1)+'%';}
+
+// ---- charts ----
+function svgGroupBars(groups){ // [{label,color,vals:[budget,actual]}]
+  const W=640,H=230,M={l:52,r:14,t:16,b:40},n=groups.length||1,gw=(W-M.l-M.r)/n,bw=Math.min(46,gw*0.32);
+  const ymax=Math.max(1,...groups.flatMap(g=>g.vals))*1.08,y=v=>M.t+(H-M.t-M.b)*(1-v/ymax);let h='';
+  for(let k=0;k<=4;k++){const t=ymax/4*k;h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-6}" y="${y(t)+4}" text-anchor="end">${M_(t)}</text>`;}
+  groups.forEach((g,i)=>{const cx=M.l+i*gw+gw/2;const [b,a]=g.vals;
+    h+=`<rect x="${cx-bw-2}" y="${y(b)}" width="${bw}" height="${Math.max(1,y(0)-y(b))}" rx="3" fill="#c9d1cd"/><rect x="${cx+2}" y="${y(a)}" width="${bw}" height="${Math.max(1,y(0)-y(a))}" rx="3" fill="${g.color||'#00322d'}"/>`;
+    h+=`<text class="ops-ax" x="${cx-bw/2-2}" y="${y(b)-4}" text-anchor="middle">${M_(b)}</text><text class="ops-ax" x="${cx+bw/2+2}" y="${y(a)-4}" text-anchor="middle" style="font-weight:700">${M_(a)}</text>`;
+    String(g.label).split(' ').slice(0,3).forEach((wd,k)=>{h+=`<text class="ops-ax" x="${cx}" y="${H-M.b+14+k*11}" text-anchor="middle">${escH(wd)}</text>`;});});
+  return `<svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${h}</svg><div class="ops-legend"><span><i style="background:#c9d1cd"></i>${ot('budget')}</span><span><i style="background:#00322d"></i>${ot('actual')}</span></div>`;
+}
+function svgHBars(rows,opts){ // [{label,a,b?}] horizontal, actual (+ optional budget ghost)
+  const n=rows.length||1,rh=26,W=640,H=Math.max(60,n*rh+16),L=200,R_=70,xmax=Math.max(1,...rows.flatMap(r=>[r.a,r.b||0]))*1.02,x=v=>L+(W-L-R_)*v/xmax;let h='';
+  rows.forEach((r,i)=>{const yy=8+i*rh;h+=`<text class="ops-ax" x="${L-8}" y="${yy+15}" text-anchor="end">${escH(String(r.label).slice(0,30))}</text>`;
+    if(r.b!=null)h+=`<rect x="${L}" y="${yy+3}" width="${Math.max(1,x(r.b)-L)}" height="16" rx="3" fill="#c9d1cd"/>`;
+    h+=`<rect x="${L}" y="${yy+(r.b!=null?9:5)}" width="${Math.max(1,x(r.a)-L)}" height="${r.b!=null?8:12}" rx="3" fill="${r.color||'#00322d'}"/><text class="ops-ax" x="${x(Math.max(r.a,r.b||0))+6}" y="${yy+16}" style="font-weight:700">${M_(r.a)}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${h}</svg>`+(opts&&opts.legend?`<div class="ops-legend"><span><i style="background:#c9d1cd"></i>${ot('contractB')}</span><span><i style="background:#00322d"></i>${ot('actual')}</span></div>`:'');
+}
+function svgDonut(parts){ // [{label,v,color}]
+  const tot=parts.reduce((s,p)=>s+p.v,0)||1,cx=110,cy=110,r=86,ri=54;let a0=-Math.PI/2,h='';
+  parts.forEach(p=>{const a1=a0+p.v/tot*2*Math.PI;const lg=a1-a0>Math.PI?1:0;const P=(a,rr)=>`${cx+rr*Math.cos(a)},${cy+rr*Math.sin(a)}`;
+    if(p.v>0)h+=`<path d="M${P(a0,r)} A${r},${r} 0 ${lg} 1 ${P(a1,r)} L${P(a1,ri)} A${ri},${ri} 0 ${lg} 0 ${P(a0,ri)} Z" fill="${p.color}"/>`;a0=a1;});
+  h+=`<text x="${cx}" y="${cy-4}" text-anchor="middle" style="font-weight:800;font-size:15px;fill:#1b1c19">${M_(tot===1?0:tot)}</text><text x="${cx}" y="${cy+14}" text-anchor="middle" class="ops-ax">SAR</text>`;
+  return `<div class="cx-donut"><svg viewBox="0 0 220 220" style="direction:ltr;width:180px;height:180px">${h}</svg><div class="cx-donut-lg">${parts.map(p=>`<span><i style="background:${p.color}"></i>${escH(p.label)}<b>${(p.v/tot*100).toFixed(1)}%</b> ${M_(p.v)}</span>`).join('')}</div></div>`;
+}
+
+// ---- section ----
+function opsCosts(){
+  vendorSync();
+  const cut=R2._cutoffQ,nq=R2.nq,m=costModel(),T=m.tree,F=opsCostF,ar=lang==='ar';
+  const cats=opsCats().filter(c=>c.group==='cost'),vs=vendors().slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
+  const d=T.actual-T.budget,vc=_varCls(T.budget,T.actual,T.budget);
+  const sel=(id,cur,opts,ph)=>`<select class="ops-mini" onchange="cxSet('${id}',this.value)"><option value="">${ph}</option>${opts.map(([v,l])=>`<option value="${v}"${cur===v?' selected':''}>${escH(l)}</option>`).join('')}</select>`;
+  let h=`<div class="ops-kpis">${kpi(ot('cxActual'),M_(T.actual),m.closed?ot('cxClosedN').replace('{n}',cut):ot('cxAllPay'))}${kpi(ot('cxBudget'),M_(T.budget),m.closed?ot('cxPlanTo').replace('{n}',cut):ot('cxFullPlan'))}${kpi(ot('cxVar'),(d>=0?'+':'−')+M_(Math.abs(d)),T.budget?(d>=0?'+':'−')+Math.abs(d/T.budget*100).toFixed(1)+'% '+ot('cxVsBudget'):'',vc==='bad'?'dn':vc==='good'?'up':'')}${EXP_TYPES.filter(t=>!F.type||F.type===t.key).map(t=>{const tn=T.types.find(x=>x.key===t.key)||{actual:0,budget:0};return kpi(etypeLabel(t.key),M_(tn.actual),ot('budget')+' '+M_(tn.budget)+' · '+_varTxt(tn.budget,tn.actual),_varCls(tn.budget,tn.actual,T.budget)==='bad'?'dn':'');}).join('')}</div>`;
+  // filters
+  h+=`<div class="cx-filters"><span class="cx-seg">${[['closed',ot('cxToDate')],['all',ot('cxAll')]].map(([v,l])=>`<a class="${F.period===v?'on':''}" onclick="cxSet('period','${v}')">${l}</a>`).join('')}</span>
+    ${sel('type',F.type,EXP_TYPES.map(t=>[t.key,etypeLabel(t.key)]),ot('cxAllTypes'))}${sel('cat',F.cat,cats.map(c=>[c.key,ar?c.ar:c.en]),ot('cxAllCats'))}${sel('vendor',F.vendor,vs.map(v=>[v.id,v.name]),ot('cxAllVendors'))}
+    <input class="ops-mini cx-q" placeholder="${ot('cxSearch')}" value="${escH(F.q)}" onchange="cxSet('q',this.value)"><a class="ops-link" onclick="opsCostF={type:'',vendor:'',cat:'',period:'closed',q:'',open:{}};renderOps()">${ot('cxReset')}</a><a class="ops-link" onclick="cxExport()">${ot('cxExport')}</a></div>`;
+  // charts
+  const byType=T.types.map(t=>({label:t.label,color:t.color,vals:[t.budget,t.actual]}));
+  const topV=m.vendorTotals.filter(v=>v.key!=='_none').slice(0,10);
+  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ot('cxChTypeBA')}<span>SAR</span></h3>${svgGroupBars(byType)}</div>
+    <div class="ops-card"><h3>${ot('cxChTypeShare')}<span>SAR</span></h3>${svgDonut(T.types.map(t=>({label:t.label,v:t.actual,color:t.color})))}</div></div>
+    <div class="ops-grid2"><div class="ops-card"><h3>${ot('cxChVendorBA')}<span>${ot('cxTop10')}</span></h3>${topV.length?svgHBars(topV.map(v=>({label:v.label,a:v.actual,b:v.contract})),{legend:true}):`<p class="ops-muted">${ot('cxNoVendors')}</p>`}</div>
+    <div class="ops-card"><h3>${ot('cxChTopVendors')}<span>${ot('cxTop10')}</span></h3>${topV.length?svgHBars(topV.map(v=>{const e=Object.entries(v.types).sort((a,b)=>b[1]-a[1])[0];const t=EXP_TYPES.find(x=>x.key===(e?e[0]:'fund'));return {label:v.label,a:v.actual,color:t?t.color:'#00322d'};})):`<p class="ops-muted">${ot('cxNoVendors')}</p>`}<div class="ops-legend">${EXP_TYPES.map(t=>`<span><i style="background:${t.color}"></i>${etypeLabel(t.key)}</span>`).join('')}</div></div></div>`;
+  // drill-down table
+  const catOpts=cats.map(c=>`<option value="${c.key}">${escH(ar?c.ar:c.en)}</option>`).join('');
+  const vOpts=vs.map(v=>`<option value="${v.id}">${escH(v.name)}</option>`).join('');
+  const row=(lvl,id,label,b,a,extra,open,hasKids,cls)=>`<tr class="cx-r lv${lvl} ${cls||''}"><td><span class="cx-ind" style="--lv:${lvl}"></span>${hasKids?`<a class="cx-tg" onclick="cxToggle('${id}')">${open?'▾':'▸'}</a>`:'<span class="cx-tg"></span>'}${label}</td><td class="rfcs-num">${b!=null&&b>0.5?fN(b):'—'}</td><td class="rfcs-num">${fN(a)}</td><td class="rfcs-num cx-var ${b==null?'':_varCls(b,a,T.budget)}">${b==null?'':_varTxt(b,a)}</td><td>${extra||''}</td></tr>`;
+  let rows=row(0,'tot',`<b>${ot('cxTotal')}</b>`,T.budget,T.actual,'',true,false,'tot');
+  for(const t of T.types){const tid='t:'+t.key,to=_cxIsOpen(tid);rows+=row(1,tid,`<b style="color:${t.color}">${escH(t.label)}</b>`,t.budget,t.actual,'',to,true);if(!to)continue;
+    for(const c of t.cats){const cid='c:'+c.key,co=_cxIsOpen(cid);rows+=row(2,cid,escH(c.label),c.budget,c.actual,`<small class="ops-muted">${c.vendors.length} ${ot('cxVendorsN')}</small>`,co,c.vendors.length>0);if(!co)continue;
+      for(const v of c.vendors){const vid='v:'+c.key+':'+v.key,vo=_cxIsOpen(vid);rows+=row(3,vid,escH(v.label),v.contract,v.actual,`<small class="ops-muted">${v.pays.length} ${ot('payments')}${v.contract!=null?' · '+ot('contractB'):''}</small>`,vo,true);if(!vo)continue;
+        for(const p of v.pays){rows+=`<tr class="cx-r lv4"><td><span class="cx-ind" style="--lv:4"></span><span class="cx-tg"></span>${escH(p.date||'')} · Q${p.quarter+1} <span class="ops-muted">${escH((p.notes||p.description||p.invoiceRef||'').slice(0,60))}</span></td><td></td><td class="rfcs-num">${fN(p.amount)}</td><td></td><td class="cx-edit"><select class="ops-mini" onchange="paymentSetCat('${p.id}',this.value)"><option value="${p.category}" selected>${escH(_actCatLabel(p.category))}</option>${catOpts}</select><select class="ops-mini" onchange="paymentSetVendor('${p.id}',this.value)"><option value="">${ot('cxNoVendor')}</option>${vs.map(x=>`<option value="${x.id}"${p.vendor===x.id?' selected':''}>${escH(x.name)}</option>`).join('')}</select></td></tr>`;}}}}
+  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ot('cxDrill')}<span><a class="ops-link" onclick="cxOpenAll(true)">${ot('cxExpand')}</a> · <a class="ops-link" onclick="cxOpenAll(false)">${ot('cxCollapse')}</a></span></h3>
+    <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ot('cxLevel')}</th><th>${ot('budget')}</th><th>${ot('actual')}</th><th>${ot('cxVarCol')}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="ops-muted" style="font-size:.76rem;margin:10px 0 0">${ot('cxNote')}</p></div>`;
+  // vendor register
+  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ot('cxVendors')}<span>${vs.length}</span></h3>
+    <div class="cx-filters" style="margin-bottom:10px"><input class="ops-mini" id="vndNew" placeholder="${ot('cxNewVendor')}" style="width:260px"><button class="ops-close" style="padding:6px 14px" onclick="vendorAdd()">${ot('cxAdd')}</button></div>
+    <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ot('cxVendor')}</th><th>${ot('cxDefaultCat')}</th><th>${ot('contractB')}</th><th>${ot('payments')}</th><th>${ot('actual')}</th><th>${ot('cxVarCol')}</th><th>${ot('cxMergeInto')}</th></tr></thead><tbody>
+    ${vs.map(v=>{const tot=m.vendorTotals.find(x=>x.key===v.id)||{actual:0,n:0};return `<tr><td><input class="ops-mini" style="width:220px" value="${escH(v.name)}" onchange="vendorSet('${v.id}','name',this.value)"></td><td><select class="ops-mini" onchange="vendorSet('${v.id}','cat',this.value)"><option value="">—</option>${cats.map(c=>`<option value="${c.key}"${v.cat===c.key?' selected':''}>${escH(ar?c.ar:c.en)}</option>`).join('')}</select></td><td><input type="number" class="ops-mini" style="width:130px" value="${v.contract??''}" placeholder="—" onchange="vendorSet('${v.id}','contract',this.value)"></td><td class="rfcs-num">${tot.n}</td><td class="rfcs-num">${fN(tot.actual)}</td><td class="rfcs-num cx-var ${v.contract!=null?_varCls(v.contract,tot.actual,T.budget):''}">${v.contract!=null?_varTxt(v.contract,tot.actual):''}</td><td><select class="ops-mini" onchange="if(this.value)vendorMerge('${v.id}',this.value)"><option value="">…</option>${vs.filter(x=>x.id!==v.id).map(x=>`<option value="${x.id}">${escH(x.name)}</option>`).join('')}</select>${tot.n?'':` <a class="ops-link" onclick="vendorRemove('${v.id}')">✕</a>`}</td></tr>`;}).join('')||`<tr><td colspan="7" class="ops-muted">${ot('cxNoVendors')}</td></tr>`}</tbody></table></div></div>`;
+  // forecast treatment cards (unchanged behaviour)
+  h+=`<details class="cx-details"><summary>${ot('cxTreatCards')}</summary><div>${cats.filter(c=>sumA(Array.from({length:R.nq},(_,i)=>c.getQ(R,i)))>0.5||actualOf(c.key,0,nq)>0).map(c=>costCard(c,cut,nq)).join('')}</div></details>`;
+  return h;
+}
+// CSV export of the transaction-level data structure (date, vendor, type, category, description, quarter budget of the line, actual, variance, fund/project)
+function cxExport(){
+  const m=costModel(),ar=lang==='ar',rows=[[ 'Date','Quarter','Vendor','Expense Type','Expense Category','Description','Invoice','Line budget (quarter)','Actual','Variance','Variance %','Fund / Project']];
+  const F=opsCostF,q=_vnorm(F.q);
+  const cb=(k,i)=>{const c=ACT_CATS.find(x=>x.key===k);return c&&!c.actualOnly?c.getQ(R,i):0;};
+  const nm=(D.fund_name||D.project_name||document.getElementById('projSelect')?.selectedOptions[0]?.textContent||'').trim();
+  for(const p of m.pays){if((F.type&&etypeOf(p.category)!==F.type)||(F.vendor&&p.vendor!==F.vendor)||(F.cat&&p.category!==F.cat))continue;if(q&&!_vnorm(p.payee+' '+(p.notes||'')+' '+(p.description||'')).includes(q))continue;
+    const v=vendorById(p.vendor),b=cb(p.category,p.quarter),d=p.amount-b;
+    rows.push([p.date||'','Q'+(p.quarter+1),v?v.name:(p.payee||''),etypeLabel(etypeOf(p.category)),_actCatLabel(p.category),(p.notes||p.description||'').replace(/\s+/g,' '),p.invoiceRef||'',Math.round(b),Math.round(p.amount),Math.round(d),b?(d/b*100).toFixed(1)+'%':'',nm]);}
+  const csv='﻿'+rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='expenses_'+(ar?'analysis':'analysis')+'.csv';a.click();
+}
+
 
 // Sales: per sales component — sold area, achieved price, unsold price, pace, start quarter → drives revenue component override + revenue phasing
 function setSales(key,field,v){_rfNorm();reforecastSettings.sales=reforecastSettings.sales||{};const s=reforecastSettings.sales[key]=reforecastSettings.sales[key]||{};if(v==='')delete s[field];else s[field]=Number(v);applySalesToForecast();opsRefresh();}
