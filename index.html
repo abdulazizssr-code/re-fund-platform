@@ -32,7 +32,6 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 [dir=rtl] .kpi-l{font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif}
 [dir=rtl] .ch-card h3{text-align:right;font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif}
 [dir=rtl] .ds-lbl{text-align:right}
-[dir=rtl] .hdr{flex-direction:row-reverse}
 [dir=rtl] .sec-hd{text-align:right;font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif}
 [dir=rtl] .role-tabs{direction:rtl}
 [dir=rtl] .es-tbl .es-val{text-align:left}
@@ -108,7 +107,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .project-bar .proj-save{background:var(--secondary);color:#fff}
 .project-bar .proj-save:hover{background:var(--secondary-l)}
 .project-bar label{font-size:.84rem;font-weight:600;color:var(--on-surface-v)}
-.project-bar .btn-calc{margin-left:auto;padding:11px 32px;background:linear-gradient(135deg,var(--primary),var(--primary-c));color:#fff;font-size:.95rem;font-weight:700;letter-spacing:.03em;border-radius:10px}
+.project-bar .btn-calc{margin-inline-start:auto;padding:11px 32px;background:linear-gradient(135deg,var(--primary),var(--primary-c));color:#fff;font-size:.95rem;font-weight:700;letter-spacing:.03em;border-radius:10px}
 .project-bar .btn-calc:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,50,45,.2)}
 .user-badge{font-size:.82rem;color:rgba(255,255,255,.6);font-weight:500}
 .btn-logout{background:transparent;color:var(--error);border:1.5px solid rgba(186,26,26,.3)}
@@ -470,6 +469,14 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
   .hdr-sub{display:none}
 }
 
+/* ── RTL polish ── */
+[dir=rtl] .kpi-v,[dir=rtl] .ds-val{unicode-bidi:plaintext}
+[dir=rtl] .footer{direction:rtl}
+.live-toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:10001;display:flex;gap:12px;align-items:center;font-size:.9rem}
+[dir=rtl] .live-toast{transform:translateX(50%)}
+.live-toast button{background:#fff;color:var(--primary);border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-family:inherit}
+.live-toast .lt-x{background:transparent;color:#fff;padding:0 4px;font-size:1.1rem}
+.share-link-area .ln{display:block;margin-bottom:6px;word-break:break-all}
 /* ── SHARE MODAL ── */
 .share-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:10000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
 .share-overlay.open{opacity:1;pointer-events:auto}
@@ -694,15 +701,20 @@ canvas{max-width:100%;display:block}
     <h2 id="shareTitle">Share Projects</h2>
     <p class="share-desc" id="shareDesc">Select one or more projects to share via a unique link. Recipients can view the financial model.</p>
     <h3 id="shareProjHead">Select Projects</h3>
-    <div class="share-proj-list" id="shareProjList"></div>
+    <div class="share-proj-list" id="shareProjList" data-no-i18n></div>
     <div class="share-toggle-row">
       <span id="shareToggleLabel">Allow recipient to modify assumptions</span>
       <label class="share-toggle"><input type="checkbox" id="shareAllowEdit" checked><span class="slider"></span></label>
     </div>
-    <div class="share-link-area" id="shareLinkArea"></div>
+    <div class="share-toggle-row">
+      <span id="shareLiveLabel">Live link — recipient adds it to their account and sees your updates automatically</span>
+      <label class="share-toggle"><input type="checkbox" id="shareLive" checked><span class="slider"></span></label>
+    </div>
+    <div class="share-link-area" id="shareLinkArea" data-no-i18n></div>
     <div class="share-btns">
       <button class="btn-gen-link" id="btnGenLink" onclick="generateShareLink()">Generate Link</button>
       <button class="btn-copy-link" id="btnCopyLink" onclick="copyShareLink()" style="display:none">Copy Link</button>
+      <button class="btn-share-close" id="btnStopLive" onclick="stopLiveShare()" style="display:none">Stop live sharing</button>
       <button class="btn-share-close" onclick="closeShareModal()">Close</button>
     </div>
   </div>
@@ -735,7 +747,7 @@ canvas{max-width:100%;display:block}
   </div>
   <div class="hdr-btns">
     <span class="user-badge" id="userBadge"></span>
-    <button class="btn-lang" onclick="toggleLang()">العربية</button>
+    <button class="btn-lang" data-no-i18n onclick="toggleLang()">العربية</button>
     <button class="btn-dl" id="btnDL" onclick="dlExcel()">Excel</button>
     <button class="btn-dl" id="btnPDF" onclick="dlPDF()">PDF</button>
     <button class="btn-dl" id="btnAcct" onclick="openAcctSettings()" title="Account Settings" style="font-size:.85rem">⚙ Account</button>
@@ -746,7 +758,7 @@ canvas{max-width:100%;display:block}
   <div class="sb-info"><span class="sb-badge" id="sharedBadge">SHARED VIEW</span><span id="sharedMsg">You are viewing shared projects</span></div>
   <button class="sb-close" id="sharedExitBtn" onclick="exitSharedView()">Exit Shared View</button>
 </div>
-<div class="project-bar" id="projectBar"><label id="projLbl">Project:</label><select id="projSelect" onchange="loadProject()"></select><button class="proj-save" id="btnProjSave" onclick="saveProject()">💾 Save</button><button class="proj-new" id="btnProjNew" onclick="newProject()">+ New</button><button class="proj-del" id="btnProjDel" onclick="deleteProject()">🗑 Delete</button><button class="proj-new" id="btnProjHist" onclick="showVersions()" title="Saved versions">🕘</button><button class="proj-share" id="btnProjShare" onclick="openShareModal()">🔗 Share</button><button class="btn-calc" id="btnCalcTop" onclick="calculate()">Calculate</button><button class="btn-calc" id="btnReforecast" onclick="toggleReforecast()" style="background:#0d6efd;display:none">🔄 Reforecast</button></div>
+<div class="project-bar" id="projectBar"><label id="projLbl">Project:</label><select id="projSelect" data-no-i18n onchange="loadProject()"></select><button class="proj-save" id="btnProjSave" onclick="saveProject()">💾 Save</button><button class="proj-new" id="btnProjNew" onclick="newProject()">+ New</button><button class="proj-del" id="btnProjDel" onclick="deleteProject()">🗑 Delete</button><button class="proj-new" id="btnProjHist" onclick="showVersions()" title="Saved versions">🕘</button><button class="proj-share" id="btnProjShare" onclick="openShareModal()">🔗 Share</button><button class="btn-calc" id="btnCalcTop" onclick="calculate()">Calculate</button><button class="btn-calc" id="btnReforecast" onclick="toggleReforecast()" style="background:#0d6efd;display:none">🔄 Reforecast</button></div>
 <nav class="tabs" id="tabNav"></nav>
 <main class="main">
   <div class="pnl act" id="p-assumptions"></div>
@@ -789,6 +801,9 @@ let currentEmail=null;
 let currentProjectId=null; // id of the loaded project row (null = unsaved)
 let authMode='login';
 let isGuest=false;
+let liveReadOnly=false;   // true while viewing a project shared with me as view-only
+let _mySaveStamp=null;    // updated_at of my own last save (so realtime ignores my own echo)
+let _liveCh=null;         // Supabase realtime channel for the open project
 
 // ═══════════════════════════════════════════════
 // SECURITY HELPERS
@@ -806,6 +821,7 @@ function _authErr(e){
 }
 
 function enterGuestMode(){
+  if(_pendingLiveToken()){_authMsg('loginError',lang==='ar'?'لإضافة المشروع المشارك يجب تسجيل الدخول أو إنشاء حساب.':'To add the shared project you need to sign in or create an account.');return;}
   isGuest=true; currentUser='Guest'; currentUid=null; currentProjectId=null;
   document.getElementById('loginOverlay').classList.add('hidden');
   document.getElementById('appMain').style.display='';
@@ -965,7 +981,7 @@ function setupAuthListener(){
       document.getElementById('userBadge').textContent='\u{1F464} '+currentUser;
       const acctBtn=document.getElementById('btnAcct'); if(acctBtn) acctBtn.style.display='';
       if(event==='PASSWORD_RECOVERY') _promptNewPassword();
-      if(event==='SIGNED_IN'||event==='INITIAL_SESSION') loadProjectList();
+      if(event==='SIGNED_IN'||event==='INITIAL_SESSION') loadProjectList().then(processPendingLive);
     }else if(event!=='TOKEN_REFRESHED'){
       currentUser=null;currentUid=null;currentEmail=null;
       if(!isSharedView){
@@ -1002,43 +1018,85 @@ function _cleanName(name){
   name=String(name||'').replace(/[\/\\]/g,'-').substring(0,100).trim();
   if(!name||name==='.'||name==='..'||/^__.*__$/.test(name)) return null; return name;
 }
+// sharedWithMe[id] = {can_edit}  — projects other people shared with me via a live link
+let sharedWithMe={}, projNames={};
+function _unsavedOpt(){return '<option value="">-- '+(lang==='ar'?'مشروع جديد غير محفوظ':'New Unsaved')+' --</option>';}
+function _isSharedProj(id){return !!(id&&sharedWithMe[id]);}
+function _sharedCanEdit(id){return !!(id&&sharedWithMe[id]&&sharedWithMe[id].can_edit);}
 async function loadProjectList(){
   const sel=document.getElementById('projSelect');
-  if(!sb||!currentUid){sel.innerHTML='<option value="">-- New Unsaved --</option>';return;}
+  if(!sb||!currentUid){sel.innerHTML=_unsavedOpt();return;}
   try{
     const {data,error}=await sb.from('projects').select('id,name').eq('owner',currentUid).order('updated_at',{ascending:false});
     if(error) throw error;
-    sel.innerHTML='<option value="">-- New Unsaved --</option>'+data.map(p=>'<option value="'+escH(p.id)+'">'+escH(p.name)+'</option>').join('');
+    // live-shared projects (needs supabase/live-share.sql; silently skipped if not installed yet)
+    let shared=[]; sharedWithMe={};
+    try{
+      const {data:mem,error:me}=await sb.from('project_members').select('project_id,can_edit').eq('user_id',currentUid);
+      if(!me&&mem&&mem.length){
+        mem.forEach(m=>{sharedWithMe[m.project_id]={can_edit:!!m.can_edit};});
+        const {data:sp}=await sb.from('projects').select('id,name').in('id',mem.map(m=>m.project_id)).order('updated_at',{ascending:false});
+        shared=sp||[];
+      }
+    }catch(ignored){}
+    projNames={}; data.forEach(p=>projNames[p.id]=p.name); shared.forEach(p=>projNames[p.id]=p.name);
+    let h=_unsavedOpt()+data.map(p=>'<option value="'+escH(p.id)+'">'+escH(p.name)+'</option>').join('');
+    if(shared.length){
+      h+='<optgroup label="'+(lang==='ar'?'مشاريع مشاركة معي (مباشرة)':'Shared with me (live)')+'">'+shared.map(p=>'<option value="'+escH(p.id)+'">🔗 '+escH(p.name)+(sharedWithMe[p.id].can_edit?'':(lang==='ar'?' — عرض فقط':' — view only'))+'</option>').join('')+'</optgroup>';
+    }
+    sel.innerHTML=h;
     if(currentProjectId) sel.value=currentProjectId;
-  }catch(e){console.error('loadProjectList error:',e);sel.innerHTML='<option value="">-- New Unsaved --</option>';}
+  }catch(e){console.error('loadProjectList error:',e);sel.innerHTML=_unsavedOpt();}
 }
 // Upsert by (owner, name). Returns the row id.
 async function _upsertProject(name,snap){
   const {data:existing,error:e1}=await sb.from('projects').select('id').eq('owner',currentUid).eq('name',name).maybeSingle();
   if(e1) throw e1;
   const row={owner:currentUid,name,fund:snap.fund,projects:snap.projects,reforecast:snap.reforecast,updated_at:new Date().toISOString()};
+  _mySaveStamp=row.updated_at;
   const q=existing?sb.from('projects').update(row).eq('id',existing.id):sb.from('projects').insert(row);
   const {data,error}=await q.select('id').single(); if(error) throw error; return data.id;
 }
 async function saveProject(){
   if(isGuest){alert(lang==='ar'?'وضع الزائر: المشاريع لا تُحفظ. يرجى إنشاء حساب للحفظ.':'Guest mode: projects are not saved. Please create an account to save.');return;}
-  if(!sb||!currentUid){alert('Not signed in');return;}
+  if(!sb||!currentUid){alert(lang==='ar'?'لم تسجّل الدخول':'Not signed in');return;}
   const sel=document.getElementById('projSelect');
-  let name=sel.selectedOptions[0]&&sel.value?sel.selectedOptions[0].textContent:'';
+  if(_isSharedProj(currentProjectId)){ return saveSharedLive(); }
+  let name=sel.value?(projNames[sel.value]||''):'';
   if(!name){const el=document.getElementById('fund_name'); name=(el&&el.value)||D.fund_name||'Untitled Project';}
-  name=_cleanName(name); if(!name){alert('Invalid project name');return;}
+  name=_cleanName(name); if(!name){alert(lang==='ar'?'اسم المشروع غير صالح':'Invalid project name');return;}
   try{
     // keep an automatic version of the previous state so nothing is ever lost
     if(currentProjectId){ const {data:prev}=await sb.from('projects').select('fund,projects,reforecast').eq('id',currentProjectId).maybeSingle();
       if(prev) await sb.from('project_versions').insert({project_id:currentProjectId,label:'auto '+new Date().toISOString().slice(0,16).replace('T',' '),fund:prev.fund,projects:prev.projects,reforecast:prev.reforecast}); }
     currentProjectId=await _upsertProject(name,_snapshot());
-    await loadProjectList(); sel.value=currentProjectId;
+    await loadProjectList(); sel.value=currentProjectId; watchProject(currentProjectId);
     alert((lang==='ar'?'تم حفظ المشروع "':'Project "')+name+(lang==='ar'?'" في السحابة':'" saved to cloud!'));
-  }catch(e){alert('Error saving: '+e.message);}
+  }catch(e){alert((lang==='ar'?'خطأ في الحفظ: ':'Error saving: ')+e.message);}
+}
+// Save a project someone shared with me (live link)
+async function saveSharedLive(){
+  const id=currentProjectId, name=projNames[id]||'';
+  if(!_sharedCanEdit(id)){
+    if(confirm(lang==='ar'?'هذا المشروع للعرض فقط — تحديثات المالك تظهر لديك تلقائياً.\nهل تريد حفظ نسخة مستقلة في مشاريعك؟':'This project is view-only — the owner\'s updates appear for you automatically.\nSave an independent copy to your projects?')){
+      const nn=prompt(lang==='ar'?'اسم النسخة:':'Name for your copy:',name+(lang==='ar'?' (نسخة)':' (copy)')); if(!nn) return;
+      try{ const nid=await saveProjectAs(nn,_snapshot()); if(nid){currentProjectId=nid; await loadProjectList(); document.getElementById('projSelect').value=nid; liveReadOnly=false; watchProject(nid); buildForm();} }
+      catch(e){alert((lang==='ar'?'خطأ في الحفظ: ':'Error saving: ')+e.message);}
+    }
+    return;
+  }
+  try{
+    const {data:prev}=await sb.from('projects').select('fund,projects,reforecast').eq('id',id).maybeSingle();
+    if(prev) await sb.from('project_versions').insert({project_id:id,label:'auto '+new Date().toISOString().slice(0,16).replace('T',' ')+' ('+(currentUser||'')+')',fund:prev.fund,projects:prev.projects,reforecast:prev.reforecast});
+    const snap=_snapshot(), stamp=new Date().toISOString(); _mySaveStamp=stamp;
+    const {error}=await sb.from('projects').update({fund:snap.fund,projects:snap.projects,reforecast:snap.reforecast,updated_at:stamp}).eq('id',id);
+    if(error) throw error;
+    alert(lang==='ar'?'تم حفظ التعديلات — يراها المالك والمشاركون فوراً':'Saved — the owner and everyone sharing it see this right away');
+  }catch(e){alert((lang==='ar'?'خطأ في الحفظ: ':'Error saving: ')+e.message);}
 }
 async function saveProjectAs(name,snap){
-  if(!sb||!currentUid){alert('Not signed in');return null;}
-  name=_cleanName(name); if(!name){alert('Invalid project name');return null;}
+  if(!sb||!currentUid){alert(lang==='ar'?'لم تسجّل الدخول':'Not signed in');return null;}
+  name=_cleanName(name); if(!name){alert(lang==='ar'?'اسم المشروع غير صالح':'Invalid project name');return null;}
   const id=await _upsertProject(name,snap); await loadProjectList(); return id;
 }
 async function saveSharedToMyProjects(){
@@ -1057,13 +1115,14 @@ async function saveSharedToMyProjects(){
 }
 async function loadProject(){
   const id=document.getElementById('projSelect').value;
-  if(!id){currentProjectId=null;return;}
+  if(!id){currentProjectId=null;liveReadOnly=false;watchProject(null);buildForm();return;}
   if(!sb||!currentUid) return;
   try{
     const {data:p,error}=await sb.from('projects').select('*').eq('id',id).single();
     if(error) throw error;
-    currentProjectId=p.id; _applySnapshot(p);
-  }catch(e){alert('Error loading: '+e.message);}
+    currentProjectId=p.id; liveReadOnly=_isSharedProj(p.id)&&!_sharedCanEdit(p.id); _applySnapshot(p);
+    watchProject(p.id);
+  }catch(e){alert((lang==='ar'?'خطأ في التحميل: ':'Error loading: ')+e.message);}
 }
 async function listVersions(){
   if(!currentProjectId) return [];
@@ -1086,17 +1145,100 @@ async function showVersions(){
     if(confirm(lang==='ar'?'استعادة هذه النسخة؟ (الحالة الحالية ستُحفظ كنسخة عند الحفظ التالي)':'Restore this version? (the current state is kept as a version on your next Save)')) await restoreVersion(vs[n-1].id);
   }catch(e){alert(e.message);}
 }
-function newProject(){currentProjectId=null;workspace='feasibility';document.getElementById('projSelect').value='';Object.keys(defaultD).forEach(k=>{D[k]=defaultD[k];});actuals=[];reforecastSettings=defaultRF();reforecastMode=false;R2=null;projects=[{name:'Project 1',strategy:'sell',land_area:204624,land_price_sqm:900,brokerage_pct:2.5,rett_pct:2,rett_refund:0,build_area:204624,dev_cost_sqm:138,dev_fee_pct:12.7,contingency_pct:5,insurance_pct:5,design_fee_mode:'fixed',design_fee:564762,design_fee_pct:2,supervision_fee_mode:'fixed',supervision_fee:0,supervision_fee_pct:0,licensing_fee:564762,con_period_months:24,sale_price_sqm:2375,sell_area:128913,wafi_pct:1,sell_exp_pct:2.5,leasable_area:0,rent_per_sqm:400,rent_escalator_pct:2,hold_period_months:36,exit_cap_rate:8,selling_cost_pct:2,occupancySchedule:[0,0,0,0,0,0,40,50,60,70,80,90],opexItems:[{name:'Property Management',nameAr:'إدارة العقار',mode:'pct_egi',value:2},{name:'Maintenance',nameAr:'الصيانة',mode:'fixed',value:100000},{name:'Utilities',nameAr:'المرافق',mode:'fixed',value:0},{name:'Insurance',nameAr:'التأمين',mode:'sqm',value:0},{name:'Major Repairs',nameAr:'إصلاحات رئيسية',mode:'fixed',value:0}],conComponents:[{name:'المساحة المطورة وسعر التطوير بنية تحتية',nameEn:'Developed Area & Infrastructure',gfa:204624,cost:120}],salesComponents:[{name:'سكني',nameEn:'Residential',area:128913,price:2375}],schBaseCon:[0,5,10,15,20,20,20,10],schDevFee:[0,5,10,15,20,20,20,10],schContingency:[0,0,0,25,0,25,25,25],schLicensing:[0,100,0,0,0,0,0,0],schDesign:[0,100,0,0,0,0,0,0],schInsurance:[0,0,0,25,0,25,25,25],schSupervision:[3,7,13,19,20,18,12,8],schMarketing:[0,100,0,0,0,0,0,0],salesSchedule:[0,0,0,0,0,5,5,90]}];activeProjectIdx=0;R=null;buildTabs();buildForm();}
+function newProject(){currentProjectId=null;liveReadOnly=false;try{watchProject(null);}catch(ignored){}workspace='feasibility';document.getElementById('projSelect').value='';Object.keys(defaultD).forEach(k=>{D[k]=defaultD[k];});actuals=[];reforecastSettings=defaultRF();reforecastMode=false;R2=null;projects=[{name:'Project 1',strategy:'sell',land_area:204624,land_price_sqm:900,brokerage_pct:2.5,rett_pct:2,rett_refund:0,build_area:204624,dev_cost_sqm:138,dev_fee_pct:12.7,contingency_pct:5,insurance_pct:5,design_fee_mode:'fixed',design_fee:564762,design_fee_pct:2,supervision_fee_mode:'fixed',supervision_fee:0,supervision_fee_pct:0,licensing_fee:564762,con_period_months:24,sale_price_sqm:2375,sell_area:128913,wafi_pct:1,sell_exp_pct:2.5,leasable_area:0,rent_per_sqm:400,rent_escalator_pct:2,hold_period_months:36,exit_cap_rate:8,selling_cost_pct:2,occupancySchedule:[0,0,0,0,0,0,40,50,60,70,80,90],opexItems:[{name:'Property Management',nameAr:'إدارة العقار',mode:'pct_egi',value:2},{name:'Maintenance',nameAr:'الصيانة',mode:'fixed',value:100000},{name:'Utilities',nameAr:'المرافق',mode:'fixed',value:0},{name:'Insurance',nameAr:'التأمين',mode:'sqm',value:0},{name:'Major Repairs',nameAr:'إصلاحات رئيسية',mode:'fixed',value:0}],conComponents:[{name:'المساحة المطورة وسعر التطوير بنية تحتية',nameEn:'Developed Area & Infrastructure',gfa:204624,cost:120}],salesComponents:[{name:'سكني',nameEn:'Residential',area:128913,price:2375}],schBaseCon:[0,5,10,15,20,20,20,10],schDevFee:[0,5,10,15,20,20,20,10],schContingency:[0,0,0,25,0,25,25,25],schLicensing:[0,100,0,0,0,0,0,0],schDesign:[0,100,0,0,0,0,0,0],schInsurance:[0,0,0,25,0,25,25,25],schSupervision:[3,7,13,19,20,18,12,8],schMarketing:[0,100,0,0,0,0,0,0],salesSchedule:[0,0,0,0,0,5,5,90]}];activeProjectIdx=0;R=null;buildTabs();buildForm();}
 async function deleteProject(){
   if(isGuest){alert(lang==='ar'?'وضع الزائر: لا توجد مشاريع محفوظة للحذف.':'Guest mode: no saved projects to delete.');return;}
   const sel=document.getElementById('projSelect'); const id=sel.value;
-  if(!id){alert('No project selected');return;}
-  const name=sel.selectedOptions[0].textContent;
-  if(!confirm('Delete "'+name+'"?')) return;
-  try{ const {error}=await sb.from('projects').delete().eq('id',id); if(error) throw error; currentProjectId=null; await loadProjectList(); }
-  catch(e){alert('Error deleting: '+e.message);}
+  if(!id){alert(lang==='ar'?'لم يتم اختيار مشروع':'No project selected');return;}
+  const name=projNames[id]||'';
+  if(_isSharedProj(id)){
+    if(!confirm(lang==='ar'?'إزالة "'+name+'" من قائمتك؟ (لن يُحذف لدى المالك)':'Remove "'+name+'" from your list? (it is not deleted for the owner)')) return;
+    try{ const {error}=await sb.from('project_members').delete().eq('project_id',id).eq('user_id',currentUid); if(error) throw error; currentProjectId=null; liveReadOnly=false; watchProject(null); await loadProjectList(); newProject(); }
+    catch(e){alert((lang==='ar'?'خطأ: ':'Error: ')+e.message);}
+    return;
+  }
+  if(!confirm(lang==='ar'?'حذف "'+name+'"؟':'Delete "'+name+'"?')) return;
+  try{ const {error}=await sb.from('projects').delete().eq('id',id); if(error) throw error; currentProjectId=null; watchProject(null); await loadProjectList(); }
+  catch(e){alert((lang==='ar'?'خطأ في الحذف: ':'Error deleting: ')+e.message);}
 }
 
+
+
+// =============================================
+// LIVE SHARING (Supabase) — recipient adds the project to their account,
+// and every Save by the owner shows up for them automatically.
+// Requires supabase/live-share.sql to be run once in the Supabase SQL editor.
+// =============================================
+const LIVE_KEY='refund_pending_live';
+function _pendingLiveToken(){try{return localStorage.getItem(LIVE_KEY);}catch(e){return null;}}
+function _setPendingLive(t){try{t?localStorage.setItem(LIVE_KEY,t):localStorage.removeItem(LIVE_KEY);}catch(e){}}
+async function processPendingLive(){
+  const token=_pendingLiveToken(); if(!token||!sb||!currentUid) return;
+  _setPendingLive(null);
+  try{
+    const {data:pid,error}=await sb.rpc('join_live_share',{p_token:token});
+    if(error) throw error;
+    await loadProjectList();
+    const sel=document.getElementById('projSelect'); sel.value=pid; await loadProject();
+    alert(lang==='ar'?'تمت إضافة المشروع المشارك إلى حسابك — ستظهر تحديثات المالك تلقائياً.':'The shared project was added to your account — the owner\'s updates will appear automatically.');
+  }catch(e){alert((lang==='ar'?'تعذّر فتح الرابط المشارك: ':'Could not open the shared link: ')+(e.message||e));}
+}
+function watchProject(id){
+  if(!sb) return;
+  if(_liveCh){try{sb.removeChannel(_liveCh);}catch(ignored){} _liveCh=null;}
+  if(!id) return;
+  _liveCh=sb.channel('proj-'+id)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'projects',filter:'id=eq.'+id},()=>onRemoteUpdate(id))
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'projects',filter:'id=eq.'+id},()=>{liveToast(lang==='ar'?'حذف المالك هذا المشروع':'The owner deleted this project');})
+    .subscribe();
+}
+async function onRemoteUpdate(id){
+  if(id!==currentProjectId) return;
+  const {data:p,error}=await sb.from('projects').select('*').eq('id',id).maybeSingle();
+  if(error||!p) return;
+  if(_mySaveStamp&&p.updated_at&&new Date(p.updated_at).getTime()===new Date(_mySaveStamp).getTime()) return; // my own save
+  const apply=()=>{
+    const had=!!R, cur=document.querySelector('.pnl.act'), tab=cur?cur.id.slice(2):null;
+    _applySnapshot(p);
+    if(had){ try{_silentCalc=true;calculate();}finally{_silentCalc=false;} if(tab) showTab(tab); }
+  };
+  if(liveReadOnly){ apply(); liveToast(lang==='ar'?'تم تحديث المشروع من المالك':'Updated by the owner'); }
+  else liveToast(lang==='ar'?'قام شخص آخر بحفظ تعديلات على هذا المشروع':'Someone else saved changes to this project',lang==='ar'?'تحميل الأحدث':'Load latest',apply);
+}
+function liveToast(msg,btnLabel,onBtn){
+  let el=document.getElementById('liveToast'); if(el) el.remove();
+  el=document.createElement('div'); el.id='liveToast'; el.className='live-toast';
+  el.innerHTML='<span></span>'+(btnLabel?'<button class="lt-go"></button>':'')+'<button class="lt-x">×</button>';
+  el.querySelector('span').textContent=msg;
+  if(btnLabel){const b=el.querySelector('.lt-go'); b.textContent=btnLabel; b.onclick=()=>{el.remove();onBtn();};}
+  el.querySelector('.lt-x').onclick=()=>el.remove();
+  document.body.appendChild(el);
+  if(!btnLabel) setTimeout(()=>{if(el.isConnected) el.remove();},5000);
+}
+async function _selectedShareIds(){
+  const ids=[...document.querySelectorAll('#shareProjList input[type=checkbox]:checked')].map(cb=>cb.dataset.id).filter(Boolean);
+  if(!ids.length&&currentProjectId&&!_isSharedProj(currentProjectId)) ids.push(currentProjectId);
+  return ids;
+}
+async function generateLiveLinks(){
+  const ids=await _selectedShareIds();
+  if(!ids.length){alert(lang==='ar'?'احفظ المشروع أولاً ثم اختره من القائمة — الرابط المباشر يعمل للمشاريع المحفوظة فقط.':'Save the project first, then tick it in the list — live links work for saved projects only.');return null;}
+  const canEdit=document.getElementById('shareAllowEdit').checked;
+  const base=window.location.origin+window.location.pathname, lines=[];
+  for(const id of ids){
+    const {data:token,error}=await sb.rpc('enable_live_share',{p_project:String(id),p_can_edit:canEdit});
+    if(error) throw error;
+    lines.push({name:projNames[id]||'',url:base+'#live='+token});
+  }
+  return lines;
+}
+async function stopLiveShare(){
+  const ids=await _selectedShareIds(); if(!ids.length) return;
+  if(!confirm(lang==='ar'?'إيقاف المشاركة المباشرة للمشاريع المحددة؟ سيفقد المستلمون الوصول ولن تعمل الروابط القديمة.':'Stop live sharing for the selected projects? Recipients lose access and old links stop working.')) return;
+  try{ for(const id of ids){const {error}=await sb.rpc('revoke_live_share',{p_project:String(id)}); if(error) throw error;}
+    const a=document.getElementById('shareLinkArea'); a.style.display='block'; a.textContent=lang==='ar'?'تم إيقاف المشاركة.':'Sharing stopped.'; document.getElementById('btnCopyLink').style.display='none';
+  }catch(e){alert(e.message);}
+}
 
 // =============================================
 // SHARING SYSTEM
@@ -1129,17 +1271,22 @@ async function openShareModal(){
   document.getElementById('shareDesc').textContent=_t.shareDesc;
   document.getElementById('shareProjHead').textContent=_t.shareProjHead;
   document.getElementById('shareToggleLabel').textContent=_t.shareToggle;
+  document.getElementById('shareLiveLabel').textContent=lang==='ar'?'رابط مباشر — يضيفه المستلم إلى حسابه ويرى تحديثاتك تلقائياً':'Live link — recipient adds it to their account and sees your updates automatically';
+  document.getElementById('btnStopLive').textContent=lang==='ar'?'إيقاف المشاركة المباشرة':'Stop live sharing';
+  document.getElementById('btnStopLive').style.display=(currentUid&&!isGuest)?'':'none';
+  const liveCb=document.getElementById('shareLive'); liveCb.disabled=!currentUid||isGuest; if(liveCb.disabled) liveCb.checked=false;
   document.getElementById('btnGenLink').textContent=_t.shareGenLink;
   document.getElementById('btnCopyLink').textContent=_t.shareCopyLink;
   document.querySelector('.btn-share-close').textContent=_t.shareClose;
   // Build project list
   const projs=await getProjects();
   const names=Object.keys(projs);
+  const idByName={}; Object.keys(projNames).forEach(id=>{if(!_isSharedProj(id)) idByName[projNames[id]]=id;});
   const listEl=document.getElementById('shareProjList');
   if(names.length===0){
     listEl.innerHTML='<div class="share-no-proj">'+_t.shareNoProj+'</div>';
   } else {
-    listEl.innerHTML=names.map((n,i)=>'<div class="share-proj-item"><input type="checkbox" id="sp_'+i+'" value="'+escH(n)+'"><label for="sp_'+i+'">'+escH(n)+'</label></div>').join('');
+    listEl.innerHTML=names.map((n,i)=>'<div class="share-proj-item"><input type="checkbox" id="sp_'+i+'" value="'+escH(n)+'" data-id="'+escH(idByName[n]||'')+'"'+(idByName[n]&&idByName[n]===currentProjectId?' checked':'')+'><label for="sp_'+i+'">'+escH(n)+'</label></div>').join('');
   }
   // Also offer current unsaved project
   document.getElementById('shareLinkArea').style.display='none';
@@ -1165,6 +1312,19 @@ function trimSch(a){const c=[...a];while(c.length>0&&c[c.length-1]===0) c.pop();
 
 async function generateShareLink(){
   const _t=TX[lang];
+  if(document.getElementById('shareLive').checked){
+    const linkArea=document.getElementById('shareLinkArea'), btnGen=document.getElementById('btnGenLink');
+    btnGen.disabled=true; linkArea.style.display='block'; linkArea.textContent=_t.shareGenerating||'Generating link...';
+    try{
+      const lines=await generateLiveLinks();
+      if(!lines){linkArea.style.display='none';return;}
+      linkArea.innerHTML=lines.map(l=>'<span class="ln">'+(lines.length>1?'<b>'+escH(l.name)+'</b><br>':'')+escH(l.url)+'</span>').join('');
+      document.getElementById('btnCopyLink').style.display='';
+    }catch(e){
+      linkArea.textContent=(lang==='ar'?'تعذّر إنشاء الرابط المباشر. هل شغّلت ملف supabase/live-share.sql؟ — ':'Could not create the live link. Did you run supabase/live-share.sql? — ')+(e.message||e);
+    }finally{btnGen.disabled=false;}
+    return;
+  }
   const checks=document.querySelectorAll('#shareProjList input[type=checkbox]:checked');
   const projs=await getProjects();
   const selected={};
@@ -1226,7 +1386,8 @@ function generateShareId(){
 
 function copyShareLink(){
   const _t=TX[lang];
-  const linkText=document.getElementById('shareLinkArea').textContent;
+  const la=document.getElementById('shareLinkArea');
+  const linkText=la.querySelector('.ln')?[...la.querySelectorAll('.ln')].map(x=>x.innerText.trim()).join('\n\n'):la.textContent;
   navigator.clipboard.writeText(linkText).then(()=>{
     const btn=document.getElementById('btnCopyLink');
     const orig=btn.textContent;
@@ -1322,6 +1483,14 @@ function applySharedPayload(payload){
 async function checkSharedLink(){
   const hash=window.location.hash;
   if(!hash) return false;
+  // Live link: #live=<token> → remember it, sign in, then add to the account
+  if(hash.startsWith('#live=')){
+    const tok=hash.substring(6);
+    if(/^[0-9a-f-]{36}$/i.test(tok)) _setPendingLive(tok);
+    history.replaceState(null,'',window.location.pathname+window.location.search);
+    setTimeout(()=>{ if(!currentUid) _authMsg('loginSuccess',lang==='ar'?'تمت مشاركة مشروع معك — سجّل الدخول أو أنشئ حساباً لإضافته إلى مشاريعك.':'A project was shared with you — sign in or create an account to add it to your projects.'); },300);
+    return false;
+  }
   // Worker-based share: #r=shortId
   if(hash.startsWith('#r=')){
     try{
@@ -1855,7 +2024,7 @@ function buildForm(){
   updateSalesComponents();
   buildSchedule();
   applyBaselineLock();
-  if(isSharedView&&sharedReadOnly) applyReadOnlyMode();
+  if((isSharedView&&sharedReadOnly)||liveReadOnly) applyReadOnlyMode();
 }
 
 function onInput(id){
@@ -2056,7 +2225,7 @@ function buildSchedule(){
     return html;})()}  `;
 
   // Re-apply read-only mode if in shared read-only view
-  if(isSharedView && sharedReadOnly){
+  if((isSharedView && sharedReadOnly)||liveReadOnly){
     const sinputs=p.querySelectorAll('input:not([readonly]),select:not([disabled])');
     sinputs.forEach(inp=>{
       if(inp.tagName==='SELECT'){inp.disabled=true;inp.classList.add('readonly-field');}
@@ -7237,7 +7406,7 @@ function onSensSlider(){
     ctx.fillStyle='#333';ctx.font='8px sans-serif';ctx.textAlign='left';
     ctx.fillText((maxIRR*100).toFixed(0)+'%',lx+lW+4,ly+8);
     ctx.fillText((minIRR*100).toFixed(0)+'%',lx+lW+4,ly+lH-2);
-    ctx.fillText('IRR',lx+lW+4,ly+lH/2);
+    ctx.fillText(lang==='ar'?'العائد':'IRR',lx+lW+4,ly+lH/2);
   }
 }
 
@@ -7264,9 +7433,97 @@ function resetSensSliders(){
 // =============================================
 // LANGUAGE TOGGLE
 // =============================================
+
+// =============================================
+// ARABIC COVERAGE LAYER
+// Catches every English string that the per-screen translations miss
+// (static HTML, dynamic labels, units, quarter labels) and switches it
+// to Arabic. Originals are kept on the node so switching back is exact.
+// =============================================
+const AR_EXACT={
+ 'Real Estate Fund':'الصندوق العقاري','Financial Study':'الدراسة المالية',
+ 'Professional-grade financial modeling for real estate funds — feasibility, cash flow, sensitivity analysis, and investor reporting in one platform.':'نمذجة مالية احترافية للصناديق العقارية — دراسة الجدوى والتدفقات النقدية وتحليل الحساسية وتقارير المستثمرين في منصة واحدة.',
+ 'Full cash flow & IRR modeling':'نمذجة كاملة للتدفقات النقدية والعائد الداخلي','Construction & sales scheduling':'جدولة التطوير والمبيعات',
+ 'Sensitivity & scenario analysis':'تحليل الحساسية والسيناريوهات','Budget vs actual tracking':'متابعة الميزانية مقابل الفعلي',
+ 'Welcome Back':'مرحباً بعودتك','Sign in to access your projects':'سجّل دخولك للوصول إلى مشاريعك',
+ 'Email':'البريد الإلكتروني','Password':'كلمة المرور','Confirm Password':'تأكيد كلمة المرور','Registered Email':'البريد المسجّل',
+ 'New Password':'كلمة المرور الجديدة','Confirm New Password':'تأكيد كلمة المرور الجديدة','Remember me':'تذكرني',
+ 'Forgot Password?':'نسيت كلمة المرور؟','Sign In':'تسجيل الدخول','Account created! You can now sign in.':'تم إنشاء الحساب! يمكنك الآن تسجيل الدخول.',
+ "Don't have an account?":'ليس لديك حساب؟','Create Account':'إنشاء حساب','Already have an account?':'لديك حساب بالفعل؟',
+ 'Continue as Guest':'المتابعة كزائر',"Explore the platform — projects won't be saved":'استكشف المنصة — لن يتم حفظ المشاريع',
+ 'Share Projects':'مشاركة المشاريع','Select one or more projects to share via a unique link. Recipients can view the financial model.':'اختر مشروعاً أو أكثر لمشاركته عبر رابط خاص. يمكن للمستلمين عرض النموذج المالي.',
+ 'Select Projects':'اختر المشاريع','Allow recipient to modify assumptions':'السماح للمستلم بتعديل الافتراضات',
+ 'Generate Link':'إنشاء الرابط','Copy Link':'نسخ الرابط','Copied!':'تم النسخ!','Close':'إغلاق','Generating link...':'جارٍ إنشاء الرابط...',
+ 'Account Settings':'إعدادات الحساب','Update your recovery email so you can reset your password if you forget it.':'حدّث بريد الاستعادة لتتمكن من إعادة تعيين كلمة المرور إذا نسيتها.',
+ 'Current Password (required)':'كلمة المرور الحالية (مطلوبة)','Recovery Email':'بريد الاستعادة','New Password (leave blank to keep current)':'كلمة مرور جديدة (اتركها فارغة للإبقاء على الحالية)',
+ 'Save Changes':'حفظ التغييرات','⚙ Account':'⚙ الحساب','Logout':'تسجيل الخروج','Excel':'إكسل',
+ 'SHARED VIEW':'عرض مشارك','You are viewing shared projects':'أنت تعرض مشاريع مشاركة','Exit Shared View':'الخروج من العرض المشارك',
+ '🔄 Reforecast':'🔄 إعادة التوقع','Done':'تم','Built for':'صُممت لـ','Real Estate Fund Managers':'مديري الصناديق العقارية',
+ 'in the Kingdom of Saudi Arabia · All calculations are estimates for planning purposes only':'في المملكة العربية السعودية · جميع الحسابات تقديرية لأغراض التخطيط فقط',
+ 'RE Fund Financial Study':'الدراسة المالية للصندوق العقاري','Saved versions':'النسخ المحفوظة',
+ 'your@email.com':'your@email.com','Enter your password':'أدخل كلمة المرور','Confirm your password':'أعد إدخال كلمة المرور',
+ 'Enter your registered email':'أدخل بريدك المسجّل','Enter new password (min 6 chars)':'أدخل كلمة مرور جديدة (6 أحرف على الأقل)',
+ 'Confirm new password':'أعد إدخال كلمة المرور الجديدة','Enter current password':'أدخل كلمة المرور الحالية','New password (optional)':'كلمة مرور جديدة (اختياري)',
+ 'Live link — recipient adds it to their account and sees your updates automatically':'رابط مباشر — يضيفه المستلم إلى حسابه ويرى تحديثاتك تلقائياً','Stop live sharing':'إيقاف المشاركة المباشرة',
+ 'IRR':'العائد الداخلي','Guest':'زائر','👤 Guest':'👤 زائر','Baseline':'خط الأساس','Forecast':'التوقع','Total':'المجموع'
+};
+const AR_TOKENS=[
+ [/\bQ(\d{1,2})\b/g,'ربع $1'],
+ [/\bProject (\d+)\b/g,'مشروع $1'],
+ [/(\d)\s?M\b/g,'$1 مليون'],[/(\d)\s?K\b/g,'$1 ألف'],
+ [/\bvs baseline\b/g,'مقابل خط الأساس'],[/\bvs base\b/g,'مقابل الأساس'],
+ [/(\d)\s?pp\b/g,'$1 نقطة مئوية'],
+ [/\/\s?sqm\b/g,'/م²'],[/\bsqm\b/g,'م²'],
+ [/\bSAR\b/g,'ريال'],[/\bSAIBOR\b/g,'سايبور'],[/\bIRR\b/g,'العائد الداخلي'],[/\bGuest\b/g,'زائر']
+];
+function _arText(t){
+  const k=t.trim(); if(!k||!/[A-Za-z]/.test(k)) return t;
+  if(AR_EXACT[k]!==undefined) return t.replace(k,AR_EXACT[k]);
+  let o=t; for(const [re,to] of AR_TOKENS) o=o.replace(re,to); return o;
+}
+function _i18nSkip(el){ return !el||el.closest('[data-no-i18n],script,style,textarea,[contenteditable="true"]'); }
+let _i18nBusy=false;
+function localizeTree(root){
+  if(lang!=='ar'||!root) return;
+  _i18nBusy=true;
+  try{
+    if(root.nodeType===3){_locText(root);return;}
+    if(root.nodeType!==1||_i18nSkip(root)) return;
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); let n; while(n=w.nextNode()) _locText(n);
+    const els=root.querySelectorAll?[root,...root.querySelectorAll('[placeholder],[title]')]:[root];
+    els.forEach(el=>{ if(!el.getAttribute||_i18nSkip(el)) return;
+      ['placeholder','title'].forEach(a=>{const v=el.getAttribute(a); if(!v) return;
+        if(el['__ar_'+a]===v) return; const tr=_arText(v); if(tr!==v){el['__en_'+a]=v; el.setAttribute(a,tr); el['__ar_'+a]=tr;}});
+    });
+  }finally{_i18nBusy=false;}
+}
+function _locText(n){
+  const p=n.parentElement; if(_i18nSkip(p)) return;
+  const v=n.nodeValue; if(n.__ar===v) return;       // already ours
+  const tr=_arText(v); if(tr===v) return;
+  n.__en=v; n.nodeValue=tr; n.__ar=tr;
+}
+function restoreEnglish(){
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT); let n;
+  while(n=w.nextNode()){ if(n.__en!==undefined&&n.nodeValue===n.__ar){n.nodeValue=n.__en;} delete n.__en; delete n.__ar; }
+  document.querySelectorAll('[placeholder],[title]').forEach(el=>{['placeholder','title'].forEach(a=>{ if(el['__en_'+a]!==undefined&&el.getAttribute(a)===el['__ar_'+a]) el.setAttribute(a,el['__en_'+a]); delete el['__en_'+a]; delete el['__ar_'+a]; });});
+}
+const _i18nObs=new MutationObserver(muts=>{
+  if(lang!=='ar'||_i18nBusy) return;
+  for(const m of muts){
+    if(m.type==='characterData') localizeTree(m.target);
+    else if(m.type==='attributes') localizeTree(m.target);
+    else m.addedNodes.forEach(nd=>localizeTree(nd));
+  }
+});
+_i18nObs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title']});
+
 function toggleLang(){
   lang=lang==='en'?'ar':'en';
+  try{localStorage.setItem('refund_lang',lang);}catch(ignored){}
   document.body.dir=lang==='ar'?'rtl':'ltr';
+  document.documentElement.lang=lang; document.documentElement.dir=lang==='ar'?'rtl':'ltr';
+  if(lang==='en') restoreEnglish();
   document.body.style.fontFamily=lang==='ar'?"'Cairo','Noto Kufi Arabic',system-ui,sans-serif":"'Inter','Manrope',system-ui,sans-serif";
   document.getElementById('appTitle').textContent=TX[lang].title;
   const subEl=document.getElementById('appSub');if(subEl) subEl.textContent=TX[lang].sub;
@@ -7285,6 +7542,10 @@ function toggleLang(){
   buildTabs();buildForm();
   if(document.getElementById('p-actuals')) buildActualsTab();
   if(R){renderDashboard();renderCashFlow();renderDebt();renderSensitivity();renderSummary();}
+  if(document.getElementById('p-ops')&&workspace==='operations'&&R){try{renderOps();}catch(ignored){}}
+  if(isGuest){const b=document.getElementById('userBadge'); if(b) b.textContent='\u{1F464} '+(lang==='ar'?'زائر':'Guest'); const sel=document.getElementById('projSelect'); if(sel) sel.innerHTML='<option value="">-- '+(lang==='ar'?'مشروع غير محفوظ':'Unsaved Project')+' --</option>';}
+  else if(currentUid) loadProjectList(); else {const sel=document.getElementById('projSelect'); if(sel&&!isSharedView) sel.innerHTML=_unsavedOpt();}
+  if(lang==='ar') localizeTree(document.body);
 }
 
 // =============================================
@@ -7315,6 +7576,7 @@ function updateProjectBar(){
   if(!isShared) checkSession();
   updateProjectBar();buildTabs();buildForm();
   if(isSharedView&&sharedReadOnly){setTimeout(()=>applyReadOnlyMode(),100);}
+  try{ if(localStorage.getItem('refund_lang')==='ar'&&lang!=='ar') toggleLang(); }catch(ignored){}
 })();
 </script>
 </body>
