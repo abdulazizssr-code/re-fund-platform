@@ -3807,6 +3807,7 @@ const ACT_CATS=[
   {key:'other_exp',   en:'Other Expense',       ar:'مصاريف أخرى',        group:'cost',    actualOnly:true, getQ:()=>0},
   {key:'vat_paid',    en:'VAT Paid',            ar:'ضريبة مدفوعة',       group:'cost',    actualOnly:true, getQ:(R,i)=>0},
   {key:'vat_received',en:'VAT Received',        ar:'ضريبة مستردة',       group:'revenue', actualOnly:true, getQ:(R,i)=>0},
+  {key:'rett_received',en:'RETT Refund Received',ar:'استرداد ضريبة التصرفات',group:'revenue', actualOnly:true, getQ:()=>0},
   // Financing — entered like costs; closed quarters use these instead of the plan once any financing row exists (strict mode)
   {key:'equity_in',   en:'Equity Injection (cash)',   ar:'ضخ رأس مال (نقدي)',    group:'financing', fin:true, getQ:(R,i)=>(R.qEquity||[])[i]||0},
   {key:'equity_ik',   en:'In-Kind Contribution',      ar:'مساهمة عينية',          group:'financing', fin:true, nonCash:true, getQ:(R,i)=>(R.qIKTotal||[])[i]||0},
@@ -4113,6 +4114,9 @@ const IMPORT_RULES=[
   {keywords:['سحب من التسهيلات','سحب من التمويل','سحب تمويل','دفعة التمويل','drawdown','draw down','facility draw','loan disbursement'],cat:'debt_draw'},
   {keywords:['سداد التمويل','سداد التسهيلات','سداد القرض','سداد أصل','repayment','loan repayment','principal repayment'],cat:'debt_repay'},
   {keywords:['توزيعات','توزيع أرباح','distribution','dividend'],cat:'distribution'},
+  {keywords:['استرداد ضريبة التصرفات','استرداد ضريبة التصرف','rett refund'],cat:'rett_received'},
+  {keywords:['استرداد ضريبة','استرداد الضريبة','رد ضريبة','vat refund','vat received'],cat:'vat_received'},
+  {keywords:['سداد ضريبة القيمة','دفع ضريبة القيمة','إقرار ضريبي','vat payment','vat paid'],cat:'vat_paid'},
   {keywords:['الإستحواذ على أرض','الاستحواذ على أرض','شراء الأرض','شراء أرض','land acquisition','land purchase','ثمن الأرض'],cat:'land'},
   {keywords:['ضريبة التصرفات','التصرفات العقارية','rett','real estate transaction tax'],cat:'rett'},
   {keywords:['سعي الأرض','سعي شراء','رسوم سعي','brokerage'],cat:'brokerage'},
@@ -4618,6 +4622,7 @@ function runReforecast(){
 
   // Build R2 — clone the CURRENT-assumption run and override quarterly arrays with actual + reforecast values
   R2=JSON.parse(JSON.stringify(Rc));
+  R2._cutoffQ=cutoffQ;
   R2._budgetOverruns=budgetOverruns; // FIX 6: expose overruns so the UI can display warnings
 
   // Map category arrays back to R2 arrays
@@ -4734,6 +4739,7 @@ function runReforecast(){
       R2.qVATAdvisor[i]=totalRef*((Number(R2.A.vat_advisor_pct)||0)/100);
       R2.qVATNet[i]=totalRef-R2.qVATAdvisor[i];
     }
+    _rfApplyActualVAT(cutoffQ); // closed quarters: actual VAT cash; outstanding refunds at their expected month
   }
   _rfRebuildVATNet();
 
@@ -5083,10 +5089,10 @@ function runForecast(){
 // All numbers come from R (baseline run) and R2 (current forecast via runReforecast). The forecast is live:
 // any change in this workspace calls opsRefresh(), which re-runs the forecast and re-renders the open section.
 // ═══════════════════════════════════════════════
-const OPS_SECTIONS=['overview','costs','sales','financing','scenarios','reports'];
+const OPS_SECTIONS=['overview','costs','sales','financing','vat','nav','scenarios','reports'];
 let opsSection='overview', opsView='forecast'; // opsView: baseline | forecast | both
 const OPS_T={
-  en:{overview:'Overview',costs:'Costs',sales:'Sales',financing:'Financing',scenarios:'Forecast & Scenarios',reports:'Reports',asof:'As of',closed:'closed',toEnd:'months to fund end',baseline:'Baseline',forecast:'Forecast',both:'Both',
+  en:{gTotal:'Total',vat:'VAT',nav:'NAV',vPaid:'paid',vOverdue:'payment overdue',vDue:'payment due',vReceived:'refund received',vLate:'refund late',vClaimed:'claim filed',vUnfiled:'not filed',vOpen:'open',vStrict:'Closed quarters use the actual VAT cash from the log (refunds received, payments to ZATCA); refunds still outstanding are forecast at their expected month.',vLenient:'No VAT-bearing payments yet — plan VAT mechanics apply. Import payments with a VAT column, or add VAT received / VAT paid rows.',vInput:'Input VAT paid',vInputSub:'on cost payments (estimated at the fund rate where not entered)',vOutput:'Output VAT collected',vOutputSub:'on sales, only where entered',vRecv:'Refunds received',vPaidZ:'paid to ZATCA',vRecvbl:'VAT receivable',vRecvblSub:'still to come back from ZATCA',vRett:'RETT refund receivable',vRettSub:'RETT paid',vChart:'Cumulative input VAT vs refunds received',vCal:'Filing calendar & alerts',vRule:'Monthly filer: return and any payment are due by the end of the following month. Refund expected {m} months after the period (fund assumption; change it in Feasibility → VAT refund period). Mark a claim as filed to stop the filing alert.',vTable:'VAT position by month',vMonthly:'monthly',vMonth:'Month',vInCon:'Input VAT — development',vInExp:'Input VAT — fund',vNet:'Net position',vDueDate:'Return due',vFiled:'Filed on / paid',vRefundExp:'Refund expected',vStatus:'Status',vPay:'to pay',vClaim:'refund claim',vEditor:'VAT per payment',vGross:'Gross',vVat:'VAT (edit)',vNetAmt:'Net',vEditorNote:'Leave blank to use the estimate (gross × 15/115 for VAT-able categories; zero for land, RETT, licences, interest). Enter 0 for exempt invoices and the actual VAT for sales invoices that carry VAT.',nBasis:'Cost basis: land, brokerage and RETT at cost; construction in progress at cost; cash, VAT and RETT receivables; less loan and any accruals. Enter a valuer’s mark to override a quarter.',nUnitPrice:'Unit price at inception (SAR)',nNav:'NAV',nNavU:'NAV per unit',nUnits:'units',nAssets:'Total assets',nLoan:'Loan balance',nNavEnd:'NAV at fund end (forecast)',nNavUEnd:'per unit',nChart:'NAV per unit — plan vs actual vs forecast',nUnit:'unit',nBridge:'NAV statement',nLand:'Land (incl. brokerage & RETT)',nCip:'Construction in progress',nCash:'Cash',nVatRec:'VAT receivable',nRettRec:'RETT receivable',nOther:'Other assets / receivables',nAccrFee:'Accrued management fee',nAccrPerf:'Performance fee provision',nPayables:'Payables & accruals',nStatement:'Quarterly NAV statement',nStmtSub:'closed quarters actual · open quarters forecast',nMarkLand:'↳ valuer’s mark — land',nMarkCip:'↳ valuer’s mark — CIP',nPlanU:'Plan NAV per unit',nNote:'A valuer’s mark carries forward to later quarters (plus costs added after it) until the next mark. Units = paid-in equity (cash + in-kind) ÷ unit price. Plan NAV per unit uses the baseline’s book NAV with the same unit price. NAV is before performance fee unless you enter a provision. Valuer’s marks and accruals are saved with the project.',fDrawTbl:'Drawdowns & repayments — plan vs actual',fPlanDraw:'Plan draw',fActDraw:'Actual draw',fPlanRepay:'Plan repay',fActRepay:'Actual repay',fPlanBal:'Plan balance',fBal:'Balance',fPlanInt:'Plan profit',fActInt:'Actual profit',fUndrawn:'Undrawn facility',fDrawnToDate:'Drawn to date',fPlanToDate:'plan to date',fFees:'Bank fees (arrangement + management)',overview:'Overview',costs:'Costs',sales:'Sales',financing:'Financing',scenarios:'Forecast & Scenarios',reports:'Reports',asof:'As of',closed:'closed',toEnd:'months to fund end',baseline:'Baseline',forecast:'Forecast',both:'Both',
     spend:'Spend to date',plan:'plan',fac:'Forecast at completion',vsBase:'vs baseline',irr:'IRR',sales_:'Sales',sold:'sold',close:'Close',calcFirst:'Calculate the model first (Feasibility) to open Operations.',
     costComplete:'Cost complete',timeElapsed:'time elapsed',committed:'Committed',ofFac:'of forecast at completion',cashLoan:'Cash & loan',atCut:'at cutoff',eqMult:'Equity multiple',dist:'Distributions',
     scurve:'Cumulative cost — plan vs actual vs forecast',ssales:'Cumulative sales — plan vs actual vs forecast',decide:'What needs a decision',items:'items',nothing:'Nothing pending — all closed-quarter variances have a treatment.',
@@ -5100,7 +5106,7 @@ const OPS_T={
     scen:'Scenarios',scenName:'Scenario',mult:'Multiple',peakD:'Peak debt',addScen:'＋ New scenario',scenHint:'A scenario is a set of extra changes on top of the current forecast (e.g. saibor 9.5).',current:'Current forecast',
     packs:'Reporting packs for',investor:'Investor pack',investorD:'Executive summary in teaser style — costs ex recoverable taxes, no internal detail.',ic:'IC pack',icD:'Baseline vs actual vs forecast, variances, IRR bridge, scenarios and commentary.',lender:'Financer pack',lenderD:'Sources & uses, quarterly cash-flow statement with actuals to date, loan schedule and covenant tests.',open:'Open',commentary:'Commentary (draft from the variances — edit before issuing)',
     addPay:'＋ Add payments',closeDrawer:'Done'},
-  ar:{overview:'نظرة عامة',costs:'التكاليف',sales:'المبيعات',financing:'التمويل',scenarios:'التوقع والسيناريوهات',reports:'التقارير',asof:'كما في',closed:'مقفل',toEnd:'شهراً حتى نهاية الصندوق',baseline:'خط الأساس',forecast:'التوقع',both:'كلاهما',
+  ar:{gTotal:'الإجمالي',vat:'الضريبة',nav:'صافي الأصول',vPaid:'مدفوع',vOverdue:'دفع متأخر',vDue:'دفع مستحق',vReceived:'تم الاسترداد',vLate:'استرداد متأخر',vClaimed:'قُدّم الطلب',vUnfiled:'لم يُقدّم',vOpen:'مفتوح',vStrict:'الأرباع المقفلة تستخدم النقد الضريبي الفعلي من السجل (الاستردادات المستلمة والمدفوع للزكاة والضريبة)؛ الاستردادات المتبقية تُتوقع في شهرها المتوقع.',vLenient:'لا توجد دفعات تحمل ضريبة بعد — تُطبّق آلية الخطة. استورد الدفعات مع عمود الضريبة أو أضف صفوف ضريبة مستردة / ضريبة مدفوعة.',vInput:'ضريبة المدخلات المدفوعة',vInputSub:'على دفعات التكاليف (مقدّرة بنسبة الصندوق حيث لم تُدخل)',vOutput:'ضريبة المخرجات المحصّلة',vOutputSub:'على المبيعات، حيث أُدخلت فقط',vRecv:'الاستردادات المستلمة',vPaidZ:'المدفوع للهيئة',vRecvbl:'ضريبة مستحقة الاسترداد',vRecvblSub:'لم تُسترد بعد من الهيئة',vRett:'استرداد ضريبة التصرفات المستحق',vRettSub:'ضريبة التصرفات المدفوعة',vChart:'ضريبة المدخلات التراكمية مقابل الاستردادات',vCal:'تقويم الإقرارات والتنبيهات',vRule:'إقرار شهري: يُقدّم الإقرار ويُدفع المستحق حتى نهاية الشهر التالي. الاسترداد متوقع بعد {m} أشهر من الفترة (افتراض الصندوق؛ يُعدّل في دراسة الجدوى ← فترة الاسترداد الضريبي). سجّل تقديم الطلب لإيقاف تنبيه التقديم.',vTable:'الموقف الضريبي حسب الشهر',vMonthly:'شهري',vMonth:'الشهر',vInCon:'ضريبة مدخلات — التطوير',vInExp:'ضريبة مدخلات — الصندوق',vNet:'صافي الموقف',vDueDate:'موعد الإقرار',vFiled:'قُدّم في / دُفع',vRefundExp:'الاسترداد المتوقع',vStatus:'الحالة',vPay:'للدفع',vClaim:'طلب استرداد',vEditor:'الضريبة لكل دفعة',vGross:'الإجمالي',vVat:'الضريبة (تعديل)',vNetAmt:'الصافي',vEditorNote:'اتركه فارغاً لاستخدام التقدير (الإجمالي × 15/115 للبنود الخاضعة؛ صفر للأرض وضريبة التصرفات والرخص وتكاليف التمويل). أدخل 0 للفواتير المعفاة والضريبة الفعلية لفواتير المبيعات الخاضعة.',nBasis:'أساس التكلفة: الأرض والسعي وضريبة التصرفات بالتكلفة؛ الأعمال تحت التنفيذ بالتكلفة؛ النقد والضرائب المستحقة الاسترداد؛ ناقص التمويل وأي استحقاقات. أدخل تقييم المقيّم لتجاوز ربع معين.',nUnitPrice:'سعر الوحدة عند التأسيس (ريال)',nNav:'صافي قيمة الأصول',nNavU:'صافي قيمة الوحدة',nUnits:'وحدة',nAssets:'إجمالي الأصول',nLoan:'رصيد التمويل',nNavEnd:'صافي الأصول عند نهاية الصندوق (توقع)',nNavUEnd:'للوحدة',nChart:'صافي قيمة الوحدة — الخطة مقابل الفعلي مقابل التوقع',nUnit:'وحدة',nBridge:'قائمة صافي الأصول',nLand:'الأرض (شاملة السعي وضريبة التصرفات)',nCip:'أعمال تحت التنفيذ',nCash:'النقد',nVatRec:'ضريبة مستحقة الاسترداد',nRettRec:'ضريبة تصرفات مستحقة الاسترداد',nOther:'أصول / ذمم أخرى',nAccrFee:'رسوم إدارة مستحقة',nAccrPerf:'مخصص رسوم الأداء',nPayables:'ذمم دائنة واستحقاقات',nStatement:'قائمة صافي الأصول الربعية',nStmtSub:'الأرباع المقفلة فعلي · المفتوحة توقع',nMarkLand:'↳ تقييم المقيّم — الأرض',nMarkCip:'↳ تقييم المقيّم — الأعمال',nPlanU:'صافي قيمة الوحدة بالخطة',nNote:'تقييم المقيّم يستمر للأرباع اللاحقة (زائد التكاليف المضافة بعده) حتى التقييم التالي. الوحدات = رأس المال المدفوع (نقدي + عيني) ÷ سعر الوحدة. صافي قيمة الوحدة بالخطة يستخدم صافي الأصول الدفتري لخط الأساس بنفس سعر الوحدة. صافي الأصول قبل رسوم الأداء ما لم تُدخل مخصصاً. تُحفظ تقييمات المقيّم والاستحقاقات مع المشروع.',fDrawTbl:'السحوبات والسداد — الخطة مقابل الفعلي',fPlanDraw:'سحب الخطة',fActDraw:'السحب الفعلي',fPlanRepay:'سداد الخطة',fActRepay:'السداد الفعلي',fPlanBal:'رصيد الخطة',fBal:'الرصيد',fPlanInt:'أرباح الخطة',fActInt:'الأرباح الفعلية',fUndrawn:'غير المسحوب من التسهيل',fDrawnToDate:'المسحوب حتى تاريخه',fPlanToDate:'الخطة حتى تاريخه',fFees:'رسوم البنك (ترتيب + إدارة)',overview:'نظرة عامة',costs:'التكاليف',sales:'المبيعات',financing:'التمويل',scenarios:'التوقع والسيناريوهات',reports:'التقارير',asof:'كما في',closed:'مقفل',toEnd:'شهراً حتى نهاية الصندوق',baseline:'خط الأساس',forecast:'التوقع',both:'كلاهما',
     spend:'المنفق حتى الآن',plan:'الخطة',fac:'التكلفة عند الاكتمال',vsBase:'مقابل خط الأساس',irr:'العائد الداخلي',sales_:'المبيعات',sold:'مباع',close:'إقفال',calcFirst:'احسب النموذج أولاً من دراسة الجدوى لفتح التشغيل.',
     costComplete:'نسبة إنجاز التكلفة',timeElapsed:'الزمن المنقضي',committed:'الملتزم به',ofFac:'من التكلفة عند الاكتمال',cashLoan:'النقد والتمويل',atCut:'عند الإقفال',eqMult:'مضاعف رأس المال',dist:'التوزيعات',
     scurve:'التكلفة التراكمية — الخطة مقابل الفعلي مقابل التوقع',ssales:'المبيعات التراكمية — الخطة مقابل الفعلي مقابل التوقع',decide:'ما يحتاج قراراً',items:'بنود',nothing:'لا يوجد معلق — كل انحرافات الأرباع المقفلة لها معالجة.',
@@ -5178,7 +5184,7 @@ function renderOps(){
     <button class="ops-close" onclick="reforecastSettings.cutoffQ=Math.min(${nq-1},${cut}+1);opsRefresh()">${ot('close')} Q${cut+1} →</button>
   </div>
   <nav class="ops-nav">${OPS_SECTIONS.map(s=>`<button class="${opsSection===s?'on':''}" onclick="opsSection='${s}';renderOps()">${ot(s)}${opsBadge(s)}</button>`).join('')}</nav>
-  <div class="ops-body">${hint}${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:opsFinancing,scenarios:opsScenarios,reports:opsReports})[opsSection]()}</div>
+  <div class="ops-body">${hint}${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:opsFinancing,vat:opsVat,nav:opsNav,scenarios:opsScenarios,reports:opsReports})[opsSection]()}</div>
   <button class="ops-drawer-btn" onclick="openPaymentsDrawer()">${ot('addPay')}</button>`;
   pnl.innerHTML=h;
 }
@@ -5190,6 +5196,7 @@ function opsAlerts(){
   else if(uns.length>1) out.push(['warn',uns.length+(lang==='ar'?' بنود بميزانية غير منفقة في الأرباع المقفلة (':' lines with unspent closed-quarter budget (')+M_(uns.reduce((a,x)=>a+x[1],0))+(lang==='ar'?') — المعالجة الافتراضية ترحيل للأمام: ':') — treatment defaults to push forward: ')+uns.slice(0,4).map(x=>x[0]).join(', ')+(uns.length>4?'…':''),'costs']);
   const un=actuals.filter(p=>(p.category==='base_con'||p.category==='revenue')&&!p.component&&lineComponents(p.category).length>1); if(un.length) out.push(['warn',un.length+' '+ot('unassigned')+' ('+M_(un.reduce((s,p)=>s+p.amount,0))+')','payments']);
   if(cut>0&&!R2._finStrict&&(sumA(R2.drawdowns.slice(0,cut))>0||sumA(R2.qEquity.slice(0,cut))>0)) out.push(['warn',ot('noFin'),'financing']);
+  try{vatAlerts().forEach(a=>out.push(a));}catch(e){}
   return out;
 }
 function opsBadge(s){const n=opsAlerts().filter(a=>a[2]===s).length;return n?`<em>${n}</em>`:'';}
@@ -5365,6 +5372,188 @@ function opsSales(){
       <div class="detail"><div class="ops-fields">${[['soldArea',ot('soldArea'),''],['achPrice',ot('achPrice'),c.price],['unsoldPrice',ot('unsoldPrice'),c.price],['pace',ot('pace'),''],['startQ',ot('startQ'),cut+1]].map(([f,l,ph])=>`<label>${l}<input type="number" class="ops-mini" placeholder="${ph}" value="${s[f]??''}" onchange="setSales('${cp.key}','${f}',this.value)"></label>`).join('')}</div></div></div>`;}
   return h;
 }
+// ═══════════════════════════════════════════════
+// VAT — monthly actual VAT position from the payments log, ZATCA filing calendar, refund tracking, alerts.
+// Input VAT on cost payments (p.vat if entered, else estimated at the fund VAT rate for VAT-able categories),
+// output VAT on revenue only when entered on the payment (off-plan residential is treated as zero VAT by default).
+// Receipts from ZATCA = 'vat_received'; payments to ZATCA = 'vat_paid'; RETT refund received = 'rett_received'.
+// ═══════════════════════════════════════════════
+const VATABLE=['brokerage','base_con','dev_fee','contingency','design','insurance','supervision','marketing','selling','fund_setup','mgmt_fee','custody','spv','auditor','sharia','engineering','board','fin_advisor','arr_fee','bank_mgmt','other_exp'];
+function payVAT(p){ // input VAT carried by a cost payment
+  if(p.include===false)return 0;
+  if(typeof p.vat==='number'&&isFinite(p.vat))return p.vat;
+  if(!VATABLE.includes(p.category))return 0;
+  const V=1+(Number(D.vat_rate)||0)/100;return p.amount-p.amount/V;
+}
+function payVATOut(p){return (p.include!==false&&p.category==='revenue'&&typeof p.vat==='number'&&isFinite(p.vat))?p.vat:0;}
+function setPayVAT(id,v){const p=actuals.find(x=>x.id===id);if(!p)return;if(v==='')delete p.vat;else p.vat=Number(v);opsRefresh();}
+function _mkey(p){ // 'YYYY-MM' of the payment; falls back to the last month of its quarter
+  if(p.date&&/^\d{4}-\d{2}/.test(p.date))return p.date.slice(0,7);
+  const sd=new Date(D.start_date||'2026-01-01');const d=new Date(Date.UTC(sd.getUTCFullYear(),sd.getUTCMonth()+3*p.quarter+2,1));return d.toISOString().slice(0,7);
+}
+function _mAdd(key,n){const [y,m]=key.split('-').map(Number);const d=new Date(Date.UTC(y,m-1+n,1));return d.toISOString().slice(0,7);}
+function _mEnd(key){const [y,m]=key.split('-').map(Number);return new Date(Date.UTC(y,m,0));} // last day of month
+function _mLabel(key){const d=_mEnd(key);return d.toLocaleDateString(lang==='ar'?'ar-SA-u-nu-latn':'en-GB',{month:'short',year:'numeric'});}
+function _mToQ(key){const sd=new Date(D.start_date||'2026-01-01');const [y,m]=key.split('-').map(Number);const months=(y-sd.getUTCFullYear())*12+(m-1-sd.getUTCMonth());return Math.max(0,Math.floor(months/3));}
+function vatSettings(){_rfNorm();reforecastSettings.vat=reforecastSettings.vat||{};const v=reforecastSettings.vat;if(v.claims==null)v.claims={};return v;} // claims[month]={filed:'YYYY-MM-DD'}
+function vatSetFiled(key,d){const v=vatSettings();v.claims[key]=v.claims[key]||{};if(d)v.claims[key].filed=d;else delete v.claims[key].filed;renderOps();}
+
+// Monthly model. Returns periods in order + totals. Receipts are matched to refund claims FIFO.
+function vatModel(){
+  const today=new Date().toISOString().slice(0,10),refundM=Number(D.vat_refund_months)||0,V=1+(Number(D.vat_rate)||0)/100;
+  const per={};const add=(k,f,v)=>{per[k]=per[k]||{key:k,inCon:0,inExp:0,out:0,paidZ:0,recvZ:0,rettPaid:0,rettRecv:0,n:0};per[k][f]+=v;};
+  for(const p of actuals){if(p.include===false)continue;const k=_mkey(p);
+    if(p.category==='vat_received')add(k,'recvZ',p.amount);else if(p.category==='vat_paid')add(k,'paidZ',p.amount);
+    else if(p.category==='rett_received')add(k,'rettRecv',p.amount);
+    else if(p.category==='rett'){add(k,'rettPaid',p.amount);}
+    else if(p.category==='revenue'){add(k,'out',payVATOut(p));}
+    else{const v=payVAT(p);if(v){add(k,etypeOf(p.category)==='dev'?'inCon':'inExp',v);per[k].n++;}}}
+  // fill month range from fund start to max(last payment, cutoff end)
+  const sd=new Date(D.start_date||'2026-01-01');let k0=sd.toISOString().slice(0,7);const cutEnd=qEndDate((R2?R2._cutoffQ:1)-1).toISOString().slice(0,7);
+  const keys=Object.keys(per);let kEnd=keys.length?keys.sort().pop():k0;if(cutEnd>kEnd)kEnd=cutEnd;
+  const list=[];for(let k=k0;k<=kEnd;k=_mAdd(k,1)){per[k]=per[k]||{key:k,inCon:0,inExp:0,out:0,paidZ:0,recvZ:0,rettPaid:0,rettRecv:0,n:0};list.push(per[k]);}
+  // per period: net position, deadlines, refund matching
+  const cl=vatSettings().claims;let pool=list.reduce((s,m)=>s+m.recvZ,0),recvCum=0;
+  for(const m of list){m.input=m.inCon+m.inExp;m.net=m.out-m.input; // <0 = refund claim, >0 = payment due
+    m.due=_mEnd(_mAdd(m.key,1)).toISOString().slice(0,10); // return + payment due: end of following month
+    m.filed=(cl[m.key]||{}).filed||null;
+    m.refundExp=refundM?_mEnd(_mAdd(m.key,refundM)).toISOString().slice(0,10):null;
+    m.refund=m.net<0?-m.net:0;const got=Math.min(pool,m.refund);m.refundGot=got;pool-=got;
+    m.status=m.net>0?(m.paidZ>=m.net-1?'paid':(today>m.due?'overdue':'due')):m.refund>0?(m.refundGot>=m.refund-1?'received':(m.refundExp&&today>m.refundExp?'late':(m.filed?'claimed':(today>m.due?'unfiled':'open')))):'nil';}
+  const T={input:sumA(list.map(m=>m.input)),out:sumA(list.map(m=>m.out)),recv:sumA(list.map(m=>m.recvZ)),paid:sumA(list.map(m=>m.paidZ)),rettPaid:sumA(list.map(m=>m.rettPaid)),rettRecv:sumA(list.map(m=>m.rettRecv))};
+  T.receivable=Math.max(0,T.input-T.out-T.recv+T.paid); // VAT still to come back from ZATCA
+  const rettRefundable=projects.some(p=>Number(p.rett_refund))?T.rettPaid:0;T.rettReceivable=Math.max(0,rettRefundable-T.rettRecv);
+  return {list,T,today,refundM,V};
+}
+function vatAlerts(){
+  if(!R2)return[];const m=vatModel(),out=[],ar=lang==='ar',d15=new Date(Date.now()+15*86400000).toISOString().slice(0,10);
+  const late=m.list.filter(p=>p.status==='late'),unf=m.list.filter(p=>p.status==='unfiled');
+  if(late.length>1)out.push(['bad',late.length+(ar?' استردادات ضريبية متأخرة عن موعدها المتوقع — ':' VAT refunds late vs expected — ')+M_(late.reduce((s,p)=>s+p.refund-p.refundGot,0))+(ar?' (الأقدم ':' (oldest ')+_mLabel(late[0].key)+')','vat']);
+  if(unf.length>1)out.push(['warn',unf.length+(ar?' إقرارات استرداد لم تُسجّل كمقدّمة — ':' refund returns not marked as filed — ')+M_(unf.reduce((s,p)=>s+p.refund,0)),'vat']);
+  for(const p of m.list){
+    if((p.status==='late'&&late.length>1)||(p.status==='unfiled'&&unf.length>1))continue;
+    if(p.status==='overdue')out.push(['bad',(ar?'ضريبة مستحقة الدفع عن ':'VAT payment overdue for ')+_mLabel(p.key)+' — '+M_(p.net)+(ar?' (كان مستحقاً ':' (was due ')+p.due+')','vat']);
+    else if(p.status==='due'&&p.due<=d15)out.push(['warn',(ar?'إقرار ودفع الضريبة عن ':'VAT return and payment for ')+_mLabel(p.key)+' — '+M_(p.net)+(ar?' يستحق في ':' due ')+p.due,'vat']);
+    if(p.status==='unfiled')out.push(['warn',(ar?'إقرار الاسترداد عن ':'Refund return for ')+_mLabel(p.key)+' ('+M_(p.refund)+(ar?') لم يُسجّل تقديمه — الموعد ':') not marked as filed — deadline ')+p.due,'vat']);
+    if(p.status==='late')out.push(['bad',(ar?'استرداد ضريبة عن ':'VAT refund for ')+_mLabel(p.key)+' — '+M_(p.refund-p.refundGot)+(ar?' متأخر عن الموعد المتوقع ':' late vs expected ')+p.refundExp,'vat']);
+  }
+  if(m.T.rettReceivable>0.5)out.push(['warn',(ar?'استرداد ضريبة التصرفات العقارية المتوقع ':'RETT refund receivable ')+M_(m.T.rettReceivable),'vat']);
+  return out;
+}
+// Engine hook: closed quarters take the actual VAT cash (received − paid to ZATCA, + RETT refunds received);
+// input VAT accrued in closed months but not yet received is placed at its expected month (never before the cutoff).
+// Costs in open quarters keep the plan mechanics (refund after vat_refund_months). Called from runReforecast.
+function _rfApplyActualVAT(cutoffQ){
+  if(cutoffQ<=0||!R2)return;const nq=R2.nq,m=vatModel(),lastQ=nq-1;
+  const hasAny=actuals.some(p=>p.include!==false&&(p.category==='vat_received'||p.category==='vat_paid'||p.category==='rett_received'||payVAT(p)>0));
+  if(!hasAny)return;
+  R2._vatStrict=true;
+  // remove plan refunds that originate from closed-quarter costs (they were placed at source+delay by the plan mechanics)
+  const delayQ=Math.floor((Number(R2.A.vat_refund_months)||0)/3),V=1+R2.A.vat_rate/100;
+  const con=Array(nq).fill(0),exp=Array(nq).fill(0);
+  if(Number(R2.A.vat_refund)){for(let s=cutoffQ;s<nq;s++){const t=Math.min(lastQ,s+delayQ);con[t]+=R2.qCon[s]-R2.qCon[s]/V;exp[t]+=(R2.qTotalFundExp[s]||0)-(R2.qTotalFundExp[s]||0)/V;}}
+  R2.qVATRefundCon=con;R2.qVATRefundExp=exp;
+  // brokerage and RETT are paid at closing (closed quarter): their plan refunds are replaced by the actual receivable below
+  R2.qBrokVATRefund=Array(nq).fill(0);R2.qRETTRefund=Array(nq).fill(0);
+  // actual cash in closed quarters
+  for(const p of m.list){const q=_mToQ(p.key);if(q>=cutoffQ)continue;R2.qVATRefundExp[q]+=p.recvZ-p.paidZ;R2.qRETTRefund[q]+=p.rettRecv;}
+  // outstanding refunds from closed months → expected month (clamped to cutoff…last)
+  let pool=m.T.recv;
+  for(const p of m.list){if(p.refund<=0)continue;const got=Math.min(pool,p.refund);pool-=got;const rest=p.refund-got;if(rest<=0.5)continue;
+    if(_mToQ(p.key)>=cutoffQ)continue;const t=Math.max(cutoffQ,Math.min(lastQ,p.refundExp?_mToQ(p.refundExp.slice(0,7)):cutoffQ));R2.qVATRefundCon[t]+=rest;}
+  if(m.T.rettReceivable>0.5){const t=Math.max(cutoffQ,Math.min(lastQ,delayQ));R2.qRETTRefund[t]+=m.T.rettReceivable;}
+  R2.qVATAdvisor=Array(nq).fill(0);R2.qVATNet=Array(nq).fill(0);
+  for(let i=0;i<nq;i++){const tot=R2.qVATRefundCon[i]+R2.qVATRefundExp[i]+R2.qBrokVATRefund[i]+R2.qRETTRefund[i];R2.qVATAdvisor[i]=i<cutoffQ?0:Math.max(0,tot)*((Number(R2.A.vat_advisor_pct)||0)/100);R2.qVATNet[i]=tot-R2.qVATAdvisor[i];}
+}
+function opsVat(){
+  const m=vatModel(),T=m.T,ar=lang==='ar',cut=R2._cutoffQ,nq=R2.nq;
+  const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
+  const st={paid:['good',ot('vPaid')],overdue:['bad',ot('vOverdue')],due:['warn',ot('vDue')],received:['good',ot('vReceived')],late:['bad',ot('vLate')],claimed:['',ot('vClaimed')],unfiled:['warn',ot('vUnfiled')],open:['',ot('vOpen')],nil:['','—']};
+  let h=`<div class="baseline-bar" style="margin:0 0 14px"><span>${R2._vatStrict?ot('vStrict'):ot('vLenient')}</span></div>
+  <div class="ops-kpis">${kpi(ot('vInput'),M_(T.input),ot('vInputSub'))}${kpi(ot('vOutput'),M_(T.out),ot('vOutputSub'))}${kpi(ot('vRecv'),M_(T.recv),ot('vPaidZ')+' '+M_(T.paid))}${kpi(ot('vRecvbl'),M_(T.receivable),ot('vRecvblSub'),T.receivable>0?'dn':'')}${kpi(ot('vRett'),M_(T.rettReceivable),ot('vRettSub')+' '+M_(T.rettPaid))}</div>`;
+  // chart: cumulative input VAT vs received, plan refunds line
+  const cumIn=cumul(m.list.map(p=>p.input)),cumRc=cumul(m.list.map(p=>p.recvZ));
+  const W=640,H=200,M={l:52,r:14,t:14,b:26},n=m.list.length||1,x=i=>M.l+i*(W-M.l-M.r)/Math.max(1,n-1),ymax=Math.max(1,...cumIn,...cumRc)*1.05,y=v=>M.t+(H-M.t-M.b)*(1-v/ymax);
+  let g='';for(let k=0;k<=4;k++){const t=ymax/4*k;g+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-6}" y="${y(t)+4}" text-anchor="end">${M_(t)}</text>`;}
+  const ev=Math.ceil(n/10);m.list.forEach((p,i)=>{if(i%ev===0)g+=`<text class="ops-ax" x="${x(i)}" y="${H-8}" text-anchor="middle">${_mLabel(p.key)}</text>`;});
+  g+=`<polyline fill="none" stroke="#775a19" stroke-width="2.2" points="${cumIn.map((v,i)=>x(i)+','+y(v)).join(' ')}"/><polyline fill="none" stroke="#00322d" stroke-width="2.2" points="${cumRc.map((v,i)=>x(i)+','+y(v)).join(' ')}"/>`;
+  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ot('vChart')}<span>SAR</span></h3><svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${g}</svg><div class="ops-legend"><span><i style="background:#775a19"></i>${ot('vInput')}</span><span><i style="background:#00322d"></i>${ot('vRecv')}</span></div></div>
+  <div class="ops-card"><h3>${ot('vCal')}</h3><div class="ops-alerts">${(()=>{const al=vatAlerts();return al.length?al.map(a=>`<div class="ops-al"><span class="dot ${a[0]}"></span><div>${escH(a[1])}</div></div>`).join(''):`<p class="ops-muted">${ot('nothing')}</p>`;})()}</div>
+  <p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ot('vRule').replace('{m}',m.refundM)}</p></div></div>`;
+  // monthly table
+  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ot('vTable')}<span>${ot('vMonthly')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ot('vMonth')}</th><th>${ot('vInCon')}</th><th>${ot('vInExp')}</th><th>${ot('vOutput')}</th><th>${ot('vNet')}</th><th>${ot('vDueDate')}</th><th>${ot('vFiled')}</th><th>${ot('vRefundExp')}</th><th>${ot('vRecv')}</th><th>${ot('vStatus')}</th></tr></thead><tbody>
+  ${m.list.map(p=>{const s=st[p.status]||['',p.status];return `<tr class="${_mToQ(p.key)<cut?'':'cx-sub'}"><td>${_mLabel(p.key)}<small class="ops-muted"> Q${_mToQ(p.key)+1}</small></td><td class="rfcs-num">${fN(p.inCon)}</td><td class="rfcs-num">${fN(p.inExp)}</td><td class="rfcs-num">${fN(p.out)}</td><td class="rfcs-num ${p.net>0?'cx-var bad':''}"><span>${p.net>0?fN(p.net)+' '+ot('vPay'):p.net<0?fN(-p.net)+' '+ot('vClaim'):'—'}</span></td><td>${p.net!==0?p.due:''}</td><td>${p.net<0?`<input type="date" class="ops-mini" style="width:140px" value="${p.filed||''}" onchange="vatSetFiled('${p.key}',this.value)">`:(p.net>0?(p.paidZ?fN(p.paidZ):''):'')}</td><td>${p.refund>0?p.refundExp||'—':''}</td><td class="rfcs-num">${p.refund>0?fN(p.refundGot):(p.recvZ?fN(p.recvZ):'')}</td><td><span class="ops-pill ${s[0]}">${s[1]}</span></td></tr>`;}).join('')}
+  <tr class="tot"><td><b>${ot('gTotal')}</b></td><td class="rfcs-num"><b>${fN(sumA(m.list.map(p=>p.inCon)))}</b></td><td class="rfcs-num"><b>${fN(sumA(m.list.map(p=>p.inExp)))}</b></td><td class="rfcs-num"><b>${fN(T.out)}</b></td><td class="rfcs-num"><b>${fN(T.out-T.input)}</b></td><td colspan="3"></td><td class="rfcs-num"><b>${fN(T.recv)}</b></td><td></td></tr></tbody></table></div></div>`;
+  // per-payment VAT editor (closed + open), only rows carrying VAT or VAT-able
+  const rows=actuals.filter(p=>p.include!==false&&(VATABLE.includes(p.category)||p.category==='revenue'||typeof p.vat==='number')).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  h+=`<details class="cx-details"><summary>${ot('vEditor')} (${rows.length})</summary><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ot('vMonth')}</th><th>${ot('cxLine')}</th><th>${ot('cxVendor')}</th><th>${ot('vGross')}</th><th>${ot('vVat')}</th><th>${ot('vNetAmt')}</th></tr></thead><tbody>
+  ${rows.slice(0,300).map(p=>{const v=p.category==='revenue'?payVATOut(p):payVAT(p);return `<tr><td>${escH(p.date||'')} · ${_mLabel(_mkey(p))}</td><td>${escH(_actCatLabel(p.category))}</td><td>${escH((p.payee||'').slice(0,36))}</td><td class="rfcs-num">${fN(p.amount)}</td><td><input type="number" class="ops-mini" style="width:120px" value="${typeof p.vat==='number'?p.vat:''}" placeholder="${Math.round(v)}" onchange="setPayVAT('${p.id}',this.value)"></td><td class="rfcs-num">${fN(p.amount-v)}</td></tr>`;}).join('')}</tbody></table></div><p class="ops-muted" style="font-size:.76rem">${ot('vEditorNote')}</p></details>`;
+  return h;
+}
+
+// ═══════════════════════════════════════════════
+// NAV — quarterly NAV statement (actual for closed quarters, forecast after), NAV per unit, plan vs actual.
+// Basis: cost (land + brokerage + RETT at cost, construction in progress at cost, cash, VAT/RETT receivable) − loan − provisions.
+// A valuer's mark per quarter can override land / CIP (reforecastSettings.nav.marks[q]={land,cip}); fees accrue only if entered.
+// Units = paid-in equity ÷ unit price (reforecastSettings.nav.unitPrice, default 10 SAR).
+// ═══════════════════════════════════════════════
+function navSettings(){_rfNorm();const n=reforecastSettings.nav=reforecastSettings.nav||{};if(n.unitPrice==null)n.unitPrice=10;n.marks=n.marks||{};n.accr=n.accr||{};return n;}
+function navSet(f,v){const n=navSettings();n[f]=v===''?null:Number(v);renderOps();}
+function navMark(q,f,v){const n=navSettings();n.marks[q]=n.marks[q]||{};if(v==='')delete n.marks[q][f];else n.marks[q][f]=Number(v);if(!Object.keys(n.marks[q]).length)delete n.marks[q];renderOps();}
+function navAccr(q,f,v){const n=navSettings();n.accr[q]=n.accr[q]||{};if(v==='')delete n.accr[q][f];else n.accr[q][f]=Number(v);renderOps();}
+function navModel(){
+  const cut=R2._cutoffQ,nq=R2.nq,n=navSettings(),vm=vatModel(),strict=!!R2._finStrict;
+  const landCats=['land','brokerage','rett'],cipCats=['base_con','dev_fee','contingency','licensing','design','insurance','supervision','engineering'];
+  const commit=(Number(R.A.equity)||0)+(Number(R.A.gp_commit_cash)||0);
+  const rows=[];let cumLand=0,cumCip=0,cumEq=0,cumIK=0,cumVatIn=0,cumVatRc=0,cumRettPaid=0,cumRettRc=0;let mkL=null,mkC=null; // {v,base}: a valuer's mark carries forward, plus cost added after it
+  const unitPrice=Number(n.unitPrice)||10;
+  for(let q=0;q<nq;q++){const closed=q<cut;
+    if(closed){cumLand+=landCats.reduce((s,k)=>s+actualOf(k,q,q+1),0);cumCip+=cipCats.reduce((s,k)=>s+actualOf(k,q,q+1),0);}
+    else{cumLand+=q===0?(R2.baseLand+R2.brokerageIncVAT+R2.rettAmount):0;cumCip+=R2.qCon[q]||0;}
+    cumEq+=R2.qEquity[q]||0;cumIK+=R2.qIKTotal[q]||0;
+    // VAT receivable: accrued input (closed: actual; open: plan VAT on costs) − received (plan qVATNet for open)
+    if(closed){for(const p of vm.list){if(_mToQ(p.key)===q){cumVatIn+=p.input-p.out;cumVatRc+=p.recvZ-p.paidZ;cumRettPaid+=p.rettPaid;cumRettRc+=p.rettRecv;}}}
+    else{const V=1+R2.A.vat_rate/100;cumVatIn+=(R2.qCon[q]-R2.qCon[q]/V)+((R2.qTotalFundExp[q]||0)-(R2.qTotalFundExp[q]||0)/V);cumVatRc+=(R2.qVATNet[q]||0)-(R2.qRETTRefund[q]||0);cumRettRc+=R2.qRETTRefund[q]||0;}
+    const mk=n.marks[q]||{},ac=n.accr[q]||{};
+    if(mk.land!=null)mkL={v:mk.land,base:cumLand};if(mk.cip!=null)mkC={v:mk.cip,base:cumCip};
+    const land=mkL?mkL.v+(cumLand-mkL.base):cumLand,cip=mkC?mkC.v+(cumCip-mkC.base):cumCip,cash=R2.qCashClose[q]||0;
+    const vatRec=Math.max(0,cumVatIn-cumVatRc),rettRec=Math.max(0,(projects.some(p=>Number(p.rett_refund))?cumRettPaid:0)-cumRettRc);
+    const assets=land+cip+cash+vatRec+rettRec+(ac.other||0);
+    const loan=R2.qLoanClose[q]||0,accrFee=ac.mgmt||0,accrPerf=ac.perf||0,payables=ac.payables||0;
+    const liab=loan+accrFee+accrPerf+payables,nav=assets-liab;
+    const units=unitPrice?(cumEq+cumIK)/unitPrice:0;
+    const planNav=(R.qNAV||[])[q]||0,planUnits=unitPrice?(((R.qEquity||[]).slice(0,q+1).reduce((a,b)=>a+b,0))+((R.qIKTotal||[]).slice(0,q+1).reduce((a,b)=>a+b,0)))/unitPrice:0;
+    rows.push({q,closed,land,cip,cash,vatRec,rettRec,other:ac.other||0,assets,loan,accrFee,accrPerf,payables,liab,nav,units,navU:units?nav/units:0,planNav,planU:planUnits?planNav/planUnits:0,marked:!!(mkL||mkC)});
+  }
+  return {rows,unitPrice,commit};
+}
+function opsNav(){
+  const m=navModel(),cut=R2._cutoffQ,nq=R2.nq,ar=lang==='ar',r=m.rows[Math.max(0,cut-1)],last=m.rows[nq-1];
+  const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
+  let h=`<div class="baseline-bar" style="margin:0 0 14px"><span>${ot('nBasis')}</span><label class="ops-field" style="margin:0">${ot('nUnitPrice')}<input type="number" class="ops-mini" style="width:90px" value="${m.unitPrice}" onchange="navSet('unitPrice',this.value)"></label></div>
+  <div class="ops-kpis">${kpi(ot('nNav')+' Q'+cut,M_(r.nav),ot('plan')+' '+M_(r.planNav),r.nav<r.planNav*0.98?'dn':'up')}${kpi(ot('nNavU'),r.navU.toFixed(3),ot('plan')+' '+r.planU.toFixed(3)+' · '+ot('nUnits')+' '+fN(r.units),r.navU<r.planU*0.98?'dn':'up')}${kpi(ot('nAssets'),M_(r.assets),ot('nLoan')+' '+M_(r.loan))}${kpi(ot('nNavEnd'),M_(last.nav),ot('nNavUEnd')+' '+last.navU.toFixed(3))}</div>`;
+  // chart NAV/unit plan vs actual+forecast
+  const lp=m.rows.map(x=>x.planU),la=m.rows.map((x,i)=>i<cut?x.navU:null),lf=m.rows.map((x,i)=>i>=cut-1?x.navU:null);
+  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ot('nChart')}<span>SAR/${ot('nUnit')}</span></h3>${svgLines([[lp,'#9aa79f'],[la,'#00322d'],[lf,'#775a19',1]],cut,nq)}</div>
+  <div class="ops-card"><h3>${ot('nBridge')} Q${cut}</h3><table class="rfcs-tbl cx-tbl"><tbody>
+  ${[[ot('nLand'),r.land],[ot('nCip'),r.cip],[ot('nCash'),r.cash],[ot('nVatRec'),r.vatRec],[ot('nRettRec'),r.rettRec],[ot('nOther'),r.other]].map(([l,v])=>`<tr><td>${l}</td><td class="rfcs-num">${fN(v)}</td></tr>`).join('')}
+  <tr class="tot"><td><b>${ot('nAssets')}</b></td><td class="rfcs-num"><b>${fN(r.assets)}</b></td></tr>
+  ${[[ot('nLoan'),r.loan],[ot('nAccrFee'),r.accrFee],[ot('nAccrPerf'),r.accrPerf],[ot('nPayables'),r.payables]].map(([l,v])=>`<tr><td>${l}</td><td class="rfcs-num">${v?'('+fN(v)+')':'—'}</td></tr>`).join('')}
+  <tr class="tot"><td><b>${ot('nNav')}</b></td><td class="rfcs-num"><b>${fN(r.nav)}</b></td></tr><tr><td>${ot('nUnits')}</td><td class="rfcs-num">${fN(r.units)}</td></tr><tr class="tot"><td><b>${ot('nNavU')}</b></td><td class="rfcs-num"><b>${r.navU.toFixed(4)}</b></td></tr></tbody></table></div></div>`;
+  // statement table across quarters with mark/accrual inputs
+  const cols=m.rows;
+  const line=(l,f,fmt,neg)=>`<tr><td>${l}</td>${cols.map(x=>`<td class="rfcs-num ${x.closed?'':'ops-muted'}">${neg&&x[f]?'('+fN(x[f])+')':(fmt?fmt(x[f]):fN(x[f]))}</td>`).join('')}</tr>`;
+  const inp=(l,kind,f)=>`<tr class="cx-sub"><td>${l}</td>${cols.map(x=>`<td><input type="number" class="ops-mini" style="width:96px" placeholder="—" value="${((kind==='mark'?navSettings().marks[x.q]:navSettings().accr[x.q])||{})[f]??''}" onchange="${kind==='mark'?'navMark':'navAccr'}(${x.q},'${f}',this.value)"></td>`).join('')}</tr>`;
+  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ot('nStatement')}<span>${ot('nStmtSub')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${cols.map(x=>`<th>Q${x.q+1}${x.closed?'':' <small>'+ot('forecast')+'</small>'}${x.marked?' ✎':''}</th>`).join('')}</tr></thead><tbody>
+  ${line(ot('nLand'),'land')}${inp(ot('nMarkLand'),'mark','land')}${line(ot('nCip'),'cip')}${inp(ot('nMarkCip'),'mark','cip')}${line(ot('nCash'),'cash')}${line(ot('nVatRec'),'vatRec')}${line(ot('nRettRec'),'rettRec')}${inp(ot('nOther'),'accr','other')}
+  <tr class="tot"><td><b>${ot('nAssets')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${fN(x.assets)}</b></td>`).join('')}</tr>
+  ${line(ot('nLoan'),'loan',null,true)}${inp(ot('nAccrFee'),'accr','mgmt')}${inp(ot('nAccrPerf'),'accr','perf')}${inp(ot('nPayables'),'accr','payables')}
+  <tr class="tot"><td><b>${ot('nNav')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${fN(x.nav)}</b></td>`).join('')}</tr>
+  ${line(ot('nUnits'),'units')}<tr class="tot"><td><b>${ot('nNavU')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${x.navU.toFixed(3)}</b></td>`).join('')}</tr>
+  <tr><td>${ot('nPlanU')}</td>${cols.map(x=>`<td class="rfcs-num ops-muted">${x.planU.toFixed(3)}</td>`).join('')}</tr></tbody></table></div>
+  <p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ot('nNote')}</p></div>`;
+  return h;
+}
 function opsFinancing(){
   const cut=R2._cutoffQ,nq=R2.nq,b=R,loanAt=cut>0?R2.qLoanClose[cut-1]:0,planAt=cut>0?(R.qLoanClose[cut-1]||0):0,drawn=sumA(R2.drawdowns.slice(0,cut)),intTo=sumA(R2.qInterest.slice(0,cut)),intPlan=sumA(R.qInterest.slice(0,cut));
   const ltc=R2.totalCost?sumA(R2.drawdowns)/R2.totalCost:0,peak=R2.peakDebt,peakQ=R2.qLoanClose.indexOf(peak)+1;
@@ -5377,6 +5566,12 @@ function opsFinancing(){
   const balSrc=reforecastSettings.actualLoanBalance!==null?ot('finConfirmed')+' ✓':(strict?ot('finFromLog'):ot('plan')+' '+M_(planAt));
   return `<div class="baseline-bar" style="margin:0 0 14px"><span>${ot('finMode')}: <b>${strict?ot('finStrict'):ot('finLenient')}</b></span></div>
   <div class="ops-kpis">${kpi(ot('eqCalled'),M_(called),ot('commitment')+' '+M_(commit),called<commit-0.5?'':'up')}${kpi(ot('loanBal'),M_(loanAt),balSrc,loanAt>planAt*1.05?'dn':'')}${kpi(ot('drawn'),M_(drawn),ot('facilityUse')+' '+M_(facility))}${kpi(ot('intToDate'),M_(intTo),ot('plan')+' '+M_(intPlan),intTo>intPlan*1.05?'dn':'')}${kpi(ot('ltc'),fP(ltc),'')}${kpi(ot('peak'),M_(peak),'Q'+peakQ)}</div>
+  ${(()=>{const pd=i=>R.drawdowns[i]||0,ad=i=>i<cut?actualOf('debt_draw',i,i+1):(R2.drawdowns[i]||0),pr=i=>R.qRepay[i]||0,arp=i=>i<cut?actualOf('debt_repay',i,i+1):(R2.qRepay[i]||0),pdt=sumA(R.drawdowns.slice(0,cut)),adt=sumA(Array.from({length:cut},(_,i)=>ad(i))),fees=k=>[sumA((R[k]||[]).slice(0,cut)),actualOf(k==='qArrFee'?'arr_fee':'bank_mgmt',0,cut)];
+    const fa=fees('qArrFee'),fb=fees('qBankMgmt');
+    return `<div class="ops-kpis">${kpi(ot('fDrawnToDate'),M_(adt),ot('fPlanToDate')+' '+M_(pdt),adt>pdt*1.05?'dn':'')}${kpi(ot('fUndrawn'),M_(Math.max(0,facility-adt)),ot('facility')+' '+M_(facility))}${kpi(ot('fFees'),M_(fa[1]+fb[1]),ot('plan')+' '+M_(fa[0]+fb[0]),fa[1]+fb[1]>(fa[0]+fb[0])*1.05?'dn':'')}</div>
+    <div class="ops-card" style="margin-bottom:16px"><h3>${ot('fDrawTbl')}<span>${strict?ot('finStrict'):ot('finLenient')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ot('fPlanDraw')}</th><th>${ot('fActDraw')}</th><th>${ot('fPlanRepay')}</th><th>${ot('fActRepay')}</th><th>${ot('fPlanBal')}</th><th>${ot('fBal')}</th><th>${ot('fPlanInt')}</th><th>${ot('fActInt')}</th></tr></thead><tbody>
+    ${Array.from({length:nq},(_,i)=>`<tr class="${i<cut?'':'cx-sub'}"><td>Q${i+1}${i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(pd(i))}</td><td class="rfcs-num ${i<cut&&ad(i)>pd(i)+0.5?'cx-var bad':''}"><span>${fN(ad(i))}</span></td><td class="rfcs-num">${fN(pr(i))}</td><td class="rfcs-num">${fN(arp(i))}</td><td class="rfcs-num">${fN(R.qLoanClose[i]||0)}</td><td class="rfcs-num"><b>${fN(R2.qLoanClose[i]||0)}</b></td><td class="rfcs-num">${fN(R.qInterest[i]||0)}</td><td class="rfcs-num">${fN(R2.qInterest[i]||0)}</td></tr>`).join('')}
+    <tr class="tot"><td><b>${ot('gTotal')}</b></td><td class="rfcs-num"><b>${fN(sumA(R.drawdowns))}</b></td><td class="rfcs-num"><b>${fN(sumA(Array.from({length:nq},(_,i)=>ad(i))))}</b></td><td class="rfcs-num"><b>${fN(sumA(R.qRepay))}</b></td><td class="rfcs-num"><b>${fN(sumA(Array.from({length:nq},(_,i)=>arp(i))))}</b></td><td></td><td></td><td class="rfcs-num"><b>${fN(sumA(R.qInterest))}</b></td><td class="rfcs-num"><b>${fN(R2.totalInterest)}</b></td></tr></tbody></table></div></div>`;})()}
   <div class="ops-grid2"><div class="ops-card"><h3>${ot('loanChart')}<span>SAR</span></h3>${svgLines(series,cut,nq)}</div>
   <div class="ops-card"><h3>${ot('facility')}</h3><table class="rfcs-tbl"><thead><tr><th></th><th>${ot('baseline')}</th><th>${ot('forecast')}</th></tr></thead><tbody>${row('SAIBOR',blF.saibor+'%',(ov.saibor??blF.saibor)+'%')}${row(lang==='ar'?'الهامش':'Margin',blF.margin+'%',(ov.margin??blF.margin)+'%')}${row(lang==='ar'?'الحد الأدنى للنقد':'Minimum cash',fN(blF.min_cash),fN(ov.min_cash??blF.min_cash))}${row(lang==='ar'?'إجمالي الأرباح':'Total interest',M_(sumA(R.qInterest)),M_(R2.totalInterest))}</tbody></table>
   <label class="ops-field" style="margin-top:12px">${ot('confirm')} Q${cut}<input type="number" class="ops-mini" style="width:160px" value="${reforecastSettings.actualLoanBalance??''}" placeholder="${M_(loanAt)}" onchange="reforecastSettings.actualLoanBalance=this.value===''?null:Number(this.value);opsRefresh()"></label>
