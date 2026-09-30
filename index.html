@@ -743,6 +743,7 @@ canvas{max-width:100%;display:block}
     <div class="login-field" style="margin-bottom:14px"><label>New Password (leave blank to keep current)</label><input type="password" id="acctNewPass" placeholder="New password (optional)" autocomplete="new-password"></div>
     <div class="login-error" id="acctError" style="display:none"></div>
     <div class="login-success" id="acctSuccess" style="display:none"></div>
+    <div style="display:flex;gap:8px;margin:4px 0 12px;flex-wrap:wrap" data-no-i18n><button class="btn-share-close" onclick="closeAcctSettings();mfaEnrol()">🔐 Two-factor: set up</button><button class="btn-share-close" onclick="mfaDisable()">Two-factor: turn off</button></div>
     <div class="share-btns">
       <button class="btn-gen-link" id="btnAcctSave" onclick="saveAcctSettings()">Save Changes</button>
       <button class="btn-share-close" onclick="closeAcctSettings()">Close</button>
@@ -986,6 +987,47 @@ function doLogout(){
   if(authMode!=='login') toggleAuthMode();
 }
 
+// ── Multi-factor authentication (TOTP, authenticator app) ──
+// After sign-in: a user with a verified factor must enter a code (session is AAL1 until then); a user without one is
+// asked to enrol (can skip). Rows in the DB are still readable at AAL1 — enforce at DB level only once everyone is enrolled:
+//   alter policy "own projects" on projects using (owner = auth.uid() and coalesce(auth.jwt()->>'aal','aal1')='aal2') ...
+let _mfaPassed=false;
+async function mfaGate(){
+  if(!sb||!currentUid) return true;
+  try{
+    const {data:aal}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    if(aal&&aal.currentLevel==='aal2'){_mfaPassed=true;return true;}
+    const {data:f}=await sb.auth.mfa.listFactors();
+    const totp=((f&&f.totp)||[]).find(x=>x.status==='verified');
+    if(totp){ if(_mfaPassed) return true; return await mfaChallenge(totp.id); }
+    if(!sessionStorage.getItem('rf_mfa_skip')) mfaOfferEnrol();
+    return true;
+  }catch(e){console.warn('mfa gate',e);return true;}
+}
+function _mfaBox(title,body){let el=document.getElementById('mfaPop');if(el)el.remove();el=document.createElement('div');el.id='mfaPop';el.className='bk-pop';document.body.appendChild(el);
+  el.innerHTML=`<div class="bk-box" style="min-width:380px;max-width:460px"><div class="bk-h"><b>${title}</b></div><div class="bk-body" id="mfaBody">${body}</div></div>`;return el;}
+function mfaChallenge(factorId){
+  const ar=lang==='ar';
+  return new Promise(res=>{
+    document.getElementById('appMain').style.display='none';
+    _mfaBox(ar?'رمز التحقق':'Verification code',`<p style="margin:0 0 10px">${ar?'أدخل الرمز من تطبيق المصادقة':'Enter the 6-digit code from your authenticator app'}</p><input id="mfaCode" class="ops-mini" style="width:100%;font-size:1.3rem;letter-spacing:.3em;text-align:center" maxlength="6" inputmode="numeric" autocomplete="one-time-code"><p id="mfaErr" class="cx-var bad" style="font-size:.8rem;min-height:1em"></p><div style="display:flex;gap:10px;justify-content:flex-end"><button class="ops-close" style="background:#e8eeec;color:#1b1c19" onclick="sb.auth.signOut();document.getElementById('mfaPop').remove()">${ar?'خروج':'Sign out'}</button><button class="ops-close" id="mfaOk">${ar?'تحقق':'Verify'}</button></div>`);
+    const go=async()=>{const code=document.getElementById('mfaCode').value.trim();if(code.length!==6)return;try{const {data:ch,error:e1}=await sb.auth.mfa.challenge({factorId});if(e1)throw e1;const {error:e2}=await sb.auth.mfa.verify({factorId,challengeId:ch.id,code});if(e2)throw e2;_mfaPassed=true;document.getElementById('mfaPop').remove();document.getElementById('appMain').style.display='';res(true);}catch(e){document.getElementById('mfaErr').innerHTML='<span>'+escH(e.message||String(e))+'</span>';}};
+    document.getElementById('mfaOk').onclick=go;document.getElementById('mfaCode').onkeydown=e=>{if(e.key==='Enter')go();};document.getElementById('mfaCode').focus();
+  });
+}
+function mfaOfferEnrol(){const ar=lang==='ar';
+  _mfaBox(ar?'تأمين الحساب':'Secure your account',`<p style="margin:0 0 12px">${ar?'يُنصح بتفعيل المصادقة الثنائية بتطبيق مصادقة (Google Authenticator، Microsoft Authenticator…). يستغرق دقيقة.':'Enable two-factor authentication with an authenticator app (Google Authenticator, Microsoft Authenticator…). It takes a minute.'}</p><div style="display:flex;gap:10px;justify-content:flex-end"><button class="ops-close" style="background:#e8eeec;color:#1b1c19" onclick="sessionStorage.setItem('rf_mfa_skip','1');document.getElementById('mfaPop').remove()">${ar?'لاحقاً':'Later'}</button><button class="ops-close" onclick="mfaEnrol()">${ar?'تفعيل الآن':'Set up now'}</button></div>`);}
+async function mfaEnrol(){const ar=lang==='ar';
+  try{
+    // remove stale unverified factors first
+    const {data:f}=await sb.auth.mfa.listFactors();for(const x of ((f&&f.all)||[]).filter(x=>x.status!=='verified')){try{await sb.auth.mfa.unenroll({factorId:x.id});}catch(e){}}
+    const {data,error}=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'Authenticator '+new Date().toISOString().slice(0,10)});if(error)throw error;
+    _mfaBox(ar?'تفعيل المصادقة الثنائية':'Set up two-factor authentication',`<p style="margin:0 0 8px;font-size:.84rem">${ar?'امسح الرمز بتطبيق المصادقة ثم أدخل الرمز المكوّن من 6 أرقام':'Scan with your authenticator app, then enter the 6-digit code'}</p><div style="text-align:center"><img src="${data.totp.qr_code}" style="width:200px;height:200px"></div><p class="ops-muted" style="font-size:.7rem;word-break:break-all">${ar?'أو أدخل المفتاح يدوياً: ':'or enter the key manually: '}${escH(data.totp.secret)}</p><input id="mfaCode" class="ops-mini" style="width:100%;font-size:1.3rem;letter-spacing:.3em;text-align:center" maxlength="6" inputmode="numeric"><p id="mfaErr" class="cx-var bad" style="font-size:.8rem;min-height:1em"></p><div style="display:flex;gap:10px;justify-content:flex-end"><button class="ops-close" style="background:#e8eeec;color:#1b1c19" onclick="sb.auth.mfa.unenroll({factorId:'${data.id}'});document.getElementById('mfaPop').remove()">${ar?'إلغاء':'Cancel'}</button><button class="ops-close" id="mfaOk">${ar?'تأكيد':'Confirm'}</button></div>`);
+    const go=async()=>{const code=document.getElementById('mfaCode').value.trim();if(code.length!==6)return;try{const {data:ch,error:e1}=await sb.auth.mfa.challenge({factorId:data.id});if(e1)throw e1;const {error:e2}=await sb.auth.mfa.verify({factorId:data.id,challengeId:ch.id,code});if(e2)throw e2;_mfaPassed=true;document.getElementById('mfaPop').remove();alert(ar?'تم تفعيل المصادقة الثنائية. ستُطلب منك عند كل تسجيل دخول.':'Two-factor authentication is on. You will be asked for a code at every sign-in.');}catch(e){document.getElementById('mfaErr').innerHTML='<span>'+escH(e.message||String(e))+'</span>';}};
+    document.getElementById('mfaOk').onclick=go;document.getElementById('mfaCode').onkeydown=e=>{if(e.key==='Enter')go();};
+  }catch(e){alert((ar?'تعذّر التفعيل: ':'Could not enrol: ')+(e.message||e));}
+}
+async function mfaDisable(){const ar=lang==='ar';try{const {data:f}=await sb.auth.mfa.listFactors();const v=((f&&f.totp)||[]);if(!v.length){alert(ar?'لا توجد مصادقة ثنائية مفعّلة':'Two-factor is not enabled');return;}if(!confirm(ar?'إيقاف المصادقة الثنائية؟':'Turn off two-factor authentication?'))return;for(const x of v){const {error}=await sb.auth.mfa.unenroll({factorId:x.id});if(error)throw error;}alert(ar?'تم الإيقاف':'Turned off');}catch(e){alert(e.message||e);}}
 // Auth state listener — handles login, logout, session persistence and password-recovery links
 function setupAuthListener(){
   if(!sb) return;
@@ -998,7 +1040,7 @@ function setupAuthListener(){
       document.getElementById('userBadge').textContent='\u{1F464} '+currentUser;
       const acctBtn=document.getElementById('btnAcct'); if(acctBtn) acctBtn.style.display='';
       if(event==='PASSWORD_RECOVERY') _promptNewPassword();
-      if(event==='SIGNED_IN'||event==='INITIAL_SESSION') loadProjectList().then(processPendingLive);
+      if(event==='SIGNED_IN'||event==='INITIAL_SESSION') mfaGate().then(ok=>{if(ok) loadProjectList().then(processPendingLive);});
     }else if(event!=='TOKEN_REFRESHED'){
       currentUser=null;currentUid=null;currentEmail=null;
       if(!isSharedView){
