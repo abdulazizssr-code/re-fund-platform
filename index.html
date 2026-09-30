@@ -701,7 +701,7 @@ canvas{max-width:100%;display:block}
       <button class="login-btn" id="authBtn" onclick="doLogin()">Sign In</button>
       <div class="login-error" id="loginError"></div>
       <div class="login-success" id="loginSuccess">Account created! You can now sign in.</div>
-      <div class="login-toggle" id="authToggle">Don't have an account? <a onclick="toggleAuthMode()">Create Account</a></div>
+      <div class="login-toggle" id="authToggle" data-no-i18n>Access is by invitation only — ask your administrator for an account.</div>
       <div class="login-footer">
         <a id="guestLink" onclick="enterGuestMode()">Continue as Guest</a>
         <div style="font-size:.76rem;color:var(--on-surface-vl);margin-top:6px" id="guestHint">Explore the platform — projects won't be saved</div>
@@ -854,6 +854,9 @@ function toggleAuthMode(){
   document.getElementById('rememberMe').parentElement.style.display='';
   document.getElementById('resetFields').classList.remove('show');
   const _t=TX[lang];
+  if(authMode==='login'&&!window.ALLOW_SIGNUP){ // invitation only (decided 2026-09-30): sign-ups are disabled in Supabase Auth as well
+    document.getElementById('authToggle').textContent=lang==='ar'?'الدخول بدعوة فقط — اطلب حساباً من مدير النظام.':'Access is by invitation only — ask your administrator for an account.';return;
+  }
   if(authMode==='login'){
     authMode='signup';
     document.getElementById('signupFields').classList.add('show');
@@ -869,7 +872,7 @@ function toggleAuthMode(){
     document.getElementById('authSubtitle').textContent=_t.authSub||'Sign in to access your projects';
     document.getElementById('authBtn').textContent=_t.authSignIn||'Sign In';
     document.getElementById('authBtn').setAttribute('onclick','doLogin()');
-    document.getElementById('authToggle').innerHTML=(_t.authNoAcct||"Don't have an account?")+' <a onclick="toggleAuthMode()">'+(_t.authCreateBtn||'Create Account')+'</a>';
+    document.getElementById('authToggle').textContent=lang==='ar'?'الدخول بدعوة فقط — اطلب حساباً من مدير النظام.':'Access is by invitation only — ask your administrator for an account.';
   }
 }
 
@@ -1160,6 +1163,9 @@ async function showVersions(){
   }catch(e){alert(e.message);}
 }
 function newProject(){currentProjectId=null;liveReadOnly=false;try{watchProject(null);}catch(ignored){}workspace='feasibility';document.getElementById('projSelect').value='';Object.keys(defaultD).forEach(k=>{D[k]=defaultD[k];});actuals=[];reforecastSettings=defaultRF();reforecastMode=false;R2=null;projects=[{name:'Project 1',strategy:'sell',land_area:204624,land_price_sqm:900,brokerage_pct:2.5,rett_pct:2,rett_refund:0,build_area:204624,dev_cost_sqm:138,dev_fee_pct:12.7,contingency_pct:5,insurance_pct:5,design_fee_mode:'fixed',design_fee:564762,design_fee_pct:2,supervision_fee_mode:'fixed',supervision_fee:0,supervision_fee_pct:0,licensing_fee:564762,con_period_months:24,sale_price_sqm:2375,sell_area:128913,wafi_pct:1,sell_exp_pct:2.5,leasable_area:0,rent_per_sqm:400,rent_escalator_pct:2,hold_period_months:36,exit_cap_rate:8,selling_cost_pct:2,occupancySchedule:[0,0,0,0,0,0,40,50,60,70,80,90],opexItems:[{name:'Property Management',nameAr:'إدارة العقار',mode:'pct_egi',value:2},{name:'Maintenance',nameAr:'الصيانة',mode:'fixed',value:100000},{name:'Utilities',nameAr:'المرافق',mode:'fixed',value:0},{name:'Insurance',nameAr:'التأمين',mode:'sqm',value:0},{name:'Major Repairs',nameAr:'إصلاحات رئيسية',mode:'fixed',value:0}],conComponents:[{name:'المساحة المطورة وسعر التطوير بنية تحتية',nameEn:'Developed Area & Infrastructure',gfa:204624,cost:120}],salesComponents:[{name:'سكني',nameEn:'Residential',area:128913,price:2375}],schBaseCon:[0,5,10,15,20,20,20,10],schDevFee:[0,5,10,15,20,20,20,10],schContingency:[0,0,0,25,0,25,25,25],schLicensing:[0,100,0,0,0,0,0,0],schDesign:[0,100,0,0,0,0,0,0],schInsurance:[0,0,0,25,0,25,25,25],schSupervision:[3,7,13,19,20,18,12,8],schMarketing:[0,100,0,0,0,0,0,0],salesSchedule:[0,0,0,0,0,5,5,90]}];activeProjectIdx=0;R=null;buildTabs();buildForm();}
+// remove every stored document under <uid>/<projectId>/ (called when a project is deleted); best-effort
+async function docsPurgeProject(uid,id){if(!sb||!uid||!id)return;try{const {data}=await sb.storage.from('docs').list(`${uid}/${id}`,{limit:1000});if(data&&data.length){const {error}=await sb.storage.from('docs').remove(data.map(f=>`${uid}/${id}/${f.name}`));if(error)throw error;}}catch(e){console.warn('docs purge:',e.message||e);}}
+async function docsRemove(paths){if(!sb)return;const ps=(paths||[]).filter(Boolean);if(!ps.length)return;try{const {error}=await sb.storage.from('docs').remove(ps);if(error)throw error;}catch(e){console.warn('docs remove:',e.message||e);}}
 async function deleteProject(){
   if(isGuest){alert(lang==='ar'?'وضع الزائر: لا توجد مشاريع محفوظة للحذف.':'Guest mode: no saved projects to delete.');return;}
   const sel=document.getElementById('projSelect'); const id=sel.value;
@@ -1172,7 +1178,7 @@ async function deleteProject(){
     return;
   }
   if(!confirm(lang==='ar'?'حذف "'+name+'"؟':'Delete "'+name+'"?')) return;
-  try{ const {error}=await sb.from('projects').delete().eq('id',id); if(error) throw error; currentProjectId=null; watchProject(null); await loadProjectList(); }
+  try{ await docsPurgeProject(currentUid,id); const {error}=await sb.from('projects').delete().eq('id',id); if(error) throw error; currentProjectId=null; watchProject(null); await loadProjectList(); }
   catch(e){alert((lang==='ar'?'خطأ في الحذف: ':'Error deleting: ')+e.message);}
 }
 
@@ -5663,7 +5669,7 @@ function docMarkPaid(invId){const inv=invoiceById(invId);if(!inv)return;const ar
   const amt=+g('amt').value||0,date=g('date').value;if(!amt||!date)throw new Error('…');const ratio=inv.total?amt/inv.total:1,vat=+(inv.vat*ratio).toFixed(2);
   const p={id:_actGenId(),date,quarter:dateToQuarterIdx(date,D.start_date),category:inv.category,amount:amt,net:+(amt-vat).toFixed(2),vat,payee:inv.supplier,notes:inv.description,invoiceRef:inv.no,txn:g('txn').value.trim(),invoiceId:inv.id,include:true};
   actuals.push(p);inv.status='paid';inv.paidDate=date;inv.paidAmount=amt;inv.paymentId=p.id;opsRefresh();});}
-function docInvoiceRemove(id){const inv=invoiceById(id);if(!inv)return;if(inv.status==='paid'){alert(lang==='ar'?'الفاتورة مدفوعة — احذف الدفعة من السجل أولاً':'Invoice is paid — delete its payment from the log first');return;}if(!confirm(lang==='ar'?'حذف الفاتورة؟':'Remove this invoice?'))return;const i=invoices().findIndex(x=>x.id===id);if(i>=0)invoices().splice(i,1);renderOps();}
+function docInvoiceRemove(id){const inv=invoiceById(id);if(!inv)return;if(inv.status==='paid'){alert(lang==='ar'?'الفاتورة مدفوعة — احذف الدفعة من السجل أولاً':'Invoice is paid — delete its payment from the log first');return;}if(!confirm(lang==='ar'?'حذف الفاتورة؟ (يُحذف الملف المخزّن أيضاً)':'Remove this invoice? (its stored file is deleted too)'))return;docsRemove([inv.files&&inv.files.invoice,inv.files&&inv.files.receipt]);const i=invoices().findIndex(x=>x.id===id);if(i>=0)invoices().splice(i,1);renderOps();}
 function docInvoiceSet(id,f,v){const inv=invoiceById(id);if(!inv)return;inv[f]=v;renderOps();}
 
 // ---- Step 3: quarterly submission summary ----
@@ -8031,6 +8037,7 @@ const _i18nObs=new MutationObserver(muts=>{
 _i18nObs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title']});
 
 function toggleLang(){
+  {const t=document.getElementById('authToggle');if(t){const nl=lang==='ar'?'en':'ar';t.textContent=nl==='ar'?'الدخول بدعوة فقط — اطلب حساباً من مدير النظام.':'Access is by invitation only — ask your administrator for an account.';}}
   lang=lang==='en'?'ar':'en';
   try{localStorage.setItem('refund_lang',lang);}catch(ignored){}
   document.body.dir=lang==='ar'?'rtl':'ltr';
