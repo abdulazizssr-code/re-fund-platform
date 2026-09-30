@@ -147,6 +147,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .ops-svg{width:100%;height:auto;display:block}.ops-ax{font-size:10.5px;fill:var(--on-surface-vl);font-family:'Manrope',sans-serif}.ops-grd{stroke:var(--outline)}.ops-legend{display:flex;gap:14px;font-size:.76rem;color:var(--on-surface-vl);margin-top:8px}.ops-legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-inline-end:6px;border-radius:2px}
 .cf-click{cursor:pointer;text-decoration:underline dotted}.cf-click:hover{background:#eef3f1}.cf-i{font-style:normal;font-size:.75em;opacity:.7}th small.qe{display:block;font-weight:500;font-size:.66rem;opacity:.75}
 .bk-pop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9999;display:flex;align-items:center;justify-content:center}.bk-box{background:#fff;border-radius:14px;min-width:340px;max-width:720px;max-height:80vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);font-size:.86rem}.bk-h{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#00322d;color:#fff;border-radius:14px 14px 0 0}.bk-h a{cursor:pointer;font-weight:800}.bk-body{padding:10px 16px}.bk-r{display:flex;justify-content:space-between;gap:20px;padding:6px 0;border-bottom:1px solid #eef1ef}.bk-r span{unicode-bidi:plaintext}.bk-r b{font-variant-numeric:tabular-nums;white-space:nowrap}.bk-r.tot{border-top:2px solid #00322d;border-bottom:none;font-weight:800}.bk-r small{display:block;color:#607068;font-weight:400}.bk-f{padding:8px 16px 12px;color:#607068;font-size:.76rem}
+.dm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}.dm-f{display:flex;flex-direction:column;font-size:.74rem;font-weight:700;color:#40514a;gap:3px}.dm-f input,.dm-f select{padding:6px 8px;border:1px solid #ccd3cf;border-radius:8px;font:inherit;font-size:.86rem;font-weight:500}.cx-rej td{background:#fdf1f1!important}
 .cx-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.cx-filters .ops-mini{width:auto;min-width:120px}.cx-filters .cx-q{min-width:220px}
 .cx-seg{display:inline-flex;background:#e8eeec;border-radius:999px;padding:3px}.cx-seg a{padding:4px 11px;border-radius:999px;font-size:.76rem;font-weight:700;cursor:pointer;color:#40514a}.cx-seg a.on{background:#00322d;color:#fff}
 .cx-wrap{overflow:auto}.cx-tbl td,.cx-tbl th{white-space:nowrap;padding:7px 9px;vertical-align:middle}.cx-tbl th,.cx-tbl td:first-child{text-align:start!important;unicode-bidi:plaintext}
@@ -4892,7 +4893,7 @@ function otherExpBreakdown(RX){
     [ar?'اللجنة الشرعية':'Shariah committee',S(RX.qSharia)],[ar?'الاستشاري الهندسي':'Engineering consultant',S(RX.qEngineering)],[ar?'مكافآت مجلس الإدارة':'Board compensation',S(RX.qBoard)],[ar?'المستشار المالي':'Financial advisor',S(RX.qFinAdvisor)],
     [ar?'التسويق':'Marketing',S(RX.qMkt)],[ar?'رسوم الإدارة البنكية':'Bank management fee',S(RX.qBankMgmt)],[ar?'رسوم الترتيب':'Arrangement fee',S(RX.qArrFee)],[ar?'رسوم وافي':'WAFI fees',S(RX.qWafi)],[ar?'عمولات البيع':'Selling commissions',S(RX.qSellExp)]];
 }
-function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[]};}
+function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[],invoices:[],submissions:[]};}
 function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k]===undefined) reforecastSettings[k]=JSON.parse(JSON.stringify(d[k]));}
 function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings.cutoffQ;
   if(c!==null&&c!==undefined) return Math.max(0,Math.min(nq-1,Number(c)));
@@ -5126,6 +5127,7 @@ function opsAlerts(){
   const un=actuals.filter(p=>(p.category==='base_con'||p.category==='revenue')&&!p.component&&lineComponents(p.category).length>1); if(un.length) out.push(['warn',un.length+' '+ot('unassigned')+' ('+M_(un.reduce((s,p)=>s+p.amount,0))+')','payments']);
   if(cut>0&&!R2._finStrict&&(sumA(R2.drawdowns.slice(0,cut))>0||sumA(R2.qEquity.slice(0,cut))>0)) out.push(['warn',ot('noFin'),'financing']);
   try{vatAlerts().forEach(a=>out.push(a));}catch(e){}
+  try{docAlerts().forEach(a=>out.push(a));}catch(e){}
   return out;
 }
 function opsBadge(s){const n=opsAlerts().filter(a=>a[2]===s).length;return n?`<em>${n}</em>`:'';}
@@ -5228,6 +5230,7 @@ function opsCosts(){
   const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
   const dv=TA-TB,vc=_vcls(TB,TA,TB),dF=TF-TO;
   let h=`<div class="ops-kpis">${kpi(ot('cxActual'),M_(TA),closed?ot('cxClosedN').replace('{n}',cut):ot('cxAllPay'))}${kpi(ot('cxBudget'),M_(TB),closed?ot('cxPlanTo').replace('{n}',cut):ot('cxFullPlan'))}${kpi(ot('cxVar'),(dv>=0?'+':'−')+M_(Math.abs(dv)),TB?(dv>=0?'+':'−')+Math.abs(dv/TB*100).toFixed(1)+'% '+ot('cxVsBudget'):'',vc==='bad'?'dn':vc==='good'?'up':'')}${kpi(ot('fac'),M_(TF),(dF>=0?'+':'−')+M_(Math.abs(dF))+' '+ot('vsBase'),dF>TO*0.005?'dn':'')}</div>`;
+  h+=docInvoicesCard();
   // table
   const colHdr=`<tr><th>${ot('cxLine')}</th><th>${ot('budget')}</th><th>${ot('actual')}</th><th>${ot('cxVarCol')}</th><th>${ot('commit')}</th><th>${ot('adj')}</th><th>${ot('facShort')}</th><th>${ot('cxTreatCol')}</th><th></th></tr>`;
   const trow=r=>{const c=r.c,id=c.key,open=!!F.open[id],comps=(c.key==='base_con')?lineComponents(c.key):[],ct=comps.reduce((a,x)=>a+x.value,0),fq=nq-cut,ph=reforecastSettings.manualRedist[c.key]||[],rem=Math.max(0,r.fac-r.act-r.com);
@@ -5419,6 +5422,7 @@ function opsVat(){
   const st={paid:['good',ot('vPaid')],overdue:['bad',ot('vOverdue')],due:['warn',ot('vDue')],received:['good',ot('vReceived')],late:['bad',ot('vLate')],claimed:['',ot('vClaimed')],unfiled:['warn',ot('vUnfiled')],open:['',ot('vOpen')],nil:['','—']};
   let h=`<div class="baseline-bar" style="margin:0 0 14px"><span>${R2._vatStrict?ot('vStrict'):ot('vLenient')}</span></div>
   <div class="ops-kpis">${kpi(ot('vInput'),M_(T.input),ot('vInputSub'))}${kpi(ot('vOutput'),M_(T.out),ot('vOutputSub'))}${kpi(ot('vRecv'),M_(T.recv),ot('vPaidZ')+' '+M_(T.paid))}${kpi(ot('vRecvbl'),M_(T.receivable),ot('vRecvblSub'),T.receivable>0?'dn':'')}${kpi(ot('vRett'),M_(T.rettReceivable),ot('vRettSub')+' '+M_(T.rettPaid))}</div>`;
+  h+=docSubmissionsCard();
   // chart: cumulative input VAT vs received, plan refunds line
   const cumIn=cumul(m.list.map(p=>p.input)),cumRc=cumul(m.list.map(p=>p.recvZ));
   const W=640,H=200,M={l:52,r:14,t:14,b:26},n=m.list.length||1,x=i=>M.l+i*(W-M.l-M.r)/Math.max(1,n-1),ymax=Math.max(1,...cumIn,...cumRc)*1.05,y=v=>M.t+(H-M.t-M.b)*(1-v/ymax);
@@ -5506,6 +5510,248 @@ function opsNav(){
   <p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ot('nNote')}</p></div>`;
   return h;
 }
+// ═══════════════════════════════════════════════
+// DOCUMENTS — cost & VAT transaction process (Steps 1–5)
+//   1 tax invoice  → obligation (base / VAT / total)          reforecastSettings.invoices[]
+//   2 bank receipt → payment in the log (cash report), invoice = paid, linked both ways
+//   3 quarterly refund submission summary → submission record, reconciled against recorded invoices
+//   4 ZATCA review report → rejected invoices + reasons on the submission
+//   5 ZATCA acceptance notice → confirmed amount; refund receipts (vat_received) close the loop
+// Files go to Supabase Storage bucket "docs" (supabase/storage.sql); metadata lives in the project. Extraction is local:
+// ZATCA e-invoice QR (TLV), then PDF text; a review form always shows what was read before anything is saved.
+// ═══════════════════════════════════════════════
+function invoices(){_rfNorm();if(!Array.isArray(reforecastSettings.invoices))reforecastSettings.invoices=[];return reforecastSettings.invoices;}
+function submissions(){_rfNorm();if(!Array.isArray(reforecastSettings.submissions))reforecastSettings.submissions=[];return reforecastSettings.submissions;}
+function invoiceById(id){return invoices().find(i=>i.id===id)||null;}
+const _libs={};
+function loadLib(name,url,test){return new Promise((res,rej)=>{if(test())return res();if(_libs[name])return _libs[name].then(res,rej);_libs[name]=new Promise((r2,j2)=>{const s=document.createElement('script');s.src=url;s.onload=()=>r2();s.onerror=()=>j2(new Error('cannot load '+name));document.head.appendChild(s);});_libs[name].then(res,rej);});}
+async function libPdf(){await loadLib('pdfjs','https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',()=>!!window.pdfjsLib);pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+async function libQR(){await loadLib('jsqr','https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js',()=>!!window.jsQR);}
+async function libXlsx(){await loadLib('xlsx','https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',()=>!!window.XLSX);}
+
+// ---- read a file: pages of text lines + canvases ----
+async function readDoc(file){
+  const out={name:file.name,pages:[]};
+  if(/\.(png|jpe?g|webp)$/i.test(file.name)||/^image\//.test(file.type)){
+    const img=await new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=URL.createObjectURL(file);});
+    const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);out.pages.push({lines:[],canvas:c});return out;}
+  await libPdf();const buf=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  for(let n=1;n<=Math.min(pdf.numPages,6);n++){const pg=await pdf.getPage(n);const tc=await pg.getTextContent();
+    const rows={};for(const it of tc.items){if(!it.str||!it.str.trim())continue;const y=Math.round(it.transform[5]/3)*3;(rows[y]=rows[y]||[]).push({x:it.transform[4],s:it.str});}
+    const lines=Object.keys(rows).map(Number).sort((a,b)=>b-a).map(y=>rows[y].sort((a,b)=>a.x-b.x).map(o=>o.s).join(' ').replace(/\s+/g,' ').trim());
+    const vp=pg.getViewport({scale:2});const c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    out.pages.push({lines,canvas:c});}
+  return out;
+}
+// ZATCA e-invoice QR: base64 TLV — 1 seller, 2 VAT no, 3 timestamp, 4 total incl. VAT, 5 VAT amount
+function decodeZatcaQR(b64){try{const bin=atob(b64);const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));const o={};let i=0;const td=new TextDecoder('utf-8');while(i+2<=bytes.length){const tag=bytes[i],len=bytes[i+1];const v=td.decode(bytes.slice(i+2,i+2+len));i+=2+len;o[tag]=v;}return (o[2]||o[4])?{seller:o[1],vat:o[2],time:o[3],total:Number(o[4]),vatAmt:Number(o[5])}:null;}catch(e){return null;}}
+async function qrFromCanvas(c){await libQR();const tries=[[c,1]];const half=document.createElement('canvas');half.width=Math.round(c.width/2);half.height=Math.round(c.height/2);half.getContext('2d').drawImage(c,0,0,half.width,half.height);tries.push([half,2]);
+  for(const [cv] of tries){const ctx=cv.getContext('2d');const d=ctx.getImageData(0,0,cv.width,cv.height);const r=jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});if(r&&r.data){const z=decodeZatcaQR(r.data);if(z)return z;}}
+  // top-right / top-left crops (the QR is usually in a corner)
+  for(const [fx,fy,fw,fh] of [[0.55,0,0.45,0.3],[0,0,0.45,0.3],[0.55,0.7,0.45,0.3],[0,0.7,0.45,0.3]]){const cv=document.createElement('canvas');cv.width=Math.round(c.width*fw);cv.height=Math.round(c.height*fh);cv.getContext('2d').drawImage(c,c.width*fx,c.height*fy,cv.width,cv.height,0,0,cv.width,cv.height);const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height);const r=jsQR(d.data,d.width,d.height);if(r&&r.data){const z=decodeZatcaQR(r.data);if(z)return z;}}
+  return null;}
+const _dnum=s=>Number(String(s).replace(/[^\d.\-]/g,''))||0;
+const _decs=s=>(s.match(/\d[\d,]*\.\d{1,2}(?!\d)/g)||[]).map(_dnum);
+function _isoDate(s){ // dd/mm/yyyy, yyyy/mm/dd, dd-mm-yy, d-Mon-yy
+  let m;if((m=s.match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/)))return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  if((m=s.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/)))return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  if((m=s.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2})(?!\d)/)))return `20${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  if((m=s.match(/(\d{1,2})-([A-Za-z]{3})-(\d{2,4})/))){const mi=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[2].toLowerCase().slice(0,3));if(mi>=0)return `${m[3].length===2?'20'+m[3]:m[3]}-${String(mi+1).padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
+  return '';}
+
+// ---- extractors ----
+async function extractInvoice(doc){
+  const r={no:'',date:'',supplier:'',supplierVat:'',base:0,vat:0,total:0,description:'',src:[]};
+  for(const pg of doc.pages){const z=await qrFromCanvas(pg.canvas);if(z){r.supplier=z.seller||'';r.supplierVat=z.vat||'';r.total=z.total||0;r.vat=z.vatAmt||0;r.base=+(r.total-r.vat).toFixed(2);if(z.time)r.date=z.time.slice(0,10);r.src.push('QR');break;}}
+  const lines=doc.pages.flatMap(p=>p.lines);const all=lines.join('\n');let m;
+  if((m=all.match(/Invoice\s*No\.?\s*:?\s*(\d+)/i))||(m=all.match(/رقم الفاتورة\s*:?\s*(\d+)/)))r.no=m[1];
+  if(!r.no){const l=lines.find(x=>/invoice|فاتورة/i.test(x)&&/\b\d{1,8}\b/.test(x));if(l){const t=l.match(/\b(\d{1,8})\b/g);if(t)r.no=t[t.length-1];}}
+  if(!r.date){const l=lines.find(x=>/date|التاريخ/i.test(x));r.date=_isoDate(l||'')||_isoDate(all);}
+  if(!r.supplierVat){const v=all.match(/\b3\d{14}\b/);if(v)r.supplierVat=v[0];}
+  if(!r.total){const tl=lines.find(x=>/total|الإجمالي|اجمالي|صافي/i.test(x)&&_decs(x).length);const vl=lines.find(x=>/vat|ضريبة/i.test(x)&&_decs(x).length);const ds=_decs(all);
+    if(tl)r.total=Math.max(..._decs(tl));if(vl)r.vat=Math.max(..._decs(vl));if(!r.total&&ds.length)r.total=Math.max(...ds);if(r.total&&!r.vat){const V=1+(Number(D.vat_rate)||0)/100;r.vat=+(r.total-r.total/V).toFixed(2);}r.base=+(r.total-r.vat).toFixed(2);if(lines.length)r.src.push('text');}
+  if(!r.supplier){const l=lines.find(x=>/company|شركة|مؤسسة|est\b/i.test(x));if(l)r.supplier=l.slice(0,60);}
+  const dl=lines.find(x=>/البيان|description|وصف/i.test(x)&&x.length>15);if(dl)r.description=dl.replace(/البيان|description|وصف البند|:/gi,'').trim().slice(0,120);
+  return r;}
+function extractReceipt(doc){
+  const lines=doc.pages.flatMap(p=>p.lines),all=lines.join('\n');const r={amount:0,date:'',txn:'',beneficiary:'',from:''};let m;
+  const amtLine=lines.find(x=>/^[^\d]{0,3}\s*[\d,]+\.\d{1,2}\s*$/.test(x))||lines.find(x=>/amount|المبلغ/i.test(x)&&_decs(x).length);if(amtLine)r.amount=Math.max(..._decs(amtLine));if(!r.amount){const ds=_decs(all);if(ds.length)r.amount=Math.max(...ds);}
+  r.date=_isoDate(lines.find(x=>/date|التاريخ/i.test(x))||'')||_isoDate(all);
+  if((m=all.match(/Transaction\s*ID\D*(\d{6,})/i))||(m=all.match(/رقم مرجع\D*(\d{6,})/))||(m=all.match(/\b(\d{10,16})\b/)))r.txn=m[1];
+  // beneficiary: the Latin line just above the "Beneficiary account" label, else the line before the amount
+  {const bi=lines.findIndex(x=>/beneficiary|المستفيد/i.test(x));const lat=x=>x&&/[A-Za-z]{3}/.test(x)&&!/[\u0600-\u06FF]/.test(x.replace(/\s/g,''))?x:'';
+    let cand=bi>0?lat(lines[bi-1]):'';if(!cand&&bi>=0)cand=(lines[bi].match(/(?:account|المستفيد)\s*[:：]?\s*([A-Za-z][A-Za-z .&'-]{2,60})/i)||['',''])[1];
+    if(!cand&&amtLine){const i=lines.indexOf(amtLine);if(i>0)cand=lat(lines[i-1]);}
+    r.beneficiary=(cand||'').replace(/\s*-\s*$/,'').replace(/\s*-?\s*SA\d{22}/,'').trim().slice(0,60);}
+  const fi=lines.find(x=>/payment from|التحويل من/i.test(x));if(fi)r.from=fi.replace(/payment from|التحويل من|-?\s*SA\d{22}/gi,'').trim().slice(0,60);
+  return r;}
+function _tableRowsFromLines(lines){ // supplier VAT# · name · date · invoice# · description · amount · VAT · total
+  const rows=[];for(const l of lines){const vat=l.match(/\b3\d{14}\b/);const date=_isoDate(l);const ds=_decs(l);if(!date||ds.length<2)continue;
+    const rest=l.replace(vat?vat[0]:'','').replace(/\d[\d,]*\.\d{1,2}/g,' ').replace(/\d{1,2}[\/\-.][A-Za-z\d]{1,3}[\/\-.]\d{2,4}/g,' ');const ints=(rest.match(/\b\d{1,10}\b/g)||[]).filter(x=>x.length>=1);
+    const inv=ints.length?ints[0]:'';const name=rest.replace(/\b\d+\b/g,' ').replace(/\s+/g,' ').trim();
+    const [a,v,t]=ds.length>=3?ds.slice(-3):[ds[0],ds[1],+(ds[0]+ds[1]).toFixed(2)];
+    rows.push({supplierVat:vat?vat[0]:'',supplier:name.slice(0,60),date,no:inv,description:'',base:a,vat:v,total:t});}
+  return rows;}
+async function extractSubmission(file){
+  if(/\.(xlsx|xlsm|xls|csv)$/i.test(file.name)){await libXlsx();const wb=XLSX.read(new Uint8Array(await file.arrayBuffer()),{type:'array',cellDates:true});const js=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,cellDates:true});
+    const hdr=(js[0]||[]).map(x=>String(x||'').toLowerCase());const col=re=>hdr.findIndex(h=>re.test(h));const cV=col(/vat\s*#|supplier vat|الرقم الضريبي/),cN=col(/name|المورد|اسم/),cD=col(/date|تاريخ/),cI=col(/invoice\s*#|invoice no|رقم الفاتورة/),cDs=col(/desc|وصف|البيان/),cA=col(/^amount|المبلغ|base|net/),cVt=col(/^vat$|vat amount|الضريبة/),cT=col(/total|الإجمالي/);
+    const rows=[];for(const r of js.slice(1)){if(!r||!r.length)continue;const a=_dnum(r[cA]),v=_dnum(r[cVt]);if(!a&&!v)continue;if(/total|الإجمالي/i.test(String(r[0]||'')))continue;const d=r[cD] instanceof Date?r[cD].toISOString().slice(0,10):_isoDate(String(r[cD]||''));
+      rows.push({supplierVat:String(r[cV]||''),supplier:String(r[cN]||''),date:d,no:String(r[cI]||''),description:String(r[cDs]||''),base:a,vat:v,total:_dnum(r[cT])||+(a+v).toFixed(2)});}
+    return {rows,pages:0};}
+  const doc=await readDoc(file);return {rows:_tableRowsFromLines(doc.pages.flatMap(p=>p.lines)),pages:doc.pages.length};}
+async function extractReview(file){ // ZATCA detailed review results — rejected invoices
+  const doc=await readDoc(file);const lines=doc.pages.flatMap(p=>p.lines);const rows=[];
+  for(const l of lines){const date=_isoDate(l);const ds=_decs(l);if(!date||ds.length<2)continue;if(/الإجمالي|total/i.test(l)&&ds.length===2&&!/\d{2}-\d{2}-\d{2}/.test(l))continue;
+    const rest=l.replace(/\d[\d,]*\.\d{1,2}/g,' ').replace(/\d{1,2}-\d{1,2}-\d{2,4}/g,' ');const ints=(rest.match(/\b\d{1,10}\b/g)||[]);const inv=ints.length>1?ints[1]:(ints[0]||'');
+    const reason=(l.match(/(عدم[^0-9]{5,200}|الفاتورة[^0-9]{5,160})/)||[''])[0].trim();
+    rows.push({date,no:inv,base:ds[0],vat:ds[1],reason:reason.slice(0,160),raw:l.slice(0,200)});}
+  return {rows,ref:(lines.join(' ').match(/\b9\d{10}\b/)||[''])[0]};}
+async function extractAcceptance(file){
+  const doc=await readDoc(file);const all=doc.pages.flatMap(p=>p.lines).join('\n');let m;const r={ref:'',from:'',to:'',result:'',accepted:0,date:''};
+  if((m=all.match(/\b(9\d{10})\b/)))r.ref=m[1];
+  const dates=(all.match(/\d{4}\/\d{2}\/\d{2}/g)||[]).map(d=>d.replace(/\//g,'-')).filter(d=>+d.slice(0,4)>1900);
+  if((m=all.match(/من\s*(\d{4}\/\d{2}\/\d{2})\s*إلى\s*(\d{4}\/\d{2}\/\d{2})/))){const two=[m[1],m[2]].map(d=>d.replace(/\//g,'-')).sort();r.from=two[0];r.to=two[1];}else if(dates.length>=2){const two=dates.slice(-2).sort();r.from=two[0];r.to=two[1];}
+  if(dates.length)r.date=dates[0];
+  r.result=/قبول|accept/i.test(all)?'accepted':(/رفض|reject/i.test(all)?'rejected':'');
+  if((m=all.match(/المقبول\D*([\d,]+\.\d{2})/))||(m=all.match(/accepted[^\d]*([\d,]+\.\d{2})/i)))r.accepted=_dnum(m[1]);else{const ds=_decs(all);if(ds.length)r.accepted=Math.max(...ds);}
+  return r;}
+
+// ---- storage ----
+async function docStore(file,kind,id){
+  if(!sb||!currentUid||!currentProjectId)return {path:null,note:lang==='ar'?'لم يُحفظ الملف: سجّل الدخول واحفظ المشروع أولاً':'file not stored: sign in and save the project first'};
+  const ext=(file.name.split('.').pop()||'bin').toLowerCase();const path=`${currentUid}/${currentProjectId}/${kind}_${id}.${ext}`;
+  try{const {error}=await sb.storage.from('docs').upload(path,file,{upsert:true});if(error)throw error;return {path,note:''};}
+  catch(e){return {path:null,note:(lang==='ar'?'لم يُحفظ الملف: ':'file not stored: ')+(e.message||e)+(/bucket|not found/i.test(e.message||'')?(lang==='ar'?' — شغّل supabase/storage.sql':' — run supabase/storage.sql'):'')};}
+}
+async function docOpen(path){if(!path||!sb)return;try{const {data,error}=await sb.storage.from('docs').createSignedUrl(path,300);if(error)throw error;window.open(data.signedUrl,'_blank');}catch(e){alert((lang==='ar'?'تعذّر فتح الملف: ':'Cannot open file: ')+(e.message||e));}}
+
+// ---- modal with a form ----
+function docModal(title,body,onOk,okLabel){let el=document.getElementById('bkPop');if(el)el.remove();el=document.createElement('div');el.id='bkPop';el.className='bk-pop';document.body.appendChild(el);
+  el.innerHTML=`<div class="bk-box" style="min-width:520px"><div class="bk-h"><b>${title}</b><a onclick="document.getElementById('bkPop').remove()">✕</a></div><div class="bk-body" id="dmBody">${body}</div><div class="bk-f" style="display:flex;gap:10px;justify-content:flex-end"><button class="ops-close" style="background:#e8eeec;color:#1b1c19" onclick="document.getElementById('bkPop').remove()">${lang==='ar'?'إلغاء':'Cancel'}</button><button class="ops-close" id="dmOk">${okLabel||(lang==='ar'?'تأكيد':'Confirm')}</button></div></div>`;
+  document.getElementById('dmOk').onclick=async()=>{const b=document.getElementById('dmOk');b.disabled=true;try{await onOk(id=>document.getElementById('dm_'+id));el.remove();}catch(e){b.disabled=false;alert(e.message||e);}};}
+const dmF=(id,label,val,type,extra)=>`<label class="dm-f">${label}<input id="dm_${id}" type="${type||'text'}" value="${escH(val==null?'':String(val))}" ${extra||''}></label>`;
+function dmTot(){const g=id=>document.getElementById('dm_'+id);if(g('base')&&g('vat')&&g('total'))g('total').value=((+g('base').value||0)+(+g('vat').value||0)).toFixed(2);}
+function docBusy(on,msg){let el=document.getElementById('docBusy');if(!on){if(el)el.remove();return;}if(!el){el=document.createElement('div');el.id='docBusy';el.className='live-toast';document.body.appendChild(el);}el.textContent=msg||(lang==='ar'?'جارٍ قراءة المستند…':'Reading document…');}
+function _pick(accept,cb){const i=document.createElement('input');i.type='file';i.accept=accept;i.onchange=()=>{if(i.files[0])cb(i.files[0]);};i.click();}
+
+// ---- Step 1: invoice → obligation ----
+function docStep1(){_pick('.pdf,.png,.jpg,.jpeg',async file=>{docBusy(true);let x;try{x=await extractInvoice(await readDoc(file));}catch(e){docBusy(false);alert((lang==='ar'?'تعذّرت قراءة الملف: ':'Could not read the file: ')+(e.message||e));return;}docBusy(false);
+  const ar=lang==='ar',cats=opsCats().filter(c=>c.group==='cost');
+  const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)} · ${x.src.length?(ar?'قُرئ من: ':'read from: ')+x.src.join(', '):(ar?'لم يُتعرّف على البيانات — أدخلها يدوياً':'nothing recognised — enter the details')}</p><div class="dm-grid">
+    ${dmF('no',ar?'رقم الفاتورة':'Invoice no.',x.no)}${dmF('date',ar?'التاريخ':'Date',x.date,'date')}${dmF('sup',ar?'المورّد':'Supplier',x.supplier)}${dmF('svat',ar?'الرقم الضريبي للمورّد':'Supplier VAT no.',x.supplierVat)}
+    ${dmF('base',ar?'المبلغ قبل الضريبة':'Base amount',x.base,'number','step="0.01" oninput="dmTot()"')}${dmF('vat',ar?'الضريبة':'VAT',x.vat,'number','step="0.01" oninput="dmTot()"')}${dmF('total',ar?'الإجمالي':'Total',x.total,'number','step="0.01" readonly')}
+    <label class="dm-f">${ar?'البند':'Category'}<select id="dm_cat">${cats.map(c=>`<option value="${c.key}">${escH(ar?c.ar:c.en)}</option>`).join('')}</select></label>${dmF('desc',ar?'البيان':'Description',x.description)}</div>`;
+  docModal(ar?'الخطوة 1 — تسجيل فاتورة ضريبية (التزام قائم)':'Step 1 — Record tax invoice (outstanding obligation)',body,async g=>{
+    const inv={id:'i'+_actGenId(),no:g('no').value.trim(),date:g('date').value,supplier:g('sup').value.trim(),supplierVat:g('svat').value.trim(),base:+g('base').value||0,vat:+g('vat').value||0,total:+g('total').value||0,category:g('cat').value,description:g('desc').value.trim(),status:'outstanding',files:{},created:new Date().toISOString().slice(0,10)};
+    if(!inv.total)throw new Error(ar?'أدخل المبلغ':'Enter the amount');
+    // suggest category from the description/supplier using the import rules
+    if(!x.src.length||true){const txt=(inv.description+' '+inv.supplier).toLowerCase();for(const r of IMPORT_RULES){if(r.keywords.some(k=>txt.includes(k.toLowerCase()))){if(g('cat').value===cats[0].key)inv.category=r.cat;break;}}}
+    const st=await docStore(file,'inv',inv.id);inv.files.invoice=st.path;inv.fileNote=st.note;invoices().push(inv);if(st.note)alert(st.note);renderOps();});});}
+// ---- Step 2: receipt → payment ----
+function docStep2(invId){const inv=invoiceById(invId);if(!inv)return;_pick('.pdf,.png,.jpg,.jpeg',async file=>{docBusy(true);let x={amount:0,date:'',txn:'',beneficiary:'',from:''};try{const d=await readDoc(file);x=extractReceipt(d);}catch(e){}docBusy(false);
+  const ar=lang==='ar';const diff=x.amount?x.amount-inv.total:0;
+  const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)} → ${ar?'فاتورة':'invoice'} ${escH(inv.no)} · ${escH(inv.supplier)} · ${fN(inv.total)}</p><div class="dm-grid">
+    ${dmF('amt',ar?'المبلغ المحوّل':'Amount paid',x.amount||inv.total,'number','step="0.01"')}${dmF('date',ar?'تاريخ الدفع':'Payment date',x.date||inv.date,'date')}${dmF('txn',ar?'رقم مرجع العملية':'Transaction ID',x.txn)}${dmF('ben',ar?'المستفيد (من الإيصال)':'Beneficiary (from receipt)',x.beneficiary)}</div>
+    ${Math.abs(diff)>0.5?`<p class="cx-var bad" style="font-size:.8rem"><span>${ar?'المبلغ يختلف عن الفاتورة بـ ':'Amount differs from the invoice by '}${fN(diff)}</span></p>`:''}`;
+  docModal(ar?'الخطوة 2 — تأكيد الدفع من إيصال البنك':'Step 2 — Confirm payment from bank receipt',body,async g=>{
+    const amt=+g('amt').value||0,date=g('date').value;if(!amt||!date)throw new Error(ar?'أدخل المبلغ والتاريخ':'Enter amount and date');
+    const ratio=inv.total?amt/inv.total:1,vat=+(inv.vat*ratio).toFixed(2);
+    const p={id:_actGenId(),date,quarter:dateToQuarterIdx(date,D.start_date),category:inv.category,amount:amt,net:+(amt-vat).toFixed(2),vat,payee:inv.supplier,description:inv.description,notes:inv.description,invoiceRef:inv.no,txn:g('txn').value.trim(),invoiceId:inv.id,include:true};
+    const st=await docStore(file,'rcpt',inv.id);inv.files.receipt=st.path;if(st.note)alert(st.note);
+    actuals.push(p);inv.status='paid';inv.paidDate=date;inv.paidAmount=amt;inv.paymentId=p.id;inv.txn=p.txn;opsRefresh();});});}
+function docMarkPaid(invId){const inv=invoiceById(invId);if(!inv)return;const ar=lang==='ar';docModal(ar?'تسجيل الدفع يدوياً':'Record payment manually',`<div class="dm-grid">${dmF('amt',ar?'المبلغ':'Amount',inv.total,'number','step="0.01"')}${dmF('date',ar?'تاريخ الدفع':'Payment date',new Date().toISOString().slice(0,10),'date')}${dmF('txn',ar?'المرجع':'Reference','')}</div>`,async g=>{
+  const amt=+g('amt').value||0,date=g('date').value;if(!amt||!date)throw new Error('…');const ratio=inv.total?amt/inv.total:1,vat=+(inv.vat*ratio).toFixed(2);
+  const p={id:_actGenId(),date,quarter:dateToQuarterIdx(date,D.start_date),category:inv.category,amount:amt,net:+(amt-vat).toFixed(2),vat,payee:inv.supplier,notes:inv.description,invoiceRef:inv.no,txn:g('txn').value.trim(),invoiceId:inv.id,include:true};
+  actuals.push(p);inv.status='paid';inv.paidDate=date;inv.paidAmount=amt;inv.paymentId=p.id;opsRefresh();});}
+function docInvoiceRemove(id){const inv=invoiceById(id);if(!inv)return;if(inv.status==='paid'){alert(lang==='ar'?'الفاتورة مدفوعة — احذف الدفعة من السجل أولاً':'Invoice is paid — delete its payment from the log first');return;}if(!confirm(lang==='ar'?'حذف الفاتورة؟':'Remove this invoice?'))return;const i=invoices().findIndex(x=>x.id===id);if(i>=0)invoices().splice(i,1);renderOps();}
+function docInvoiceSet(id,f,v){const inv=invoiceById(id);if(!inv)return;inv[f]=v;renderOps();}
+
+// ---- Step 3: quarterly submission summary ----
+function _qOfDate(d){return d?dateToQuarterIdx(d,D.start_date):0;}
+function docStep3(q){_pick('.pdf,.xlsx,.xlsm,.xls,.csv',async file=>{docBusy(true);let x;try{x=await extractSubmission(file);}catch(e){docBusy(false);alert((lang==='ar'?'تعذّرت قراءة الملف: ':'Could not read the file: ')+(e.message||e));return;}docBusy(false);
+  const ar=lang==='ar';const rows=x.rows;const inv=invoices();
+  // match to recorded invoices: invoice no + supplier VAT, else invoice no + VAT amount, else amount + date
+  for(const r of rows){const m=inv.find(i=>i.no&&r.no&&String(i.no)===String(r.no)&&(!i.supplierVat||!r.supplierVat||i.supplierVat===r.supplierVat))||inv.find(i=>i.no&&r.no&&String(i.no)===String(r.no)&&Math.abs(i.vat-r.vat)<1)||inv.find(i=>Math.abs(i.vat-r.vat)<1&&i.date===r.date);r.invoiceId=m?m.id:null;}
+  const tot=k=>rows.reduce((s,r)=>s+(r[k]||0),0);
+  const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)} · ${rows.length} ${ar?'صف':'rows'} · ${ar?'الضريبة':'VAT'} ${fN(tot('vat'))}</p><div class="dm-grid">${dmF('sub',ar?'الضريبة المقدَّمة للهيئة في الإقرار':'VAT submitted to ZATCA in the return',tot('vat').toFixed(2),'number','step="0.01"')}${dmF('date',ar?'تاريخ التقديم':'Submission date',new Date().toISOString().slice(0,10),'date')}${dmF('ref',ar?'رقم طلب الاسترداد':'Refund request no.','')}</div>
+    <div class="cx-wrap" style="max-height:40vh"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>#</th><th>${ar?'المورّد':'Supplier'}</th><th>${ar?'المبلغ':'Amount'}</th><th>${ar?'الضريبة':'VAT'}</th><th>${ar?'مطابق':'Matched'}</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${escH(r.date)}</td><td>${escH(r.no)}</td><td>${escH(r.supplier.slice(0,30))}</td><td class="rfcs-num">${fN(r.base)}</td><td class="rfcs-num"><input id="dm_v${i}" type="number" step="0.01" value="${r.vat}" style="width:100px"></td><td>${r.invoiceId?'✓ '+escH(invoiceById(r.invoiceId).no):`<span class="ops-muted">${ar?'غير مسجّلة':'not in register'}</span>`}</td></tr>`).join('')}</tbody></table></div>`;
+  docModal((ar?'الخطوة 3 — ملخص طلب الاسترداد الربعي ':'Step 3 — Quarterly refund submission ')+qLabel(q),body,async g=>{
+    rows.forEach((r,i)=>{r.vat=+g('v'+i).value||0;});
+    let sub=submissions().find(s=>s.q===q);if(!sub){sub={id:'s'+_actGenId(),q,files:{}};submissions().push(sub);}
+    sub.rows=rows;sub.summaryVat=tot('vat');sub.submitted=+g('sub').value||0;sub.date=g('date').value;sub.ref=g('ref').value.trim();sub.status='submitted';
+    const st=await docStore(file,'sub'+q,sub.id);sub.files.summary=st.path;if(st.note)alert(st.note);
+    // mark the quarter's months as filed for the VAT calendar
+    const v=vatSettings();for(let k=qStartDate(q).toISOString().slice(0,7);k<=qEndDate(q).toISOString().slice(0,7);k=_mAdd(k,1)){v.claims[k]=v.claims[k]||{};v.claims[k].filed=sub.date;}
+    rows.forEach(r=>{const i=r.invoiceId&&invoiceById(r.invoiceId);if(i){i.submission=sub.id;i.zatca='submitted';}});renderOps();});});}
+// ---- Step 4: ZATCA review (rejections) ----
+function docStep4(q){const sub=submissions().find(s=>s.q===q);if(!sub){alert(lang==='ar'?'ارفع ملخص التقديم (الخطوة 3) أولاً':'Upload the submission summary (Step 3) first');return;}
+  _pick('.pdf',async file=>{docBusy(true);let x;try{x=await extractReview(file);}catch(e){docBusy(false);alert(e.message||e);return;}docBusy(false);const ar=lang==='ar';
+    for(const r of x.rows){const m=(sub.rows||[]).find(s=>String(s.no)===String(r.no)&&Math.abs(s.vat-r.vat)<1)||(sub.rows||[]).find(s=>Math.abs(s.vat-r.vat)<0.5&&s.date===r.date);r.rowIdx=m?sub.rows.indexOf(m):-1;}
+    const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)} · ${x.rows.length} ${ar?'فاتورة مستبعدة':'rejected invoices'} · ${ar?'الضريبة المرفوضة':'rejected VAT'} ${fN(x.rows.reduce((s,r)=>s+r.vat,0))}${x.ref?' · '+x.ref:''}</p>
+      <div class="cx-wrap" style="max-height:45vh"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>#</th><th>${ar?'المبلغ':'Amount'}</th><th>${ar?'الضريبة':'VAT'}</th><th>${ar?'السبب':'Reason'}</th><th>${ar?'مطابق':'Matched'}</th></tr></thead><tbody>${x.rows.map((r,i)=>`<tr><td>${escH(r.date)}</td><td><input id="dm_n${i}" value="${escH(r.no)}" style="width:80px"></td><td class="rfcs-num">${fN(r.base)}</td><td class="rfcs-num"><input id="dm_v${i}" type="number" step="0.01" value="${r.vat}" style="width:100px"></td><td><input id="dm_r${i}" value="${escH(r.reason)}" style="width:260px"></td><td>${r.rowIdx>=0?'✓':`<span class="ops-muted">${ar?'غير موجودة في الملخص':'not in summary'}</span>`}</td></tr>`).join('')}</tbody></table></div>`;
+    docModal((ar?'الخطوة 4 — نتائج مراجعة الهيئة ':'Step 4 — ZATCA review results ')+qLabel(q),body,async g=>{
+      x.rows.forEach((r,i)=>{r.no=g('n'+i).value.trim();r.vat=+g('v'+i).value||0;r.reason=g('r'+i).value.trim();});
+      sub.review={rows:x.rows,ref:x.ref,date:new Date().toISOString().slice(0,10)};sub.rejectedVat=x.rows.reduce((s,r)=>s+r.vat,0);sub.status='reviewed';
+      const st=await docStore(file,'rev'+q,sub.id);sub.files.review=st.path;if(st.note)alert(st.note);
+      (sub.rows||[]).forEach(s=>{delete s.rejected;delete s.reason;});x.rows.forEach(r=>{if(r.rowIdx>=0){const s=sub.rows[r.rowIdx];s.rejected=true;s.reason=r.reason;const i=s.invoiceId&&invoiceById(s.invoiceId);if(i){i.zatca='rejected';i.zatcaReason=r.reason;}}});renderOps();});});}
+// ---- Step 5: acceptance notice ----
+function docStep5(q){const sub=submissions().find(s=>s.q===q);if(!sub){alert(lang==='ar'?'ارفع ملخص التقديم (الخطوة 3) أولاً':'Upload the submission summary (Step 3) first');return;}
+  _pick('.pdf,.png,.jpg,.jpeg',async file=>{docBusy(true);let x={ref:'',from:'',to:'',result:'',accepted:0,date:''};try{x=await extractAcceptance(file);}catch(e){}docBusy(false);const ar=lang==='ar';
+    const expect=(sub.submitted||sub.summaryVat||0)-(sub.rejectedVat||0);
+    const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)}</p><div class="dm-grid">${dmF('ref',ar?'رقم الطلب':'Request no.',x.ref||sub.ref)}${dmF('date',ar?'تاريخ الإشعار':'Notice date',x.date,'date')}${dmF('from',ar?'الفترة من':'Period from',x.from,'date')}${dmF('to',ar?'إلى':'to',x.to,'date')}<label class="dm-f">${ar?'النتيجة':'Result'}<select id="dm_res"><option value="accepted"${x.result!=='rejected'?' selected':''}>${ar?'قبول':'Accepted'}</option><option value="rejected"${x.result==='rejected'?' selected':''}>${ar?'رفض':'Rejected'}</option></select></label>${dmF('acc',ar?'مبلغ الاسترداد المقبول':'Accepted refund amount',x.accepted,'number','step="0.01"')}</div>
+      <p class="ops-muted" style="font-size:.78rem">${ar?'المتوقع (المقدَّم − المرفوض): ':'Expected (submitted − rejected): '}${fN(expect)}${Math.abs(expect-x.accepted)>0.5&&x.accepted?` · <span class="cx-var bad"><span>${ar?'فرق ':'difference '}${fN(x.accepted-expect)}</span></span>`:''}</p>`;
+    docModal((ar?'الخطوة 5 — إشعار قبول الاسترداد ':'Step 5 — ZATCA acceptance notice ')+qLabel(q),body,async g=>{
+      sub.acceptance={ref:g('ref').value.trim(),date:g('date').value,from:g('from').value,to:g('to').value,result:g('res').value,accepted:+g('acc').value||0};sub.status=g('res').value==='accepted'?'accepted':'rejected';
+      const st=await docStore(file,'acc'+q,sub.id);sub.files.notice=st.path;if(st.note)alert(st.note);
+      (sub.rows||[]).forEach(s=>{const i=s.invoiceId&&invoiceById(s.invoiceId);if(i&&!s.rejected)i.zatca=sub.status==='accepted'?'accepted':'rejected';});renderOps();});});}
+
+// ---- reconciliation per quarter ----
+function vatRecon(q){
+  const inv=invoices().filter(i=>_qOfDate(i.date)===q),sub=submissions().find(s=>s.q===q)||null;
+  const recordedInv=inv.reduce((s,i)=>s+i.vat,0);
+  const otherPay=actuals.filter(p=>p.include!==false&&!p.invoiceId&&p.quarter===q&&!['revenue','vat_received','vat_paid','rett_received'].includes(p.category)&&!FIN_KEYS.includes(p.category)).reduce((s,p)=>s+payVAT(p),0);
+  const recorded=recordedInv+otherPay,inSummary=sub?(sub.summaryVat||0):0,submitted=sub?(sub.submitted||sub.summaryVat||0):0,rejected=sub?(sub.rejectedVat||0):0,accepted=sub?submitted-rejected:0,confirmed=sub&&sub.acceptance?sub.acceptance.accepted:null;
+  const received=actuals.filter(p=>p.include!==false&&p.category==='vat_received'&&(p.submissionQ===q||(p.notes||'').includes(sub&&sub.ref||'§'))).reduce((s,p)=>s+p.amount,0);
+  const missing=sub?inv.filter(i=>!(sub.rows||[]).some(r=>r.invoiceId===i.id)):[],extra=sub?(sub.rows||[]).filter(r=>!r.invoiceId):[];
+  return {q,inv,sub,recordedInv,otherPay,recorded,inSummary,submitted,rejected,accepted,confirmed,received,missing,extra,remaining:recorded-(confirmed!=null?confirmed:accepted)};
+}
+function docAlerts(){const out=[],ar=lang==='ar',today=new Date().toISOString().slice(0,10);
+  const os=invoices().filter(i=>i.status==='outstanding');if(os.length)out.push(['warn',os.length+(ar?' فواتير قائمة غير مدفوعة — ':' outstanding invoices unpaid — ')+M_(os.reduce((s,i)=>s+i.total,0)),'costs']);
+  const old=os.filter(i=>i.date&&(new Date(today)-new Date(i.date))/86400000>30);if(old.length)out.push(['bad',old.length+(ar?' فواتير قائمة منذ أكثر من 30 يوماً':' invoices outstanding for more than 30 days'),'costs']);
+  const rej=invoices().filter(i=>i.zatca==='rejected');if(rej.length)out.push(['bad',rej.length+(ar?' فواتير رفضت الهيئة استرداد ضريبتها — ':' invoices rejected by ZATCA — ')+M_(rej.reduce((s,i)=>s+i.vat,0))+(ar?' تحتاج إجراء':' need action'),'vat']);
+  if(R2){const cut=R2._cutoffQ;for(let q=0;q<cut;q++){const r=vatRecon(q);if(!r.sub&&r.recorded>0.5&&qEndDate(q).toISOString().slice(0,10)<today)out.push(['warn',(ar?'لم يُرفع ملخص طلب الاسترداد عن ':'No refund submission uploaded for ')+qLabel(q)+' — '+M_(r.recorded),'vat']);
+    if(r.sub&&Math.abs(r.recorded-r.inSummary)>1)out.push(['warn',qLabel(q)+(ar?': فرق بين الضريبة المسجّلة والملخص ':': recorded VAT differs from the summary by ')+M_(r.recorded-r.inSummary),'vat']);}}
+  return out;}
+
+// ---- UI: invoices card (Costs) ----
+function docInvoicesCard(){
+  const ar=lang==='ar',inv=invoices().slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')),os=inv.filter(i=>i.status==='outstanding');
+  const sum=(a,k)=>a.reduce((s,i)=>s+(i[k]||0),0);
+  const zt={submitted:[ar?'مُقدَّمة':'submitted',''],accepted:[ar?'مقبولة':'accepted','good'],rejected:[ar?'مرفوضة':'rejected','bad']};
+  let h=`<div class="ops-card" style="margin-bottom:16px"><h3>${ar?'الفواتير والالتزامات القائمة':'Invoices & outstanding obligations'}<span><button class="ops-close" style="padding:6px 14px" onclick="docStep1()">${ar?'⬆ فاتورة ضريبية (الخطوة 1)':'⬆ Tax invoice (Step 1)'}</button></span></h3>
+    <div class="ops-kpis" style="margin-bottom:12px"><div class="ops-kpi"><small>${ar?'التزامات قائمة':'Outstanding obligations'}</small><b>${M_(sum(os,'total'))}</b><i>${ar?'قبل الضريبة':'base'} ${M_(sum(os,'base'))} · ${ar?'الضريبة':'VAT'} ${M_(sum(os,'vat'))} · ${os.length}</i></div><div class="ops-kpi"><small>${ar?'مدفوعة (مرتبطة بإيصالات)':'Paid (linked to receipts)'}</small><b>${M_(sum(inv.filter(i=>i.status==='paid'),'total'))}</b><i>${inv.filter(i=>i.status==='paid').length}</i></div><div class="ops-kpi"><small>${ar?'ضريبة الفواتير المسجّلة':'VAT on recorded invoices'}</small><b>${M_(sum(inv,'vat'))}</b><i>${ar?'مرفوضة من الهيئة':'rejected by ZATCA'} ${M_(sum(inv.filter(i=>i.zatca==='rejected'),'vat'))}</i></div></div>`;
+  if(!inv.length)return h+`<p class="ops-muted">${ar?'ارفع الفاتورة الضريبية الأصلية؛ يقرأ النظام رمز QR الخاص بالهيئة (المورّد، الرقم الضريبي، الإجمالي، الضريبة) أو نص الملف، وتراجع البيانات قبل الحفظ.':'Upload the original tax invoice; the system reads the ZATCA QR code (supplier, VAT no., total, VAT) or the PDF text, and you review the details before saving.'}</p></div>`;
+  h+=`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الفاتورة':'Invoice'}</th><th>${ar?'المورّد':'Supplier'}</th><th>${ar?'البند':'Category'}</th><th>${ar?'قبل الضريبة':'Base'}</th><th>${ar?'الضريبة':'VAT'}</th><th>${ar?'الإجمالي':'Total'}</th><th>${ar?'الحالة':'Status'}</th><th>${ar?'الهيئة':'ZATCA'}</th><th>${ar?'المستندات':'Documents'}</th><th></th></tr></thead><tbody>
+    ${inv.map(i=>`<tr><td><b>${escH(i.no||'—')}</b><small class="ops-muted">${escH(i.date||'')} · ${escH((i.description||'').slice(0,40))}</small></td><td>${escH((i.supplier||'').slice(0,30))}<small class="ops-muted">${escH(i.supplierVat||'')}</small></td><td>${escH(_actCatLabel(i.category))}</td><td class="rfcs-num">${fN(i.base)}</td><td class="rfcs-num">${fN(i.vat)}</td><td class="rfcs-num"><b>${fN(i.total)}</b></td><td>${i.status==='paid'?`<span class="ops-pill good">${ar?'مدفوعة':'paid'}</span><small class="ops-muted">${escH(i.paidDate||'')}${i.txn?' · '+escH(i.txn):''}</small>`:`<span class="ops-pill warn">${ar?'قائمة':'outstanding'}</span>`}</td><td>${i.zatca?`<span class="ops-pill ${zt[i.zatca][1]}">${zt[i.zatca][0]}</span>${i.zatcaReason?`<small class="ops-muted" title="${escH(i.zatcaReason)}">${escH(i.zatcaReason.slice(0,40))}</small>`:''}`:''}</td>
+      <td>${i.files&&i.files.invoice?`<a class="ops-link" onclick="docOpen('${i.files.invoice}')">${ar?'فاتورة':'invoice'}</a>`:`<span class="ops-muted" title="${escH(i.fileNote||'')}">${ar?'فاتورة (غير محفوظة)':'invoice (not stored)'}</span>`}${i.files&&i.files.receipt?` · <a class="ops-link" onclick="docOpen('${i.files.receipt}')">${ar?'إيصال':'receipt'}</a>`:''}</td>
+      <td style="white-space:nowrap">${i.status==='outstanding'?`<button class="ops-close" style="padding:4px 10px;font-size:.76rem" onclick="docStep2('${i.id}')">${ar?'⬆ إيصال (الخطوة 2)':'⬆ Receipt (Step 2)'}</button> <a class="ops-link" onclick="docMarkPaid('${i.id}')">${ar?'دفع يدوي':'manual'}</a> <a class="ops-link" onclick="docInvoiceRemove('${i.id}')">✕</a>`:''}</td></tr>`).join('')}</tbody></table></div></div>`;
+  return h;}
+// ---- UI: submissions & reconciliation card (VAT) ----
+function docSubmissionsCard(){
+  const ar=lang==='ar',cut=R2._cutoffQ,nq=R2.nq;let h=`<div class="ops-card" style="margin-bottom:16px"><h3>${ar?'طلبات الاسترداد ومطابقة الهيئة (الخطوات 3–5)':'ZATCA refund submissions & reconciliation (Steps 3–5)'}</h3>`;
+  const stl={submitted:[ar?'مُقدَّم':'submitted',''],reviewed:[ar?'تمت المراجعة':'reviewed','warn'],accepted:[ar?'مقبول':'accepted','good'],rejected:[ar?'مرفوض':'rejected','bad']};
+  h+=`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الربع':'Quarter'}</th><th>${ar?'المسجّل (فواتير + دفعات)':'Recorded (invoices + payments)'}</th><th>${ar?'في الملخص':'In summary'}</th><th>${ar?'المقدَّم للهيئة':'Submitted'}</th><th>${ar?'المرفوض':'Rejected'}</th><th>${ar?'المقبول':'Accepted'}</th><th>${ar?'المؤكَّد':'Confirmed'}</th><th>${ar?'المستلم':'Received'}</th><th>${ar?'المتبقي / فرق':'Remaining / diff'}</th><th>${ar?'الحالة':'Status'}</th><th>${ar?'المستندات':'Documents'}</th><th></th></tr></thead><tbody>`;
+  for(let q=0;q<Math.min(nq,Math.max(cut,1)+1);q++){const r=vatRecon(q),s=r.sub,open=!!opsCostF.open['sq:'+q];
+    const files=s?['summary','review','notice'].filter(k=>s.files&&s.files[k]).map(k=>`<a class="ops-link" onclick="docOpen('${s.files[k]}')">${{summary:ar?'ملخص':'summary',review:ar?'مراجعة':'review',notice:ar?'إشعار':'notice'}[k]}</a>`).join(' · '):'';
+    h+=`<tr class="cx-cat"><td><a class="cx-tg" onclick="cxToggle('sq:${q}')">${open?'▾':'▸'}</a>${qLabel(q)}<small class="ops-muted">${r.inv.length} ${ar?'فاتورة':'invoices'}${s&&s.ref?' · '+escH(s.ref):''}</small></td><td class="rfcs-num">${fN(r.recorded)}<small class="ops-muted">${ar?'فواتير':'inv'} ${fN(r.recordedInv)} · ${ar?'أخرى':'other'} ${fN(r.otherPay)}</small></td><td class="rfcs-num ${s&&Math.abs(r.recorded-r.inSummary)>1?'cx-var warn':''}"><span>${s?fN(r.inSummary):'—'}</span></td><td class="rfcs-num">${s?fN(r.submitted):'—'}</td><td class="rfcs-num ${r.rejected>0.5?'cx-var bad':''}"><span>${s?fN(r.rejected):'—'}</span></td><td class="rfcs-num">${s?fN(r.accepted):'—'}</td><td class="rfcs-num ${r.confirmed!=null&&Math.abs(r.confirmed-r.accepted)>0.5?'cx-var warn':''}"><span>${r.confirmed!=null?fN(r.confirmed):'—'}</span></td><td class="rfcs-num">${fN(r.received)}</td><td class="rfcs-num ${Math.abs(r.remaining)>0.5&&s?'cx-var bad':''}"><span>${s?fN(r.remaining):'—'}</span></td><td>${s?`<span class="ops-pill ${stl[s.status]?stl[s.status][1]:''}">${stl[s.status]?stl[s.status][0]:s.status}</span>`:`<span class="ops-muted">${ar?'لم يُرفع':'not uploaded'}</span>`}</td><td>${files}</td>
+      <td style="white-space:nowrap"><button class="ops-close" style="padding:4px 8px;font-size:.72rem" onclick="docStep3(${q})">3</button> <button class="ops-close" style="padding:4px 8px;font-size:.72rem" onclick="docStep4(${q})">4</button> <button class="ops-close" style="padding:4px 8px;font-size:.72rem" onclick="docStep5(${q})">5</button></td></tr>`;
+    if(open){
+      if(r.missing.length)h+=`<tr class="cx-pay"><td colspan="12"><b>${ar?'فواتير مسجّلة غير موجودة في الملخص:':'Recorded invoices missing from the summary:'}</b> ${r.missing.map(i=>escH(i.no||'?')+' ('+fN(i.vat)+')').join(', ')}</td></tr>`;
+      if(r.extra.length)h+=`<tr class="cx-pay"><td colspan="12"><b>${ar?'صفوف في الملخص بلا فاتورة مسجّلة:':'Summary rows with no recorded invoice:'}</b> ${r.extra.map(x=>escH(x.no||'?')+' · '+escH((x.supplier||'').slice(0,20))+' ('+fN(x.vat)+')').join(', ')}</td></tr>`;
+      if(s&&s.rows&&s.rows.length)h+=s.rows.map(x=>`<tr class="cx-pay ${x.rejected?'cx-rej':''}"><td><span class="cx-ind" style="--lv:1"></span>${escH(x.date)} · #${escH(x.no)}</td><td colspan="2">${escH((x.supplier||'').slice(0,40))}${x.invoiceId?' <small class="ops-muted">✓</small>':''}</td><td class="rfcs-num">${fN(x.base)}</td><td class="rfcs-num">${fN(x.vat)}</td><td colspan="7">${x.rejected?`<span class="ops-pill bad">${ar?'مرفوضة':'rejected'}</span> <span class="ops-muted">${escH(x.reason||'')}</span>`:''}</td></tr>`).join('');
+      if(!s)h+=`<tr class="cx-pay"><td colspan="12" class="ops-muted">${ar?'ارفع ملخص طلب الاسترداد المقدَّم للهيئة (PDF أو Excel) لهذا الربع.':'Upload the refund submission summary sent to ZATCA (PDF or Excel) for this quarter.'}</td></tr>`;}}
+  h+=`</tbody></table></div><p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ar?'المسجّل = ضريبة الفواتير المسجّلة في الربع + الضريبة على الدفعات الأخرى غير المرتبطة بفاتورة. المقبول = المقدَّم − المرفوض. المتبقي = المسجّل − المؤكَّد (أو المقبول). الاستردادات المستلمة تُسجّل كدفعة «ضريبة مستردة».':'Recorded = VAT on invoices dated in the quarter + VAT on other payments not linked to an invoice. Accepted = submitted − rejected. Remaining = recorded − confirmed (or accepted). Refunds received are logged as “VAT received” payments.'}</p></div>`;
+  return h;}
 function opsFinancing(){
   const cut=R2._cutoffQ,nq=R2.nq,b=R,loanAt=cut>0?R2.qLoanClose[cut-1]:0,planAt=cut>0?(R.qLoanClose[cut-1]||0):0,drawn=sumA(R2.drawdowns.slice(0,cut)),intTo=sumA(R2.qInterest.slice(0,cut)),intPlan=sumA(R.qInterest.slice(0,cut));
   const ltc=R2.totalCost?sumA(R2.drawdowns)/R2.totalCost:0,peak=R2.peakDebt,peakQ=R2.qLoanClose.indexOf(peak)+1;
