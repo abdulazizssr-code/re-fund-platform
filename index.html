@@ -148,6 +148,12 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .cf-click{cursor:pointer;text-decoration:underline dotted}.cf-click:hover{background:#eef3f1}.cf-i{font-style:normal;font-size:.75em;opacity:.7}th small.qe{display:block;font-weight:500;font-size:.66rem;opacity:.75}
 .bk-pop{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9999;display:flex;align-items:center;justify-content:center}.bk-box{background:#fff;border-radius:14px;min-width:340px;max-width:720px;max-height:80vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);font-size:.86rem}.bk-h{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#00322d;color:#fff;border-radius:14px 14px 0 0}.bk-h a{cursor:pointer;font-weight:800}.bk-body{padding:10px 16px}.bk-r{display:flex;justify-content:space-between;gap:20px;padding:6px 0;border-bottom:1px solid #eef1ef}.bk-r span{unicode-bidi:plaintext}.bk-r b{font-variant-numeric:tabular-nums;white-space:nowrap}.bk-r.tot{border-top:2px solid #00322d;border-bottom:none;font-weight:800}.bk-r small{display:block;color:#607068;font-weight:400}.bk-f{padding:8px 16px 12px;color:#607068;font-size:.76rem}
 .dm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}.dm-f{display:flex;flex-direction:column;font-size:.74rem;font-weight:700;color:#40514a;gap:3px}.dm-f input,.dm-f select{padding:6px 8px;border:1px solid #ccd3cf;border-radius:8px;font:inherit;font-size:.86rem;font-weight:500}.cx-rej td{background:#fdf1f1!important}
+.vq-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.vq-head b{font-family:'Noto Serif',serif;font-size:1rem;color:#00322d}
+.vq-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}@media(max-width:1000px){.vq-steps{grid-template-columns:repeat(2,1fr)}}
+.vq-step{position:relative;border:1px solid #e3e8e5;border-radius:12px;padding:12px 12px 12px 40px;min-height:96px;background:#fbfcfb}.vq-step i{position:absolute;left:12px;top:12px;width:20px;height:20px;border-radius:50%;background:#e8eeec;color:#40514a;font-style:normal;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center}[dir=rtl] .vq-step{padding:12px 40px 12px 12px}[dir=rtl] .vq-step i{left:auto;right:12px}
+.vq-step.done{border-color:#c9d9d3;background:#f2f7f4}.vq-step.done i{background:#00322d;color:#fff}.vq-step.cur{border-color:#775a19;background:#fff}.vq-step.cur i{background:#775a19;color:#fff}.vq-step.bad{border-color:#e8b4b4;background:#fdf5f5}
+.vq-step small{display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--on-surface-vl);font-weight:700}.vq-step b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums;margin:2px 0}.vq-step span{display:block;font-size:.74rem;color:#40514a;min-height:1.1em}.vq-step span a{cursor:pointer;text-decoration:underline dotted}.vq-step button{margin-top:8px}
+.vq-detail{margin-top:12px;border-top:1px solid #eef1ef;padding-top:10px}
 .cx-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.cx-filters .ops-mini{width:auto;min-width:120px}.cx-filters .cx-q{min-width:220px}
 .cx-seg{display:inline-flex;background:#e8eeec;border-radius:999px;padding:3px}.cx-seg a{padding:4px 11px;border-radius:999px;font-size:.76rem;font-weight:700;cursor:pointer;color:#40514a}.cx-seg a.on{background:#00322d;color:#fff}
 .cx-wrap{overflow:auto}.cx-tbl td,.cx-tbl th{white-space:nowrap;padding:7px 9px;vertical-align:middle}.cx-tbl th,.cx-tbl td:first-child{text-align:start!important;unicode-bidi:plaintext}
@@ -3924,7 +3930,8 @@ function buildActualsTab(){
       <div><label>${t?'البند':'Category'}</label><select id="act_category" onchange="_actCompToggle()">${catOpts}</select></div>
       <div id="act_component_wrap" style="display:none"><label>${t?'المكوّن':'Component'}</label><select id="act_component"></select></div>
       <div><label>${t?'المستفيد':'Payee'}</label><input type="text" id="act_payee" list="vendorList" placeholder="${t?'اسم المستفيد':'Payee name'}"><datalist id="vendorList">${(reforecastSettings.contracts||[]).map(v=>`<option value="${escH(v.vendor)}">`).join('')}</datalist></div>
-      <div><label>${t?'المبلغ (ريال)':'Amount (SAR)'}</label><input type="number" id="act_amount" step="any" placeholder="0"></div>
+      <div><label>${t?'المبلغ (ريال، شامل الضريبة)':'Amount (SAR, incl. VAT)'}</label><input type="number" id="act_amount" step="any" placeholder="0"></div>
+      <div><label>${t?'الضريبة (ريال) — من الفاتورة':'VAT (SAR) — from the invoice'}</label><input type="number" id="act_vat" step="any" placeholder="${t?'فارغ = غير موثّق':'blank = not documented'}"></div>
       <div><label>${t?'التاريخ':'Date'}</label><input type="date" id="act_date" onchange="_actAutoQ()"></div>
       <div><label>${t?'مرجع الفاتورة':'Invoice Ref'}</label><input type="text" id="act_invoice" placeholder="${t?'رقم الفاتورة':'INV-001'}"></div>
       <div class="act-full"><label>${t?'ملاحظات':'Notes'}</label><textarea id="act_notes" rows="2" placeholder="${t?'ملاحظات إضافية':'Additional notes'}"></textarea></div>
@@ -4004,6 +4011,7 @@ function buildActualsTab(){
       document.getElementById('act_category').value=ep.category;
       document.getElementById('act_payee').value=ep.payee||'';
       document.getElementById('act_amount').value=ep.amount||'';
+      {const v=document.getElementById('act_vat');if(v)v.value=typeof ep.vat==='number'?ep.vat:'';}
       document.getElementById('act_date').value=ep.date||'';
       document.getElementById('act_invoice').value=ep.invoiceRef||'';
       document.getElementById('act_notes').value=ep.notes||'';
@@ -4035,6 +4043,7 @@ function _actSave(){
   const invoiceRef=document.getElementById('act_invoice').value.trim();
   const notes=document.getElementById('act_notes').value.trim();
   const component=(document.getElementById('act_component')||{}).value||'';
+  const vatEl=document.getElementById('act_vat');const vatVal=vatEl&&vatEl.value!==''?Number(vatEl.value):null;
 
   if(!category){alert(lang==='ar'?'يرجى اختيار البند':'Please select a category');return;}
   if(!isFinite(amount)||amount<=0){alert(lang==='ar'?'يرجى إدخال المبلغ':'Please enter an amount');return;}
@@ -4045,12 +4054,12 @@ function _actSave(){
     // Update existing
     const idx=actuals.findIndex(p=>p.id===_actEditId);
     if(idx>=0){
-      actuals[idx]={...actuals[idx],quarter,category,payee,amount,date,invoiceRef,notes,component};
+      actuals[idx]={...actuals[idx],quarter,category,payee,amount,date,invoiceRef,notes,component};if(vatVal===null)delete actuals[idx].vat;else{actuals[idx].vat=vatVal;actuals[idx].net=amount-vatVal;}
     }
     _actEditId=null;
   }else{
     // Add new
-    actuals.push({id:_actGenId(),quarter,category,payee,amount,date,invoiceRef,notes,component});
+    const _np={id:_actGenId(),quarter,category,payee,amount,date,invoiceRef,notes,component};if(vatVal!==null){_np.vat=vatVal;_np.net=amount-vatVal;}actuals.push(_np);
   }
   buildActualsTab();
 }
@@ -5064,7 +5073,7 @@ function runForecast(){
 const OPS_SECTIONS=['overview','costs','sales','financing','vat','nav','scenarios','reports'];
 let opsSection='overview', opsView='forecast'; // opsView: baseline | forecast | both
 const OPS_T={
-  en:{gTotal:'Total',vat:'VAT',nav:'NAV',vPaid:'paid',vOverdue:'payment overdue',vDue:'payment due',vReceived:'refund received',vLate:'refund late',vClaimed:'claim filed',vUnfiled:'not filed',vOpen:'open',vStrict:'Closed quarters use the actual VAT cash from the log (refunds received, payments to ZATCA); refunds still outstanding are forecast at their expected month.',vLenient:'No VAT-bearing payments yet — plan VAT mechanics apply. Import payments with a VAT column, or add VAT received / VAT paid rows.',vInput:'Input VAT paid',vInputSub:'on cost payments (estimated at the fund rate where not entered)',vOutput:'Output VAT collected',vOutputSub:'on sales, only where entered',vRecv:'Refunds received',vPaidZ:'paid to ZATCA',vRecvbl:'VAT receivable',vRecvblSub:'still to come back from ZATCA',vRett:'RETT refund receivable',vRettSub:'RETT paid',vChart:'Cumulative input VAT vs refunds received',vCal:'Filing calendar & alerts',vRule:'Monthly filer: return and any payment are due by the end of the following month. Refund expected {m} months after the period (fund assumption; change it in Feasibility → VAT refund period). Mark a claim as filed to stop the filing alert.',vTable:'VAT position by month',vMonthly:'monthly',vMonth:'Month',vInCon:'Input VAT — development',vInExp:'Input VAT — fund',vNet:'Net position',vDueDate:'Return due',vFiled:'Filed on / paid',vRefundExp:'Refund expected',vStatus:'Status',vPay:'to pay',vClaim:'refund claim',vEditor:'VAT per payment',vGross:'Gross',vVat:'VAT (edit)',vNetAmt:'Net',vEditorNote:'Leave blank to use the estimate (gross × 15/115 for VAT-able categories; zero for land, RETT, licences, interest). Enter 0 for exempt invoices and the actual VAT for sales invoices that carry VAT.',nBasis:'Cost basis: land, brokerage and RETT at cost; construction in progress at cost; cash, VAT and RETT receivables; less loan and any accruals. Enter a valuer’s mark to override a quarter.',nUnitPrice:'Unit price at inception (SAR)',nNav:'NAV',nNavU:'NAV per unit',nUnits:'units',nAssets:'Total assets',nLoan:'Loan balance',nNavEnd:'NAV at fund end (forecast)',nNavUEnd:'per unit',nChart:'NAV per unit — plan vs actual vs forecast',nUnit:'unit',nBridge:'NAV statement',nLand:'Land (incl. brokerage & RETT)',nCip:'Construction in progress',nCash:'Cash',nVatRec:'VAT receivable',nRettRec:'RETT receivable',nOther:'Other assets / receivables',nAccrFee:'Accrued management fee',nAccrPerf:'Performance fee provision',nPayables:'Payables & accruals',nStatement:'Quarterly NAV statement',nStmtSub:'closed quarters actual · open quarters forecast',nMarkLand:'↳ valuer’s mark — land',nMarkCip:'↳ valuer’s mark — CIP',nPlanU:'Plan NAV per unit',nNote:'A valuer’s mark carries forward to later quarters (plus costs added after it) until the next mark. Units = paid-in equity (cash + in-kind) ÷ unit price. Plan NAV per unit uses the baseline’s book NAV with the same unit price. NAV is before performance fee unless you enter a provision. Valuer’s marks and accruals are saved with the project.',fDrawTbl:'Drawdowns & repayments — plan vs actual',fPlanDraw:'Plan draw',fActDraw:'Actual draw',fPlanRepay:'Plan repay',fActRepay:'Actual repay',fPlanBal:'Plan balance',fBal:'Balance',fPlanInt:'Plan profit',fActInt:'Actual profit',fUndrawn:'Undrawn facility',fDrawnToDate:'Drawn to date',fPlanToDate:'plan to date',fFees:'Bank fees (arrangement + management)',overview:'Overview',costs:'Costs',sales:'Sales',financing:'Financing',scenarios:'Forecast & Scenarios',reports:'Reports',asof:'As of',closed:'closed',toEnd:'months to fund end',baseline:'Baseline',forecast:'Forecast',both:'Both',
+  en:{gTotal:'Total',vat:'VAT',nav:'NAV',vRecorded:'Recorded',vClaimed:'Claimed',vAccepted:'Accepted',vPaid:'paid',vOverdue:'payment overdue',vDue:'payment due',vReceived:'refund received',vLate:'refund late',vClaimed:'claim filed',vUnfiled:'not filed',vOpen:'open',vStrict:'Closed quarters use the actual VAT cash from the log (refunds received, payments to ZATCA); refunds still outstanding are forecast at their expected month.',vLenient:'No VAT-bearing payments yet — plan VAT mechanics apply. Import payments with a VAT column, or add VAT received / VAT paid rows.',vInput:'Input VAT paid',vInputSub:'on cost payments (estimated at the fund rate where not entered)',vOutput:'Output VAT collected',vOutputSub:'on sales, only where entered',vRecv:'Refunds received',vPaidZ:'paid to ZATCA',vRecvbl:'VAT receivable',vRecvblSub:'still to come back from ZATCA',vRett:'RETT refund receivable',vRettSub:'RETT paid',vChart:'Cumulative input VAT vs refunds received',vCal:'Filing calendar & alerts',vRule:'Monthly filer: return and any payment are due by the end of the following month. Refund expected {m} months after the period (fund assumption; change it in Feasibility → VAT refund period). Mark a claim as filed to stop the filing alert.',vTable:'VAT position by month',vMonthly:'monthly',vMonth:'Month',vInCon:'Input VAT — development',vInExp:'Input VAT — fund',vNet:'Net position',vDueDate:'Return due',vFiled:'Filed on / paid',vRefundExp:'Refund expected',vStatus:'Status',vPay:'to pay',vClaim:'refund claim',vEditor:'VAT per payment',vGross:'Gross',vVat:'VAT (edit)',vNetAmt:'Net',vEditorNote:'Leave blank to use the estimate (gross × 15/115 for VAT-able categories; zero for land, RETT, licences, interest). Enter 0 for exempt invoices and the actual VAT for sales invoices that carry VAT.',nBasis:'Cost basis: land, brokerage and RETT at cost; construction in progress at cost; cash, VAT and RETT receivables; less loan and any accruals. Enter a valuer’s mark to override a quarter.',nUnitPrice:'Unit price at inception (SAR)',nNav:'NAV',nNavU:'NAV per unit',nUnits:'units',nAssets:'Total assets',nLoan:'Loan balance',nNavEnd:'NAV at fund end (forecast)',nNavUEnd:'per unit',nChart:'NAV per unit — plan vs actual vs forecast',nUnit:'unit',nBridge:'NAV statement',nLand:'Land (incl. brokerage & RETT)',nCip:'Construction in progress',nCash:'Cash',nVatRec:'VAT receivable',nRettRec:'RETT receivable',nOther:'Other assets / receivables',nAccrFee:'Accrued management fee',nAccrPerf:'Performance fee provision',nPayables:'Payables & accruals',nStatement:'Quarterly NAV statement',nStmtSub:'closed quarters actual · open quarters forecast',nMarkLand:'↳ valuer’s mark — land',nMarkCip:'↳ valuer’s mark — CIP',nPlanU:'Plan NAV per unit',nNote:'A valuer’s mark carries forward to later quarters (plus costs added after it) until the next mark. Units = paid-in equity (cash + in-kind) ÷ unit price. Plan NAV per unit uses the baseline’s book NAV with the same unit price. NAV is before performance fee unless you enter a provision. Valuer’s marks and accruals are saved with the project.',fDrawTbl:'Drawdowns & repayments — plan vs actual',fPlanDraw:'Plan draw',fActDraw:'Actual draw',fPlanRepay:'Plan repay',fActRepay:'Actual repay',fPlanBal:'Plan balance',fBal:'Balance',fPlanInt:'Plan profit',fActInt:'Actual profit',fUndrawn:'Undrawn facility',fDrawnToDate:'Drawn to date',fPlanToDate:'plan to date',fFees:'Bank fees (arrangement + management)',overview:'Overview',costs:'Costs',sales:'Sales',financing:'Financing',scenarios:'Forecast & Scenarios',reports:'Reports',asof:'As of',closed:'closed',toEnd:'months to fund end',baseline:'Baseline',forecast:'Forecast',both:'Both',
     spend:'Spend to date',plan:'plan',fac:'Forecast at completion',vsBase:'vs baseline',irr:'IRR',sales_:'Sales',sold:'sold',close:'Close',calcFirst:'Calculate the model first (Feasibility) to open Operations.',
     costComplete:'Cost complete',timeElapsed:'time elapsed',committed:'Committed',ofFac:'of forecast at completion',cashLoan:'Cash & loan',atCut:'at cutoff',eqMult:'Equity multiple',dist:'Distributions',
     scurve:'Cumulative cost — plan vs actual vs forecast',ssales:'Cumulative sales — plan vs actual vs forecast',decide:'What needs a decision',items:'items',nothing:'Nothing pending — all closed-quarter variances have a treatment.',
@@ -5078,7 +5087,7 @@ const OPS_T={
     scen:'Scenarios',scenName:'Scenario',mult:'Multiple',peakD:'Peak debt',addScen:'＋ New scenario',scenHint:'A scenario is a set of extra changes on top of the current forecast (e.g. saibor 9.5).',current:'Current forecast',
     packs:'Reporting packs for',investor:'Investor pack',investorD:'Executive summary in teaser style — costs ex recoverable taxes, no internal detail.',ic:'IC pack',icD:'Baseline vs actual vs forecast, variances, IRR bridge, scenarios and commentary.',lender:'Financer pack',lenderD:'Sources & uses, quarterly cash-flow statement with actuals to date, loan schedule and covenant tests.',open:'Open',commentary:'Commentary (draft from the variances — edit before issuing)',
     addPay:'＋ Add payments',closeDrawer:'Done'},
-  ar:{gTotal:'الإجمالي',vat:'الضريبة',nav:'صافي الأصول',vPaid:'مدفوع',vOverdue:'دفع متأخر',vDue:'دفع مستحق',vReceived:'تم الاسترداد',vLate:'استرداد متأخر',vClaimed:'قُدّم الطلب',vUnfiled:'لم يُقدّم',vOpen:'مفتوح',vStrict:'الأرباع المقفلة تستخدم النقد الضريبي الفعلي من السجل (الاستردادات المستلمة والمدفوع للزكاة والضريبة)؛ الاستردادات المتبقية تُتوقع في شهرها المتوقع.',vLenient:'لا توجد دفعات تحمل ضريبة بعد — تُطبّق آلية الخطة. استورد الدفعات مع عمود الضريبة أو أضف صفوف ضريبة مستردة / ضريبة مدفوعة.',vInput:'ضريبة المدخلات المدفوعة',vInputSub:'على دفعات التكاليف (مقدّرة بنسبة الصندوق حيث لم تُدخل)',vOutput:'ضريبة المخرجات المحصّلة',vOutputSub:'على المبيعات، حيث أُدخلت فقط',vRecv:'الاستردادات المستلمة',vPaidZ:'المدفوع للهيئة',vRecvbl:'ضريبة مستحقة الاسترداد',vRecvblSub:'لم تُسترد بعد من الهيئة',vRett:'استرداد ضريبة التصرفات المستحق',vRettSub:'ضريبة التصرفات المدفوعة',vChart:'ضريبة المدخلات التراكمية مقابل الاستردادات',vCal:'تقويم الإقرارات والتنبيهات',vRule:'إقرار شهري: يُقدّم الإقرار ويُدفع المستحق حتى نهاية الشهر التالي. الاسترداد متوقع بعد {m} أشهر من الفترة (افتراض الصندوق؛ يُعدّل في دراسة الجدوى ← فترة الاسترداد الضريبي). سجّل تقديم الطلب لإيقاف تنبيه التقديم.',vTable:'الموقف الضريبي حسب الشهر',vMonthly:'شهري',vMonth:'الشهر',vInCon:'ضريبة مدخلات — التطوير',vInExp:'ضريبة مدخلات — الصندوق',vNet:'صافي الموقف',vDueDate:'موعد الإقرار',vFiled:'قُدّم في / دُفع',vRefundExp:'الاسترداد المتوقع',vStatus:'الحالة',vPay:'للدفع',vClaim:'طلب استرداد',vEditor:'الضريبة لكل دفعة',vGross:'الإجمالي',vVat:'الضريبة (تعديل)',vNetAmt:'الصافي',vEditorNote:'اتركه فارغاً لاستخدام التقدير (الإجمالي × 15/115 للبنود الخاضعة؛ صفر للأرض وضريبة التصرفات والرخص وتكاليف التمويل). أدخل 0 للفواتير المعفاة والضريبة الفعلية لفواتير المبيعات الخاضعة.',nBasis:'أساس التكلفة: الأرض والسعي وضريبة التصرفات بالتكلفة؛ الأعمال تحت التنفيذ بالتكلفة؛ النقد والضرائب المستحقة الاسترداد؛ ناقص التمويل وأي استحقاقات. أدخل تقييم المقيّم لتجاوز ربع معين.',nUnitPrice:'سعر الوحدة عند التأسيس (ريال)',nNav:'صافي قيمة الأصول',nNavU:'صافي قيمة الوحدة',nUnits:'وحدة',nAssets:'إجمالي الأصول',nLoan:'رصيد التمويل',nNavEnd:'صافي الأصول عند نهاية الصندوق (توقع)',nNavUEnd:'للوحدة',nChart:'صافي قيمة الوحدة — الخطة مقابل الفعلي مقابل التوقع',nUnit:'وحدة',nBridge:'قائمة صافي الأصول',nLand:'الأرض (شاملة السعي وضريبة التصرفات)',nCip:'أعمال تحت التنفيذ',nCash:'النقد',nVatRec:'ضريبة مستحقة الاسترداد',nRettRec:'ضريبة تصرفات مستحقة الاسترداد',nOther:'أصول / ذمم أخرى',nAccrFee:'رسوم إدارة مستحقة',nAccrPerf:'مخصص رسوم الأداء',nPayables:'ذمم دائنة واستحقاقات',nStatement:'قائمة صافي الأصول الربعية',nStmtSub:'الأرباع المقفلة فعلي · المفتوحة توقع',nMarkLand:'↳ تقييم المقيّم — الأرض',nMarkCip:'↳ تقييم المقيّم — الأعمال',nPlanU:'صافي قيمة الوحدة بالخطة',nNote:'تقييم المقيّم يستمر للأرباع اللاحقة (زائد التكاليف المضافة بعده) حتى التقييم التالي. الوحدات = رأس المال المدفوع (نقدي + عيني) ÷ سعر الوحدة. صافي قيمة الوحدة بالخطة يستخدم صافي الأصول الدفتري لخط الأساس بنفس سعر الوحدة. صافي الأصول قبل رسوم الأداء ما لم تُدخل مخصصاً. تُحفظ تقييمات المقيّم والاستحقاقات مع المشروع.',fDrawTbl:'السحوبات والسداد — الخطة مقابل الفعلي',fPlanDraw:'سحب الخطة',fActDraw:'السحب الفعلي',fPlanRepay:'سداد الخطة',fActRepay:'السداد الفعلي',fPlanBal:'رصيد الخطة',fBal:'الرصيد',fPlanInt:'أرباح الخطة',fActInt:'الأرباح الفعلية',fUndrawn:'غير المسحوب من التسهيل',fDrawnToDate:'المسحوب حتى تاريخه',fPlanToDate:'الخطة حتى تاريخه',fFees:'رسوم البنك (ترتيب + إدارة)',overview:'نظرة عامة',costs:'التكاليف',sales:'المبيعات',financing:'التمويل',scenarios:'التوقع والسيناريوهات',reports:'التقارير',asof:'كما في',closed:'مقفل',toEnd:'شهراً حتى نهاية الصندوق',baseline:'خط الأساس',forecast:'التوقع',both:'كلاهما',
+  ar:{gTotal:'الإجمالي',vat:'الضريبة',nav:'صافي الأصول',vRecorded:'مسجّل',vClaimed:'مُطالَب به',vAccepted:'مقبول',vPaid:'مدفوع',vOverdue:'دفع متأخر',vDue:'دفع مستحق',vReceived:'تم الاسترداد',vLate:'استرداد متأخر',vClaimed:'قُدّم الطلب',vUnfiled:'لم يُقدّم',vOpen:'مفتوح',vStrict:'الأرباع المقفلة تستخدم النقد الضريبي الفعلي من السجل (الاستردادات المستلمة والمدفوع للزكاة والضريبة)؛ الاستردادات المتبقية تُتوقع في شهرها المتوقع.',vLenient:'لا توجد دفعات تحمل ضريبة بعد — تُطبّق آلية الخطة. استورد الدفعات مع عمود الضريبة أو أضف صفوف ضريبة مستردة / ضريبة مدفوعة.',vInput:'ضريبة المدخلات المدفوعة',vInputSub:'على دفعات التكاليف (مقدّرة بنسبة الصندوق حيث لم تُدخل)',vOutput:'ضريبة المخرجات المحصّلة',vOutputSub:'على المبيعات، حيث أُدخلت فقط',vRecv:'الاستردادات المستلمة',vPaidZ:'المدفوع للهيئة',vRecvbl:'ضريبة مستحقة الاسترداد',vRecvblSub:'لم تُسترد بعد من الهيئة',vRett:'استرداد ضريبة التصرفات المستحق',vRettSub:'ضريبة التصرفات المدفوعة',vChart:'ضريبة المدخلات التراكمية مقابل الاستردادات',vCal:'تقويم الإقرارات والتنبيهات',vRule:'إقرار شهري: يُقدّم الإقرار ويُدفع المستحق حتى نهاية الشهر التالي. الاسترداد متوقع بعد {m} أشهر من الفترة (افتراض الصندوق؛ يُعدّل في دراسة الجدوى ← فترة الاسترداد الضريبي). سجّل تقديم الطلب لإيقاف تنبيه التقديم.',vTable:'الموقف الضريبي حسب الشهر',vMonthly:'شهري',vMonth:'الشهر',vInCon:'ضريبة مدخلات — التطوير',vInExp:'ضريبة مدخلات — الصندوق',vNet:'صافي الموقف',vDueDate:'موعد الإقرار',vFiled:'قُدّم في / دُفع',vRefundExp:'الاسترداد المتوقع',vStatus:'الحالة',vPay:'للدفع',vClaim:'طلب استرداد',vEditor:'الضريبة لكل دفعة',vGross:'الإجمالي',vVat:'الضريبة (تعديل)',vNetAmt:'الصافي',vEditorNote:'اتركه فارغاً لاستخدام التقدير (الإجمالي × 15/115 للبنود الخاضعة؛ صفر للأرض وضريبة التصرفات والرخص وتكاليف التمويل). أدخل 0 للفواتير المعفاة والضريبة الفعلية لفواتير المبيعات الخاضعة.',nBasis:'أساس التكلفة: الأرض والسعي وضريبة التصرفات بالتكلفة؛ الأعمال تحت التنفيذ بالتكلفة؛ النقد والضرائب المستحقة الاسترداد؛ ناقص التمويل وأي استحقاقات. أدخل تقييم المقيّم لتجاوز ربع معين.',nUnitPrice:'سعر الوحدة عند التأسيس (ريال)',nNav:'صافي قيمة الأصول',nNavU:'صافي قيمة الوحدة',nUnits:'وحدة',nAssets:'إجمالي الأصول',nLoan:'رصيد التمويل',nNavEnd:'صافي الأصول عند نهاية الصندوق (توقع)',nNavUEnd:'للوحدة',nChart:'صافي قيمة الوحدة — الخطة مقابل الفعلي مقابل التوقع',nUnit:'وحدة',nBridge:'قائمة صافي الأصول',nLand:'الأرض (شاملة السعي وضريبة التصرفات)',nCip:'أعمال تحت التنفيذ',nCash:'النقد',nVatRec:'ضريبة مستحقة الاسترداد',nRettRec:'ضريبة تصرفات مستحقة الاسترداد',nOther:'أصول / ذمم أخرى',nAccrFee:'رسوم إدارة مستحقة',nAccrPerf:'مخصص رسوم الأداء',nPayables:'ذمم دائنة واستحقاقات',nStatement:'قائمة صافي الأصول الربعية',nStmtSub:'الأرباع المقفلة فعلي · المفتوحة توقع',nMarkLand:'↳ تقييم المقيّم — الأرض',nMarkCip:'↳ تقييم المقيّم — الأعمال',nPlanU:'صافي قيمة الوحدة بالخطة',nNote:'تقييم المقيّم يستمر للأرباع اللاحقة (زائد التكاليف المضافة بعده) حتى التقييم التالي. الوحدات = رأس المال المدفوع (نقدي + عيني) ÷ سعر الوحدة. صافي قيمة الوحدة بالخطة يستخدم صافي الأصول الدفتري لخط الأساس بنفس سعر الوحدة. صافي الأصول قبل رسوم الأداء ما لم تُدخل مخصصاً. تُحفظ تقييمات المقيّم والاستحقاقات مع المشروع.',fDrawTbl:'السحوبات والسداد — الخطة مقابل الفعلي',fPlanDraw:'سحب الخطة',fActDraw:'السحب الفعلي',fPlanRepay:'سداد الخطة',fActRepay:'السداد الفعلي',fPlanBal:'رصيد الخطة',fBal:'الرصيد',fPlanInt:'أرباح الخطة',fActInt:'الأرباح الفعلية',fUndrawn:'غير المسحوب من التسهيل',fDrawnToDate:'المسحوب حتى تاريخه',fPlanToDate:'الخطة حتى تاريخه',fFees:'رسوم البنك (ترتيب + إدارة)',overview:'نظرة عامة',costs:'التكاليف',sales:'المبيعات',financing:'التمويل',scenarios:'التوقع والسيناريوهات',reports:'التقارير',asof:'كما في',closed:'مقفل',toEnd:'شهراً حتى نهاية الصندوق',baseline:'خط الأساس',forecast:'التوقع',both:'كلاهما',
     spend:'المنفق حتى الآن',plan:'الخطة',fac:'التكلفة عند الاكتمال',vsBase:'مقابل خط الأساس',irr:'العائد الداخلي',sales_:'المبيعات',sold:'مباع',close:'إقفال',calcFirst:'احسب النموذج أولاً من دراسة الجدوى لفتح التشغيل.',
     costComplete:'نسبة إنجاز التكلفة',timeElapsed:'الزمن المنقضي',committed:'الملتزم به',ofFac:'من التكلفة عند الاكتمال',cashLoan:'النقد والتمويل',atCut:'عند الإقفال',eqMult:'مضاعف رأس المال',dist:'التوزيعات',
     scurve:'التكلفة التراكمية — الخطة مقابل الفعلي مقابل التوقع',ssales:'المبيعات التراكمية — الخطة مقابل الفعلي مقابل التوقع',decide:'ما يحتاج قراراً',items:'بنود',nothing:'لا يوجد معلق — كل انحرافات الأرباع المقفلة لها معالجة.',
@@ -5241,7 +5250,7 @@ function cxToggle(id){opsCostF.open[id]=!opsCostF.open[id];renderOps();}
 // Control-room costs are shown EXCLUDING VAT: engine arrays are inc-VAT for VAT-able lines (÷ V), payments net = amount − VAT carried.
 function vatDiv(key){return VATABLE.includes(key)?1+(Number(D.vat_rate)||0)/100:1;}
 function netQ(c,RX,i){return c.getQ(RX,i)/vatDiv(c.key);}
-function actualNet(key,q0,q1,comp){return actuals.filter(p=>p.include!==false&&p.category===key&&p.quarter>=q0&&p.quarter<q1&&(comp===undefined||p.component===comp)).reduce((s,p)=>s+p.amount-payVAT(p),0);}
+function actualNet(key,q0,q1,comp){return actuals.filter(p=>p.include!==false&&p.category===key&&p.quarter>=q0&&p.quarter<q1&&(comp===undefined||p.component===comp)).reduce((s,p)=>s+p.amount-payVATAny(p),0);}
 function _catRow(c,cut,nq,qEnd){
   const d=vatDiv(c.key);
   const toDate=()=>{let s=0;for(let i=0;i<qEnd;i++)s+=netQ(c,R,i);return s;};
@@ -5290,7 +5299,7 @@ function opsCosts(){
     for(const cp of comps){const share=ct>0?cp.value/ct:0,cOrig=r.orig*share,cAct=actualNet(c.key,0,qEnd,cp.key),cAdj=reforecastSettings.budgetOverrides[cp.key],cAdjN=cAdj==null?null:cAdj/r.d;
       s+=`<tr class="cx-sub"><td>↳ ${escH(cp.label)}</td><td class="rfcs-num">${fN(cOrig*(r.orig?r.bud/r.orig:0))}</td><td class="rfcs-num">${fN(cAct)}</td><td></td><td></td><td><input type="number" class="ops-mini" placeholder="${M_(cOrig)}" value="${cAdjN==null?'':Math.round(cAdjN)}" onchange="setLineBudget('${cp.key}',this.value===''?'':String(Number(this.value)*${r.d}));opsRefresh()"></td><td class="rfcs-num">${fN(cAdjN??cOrig)}</td><td colspan="2"></td></tr>`;}
     const pays=actuals.filter(p=>p.category===c.key&&p.quarter<qEnd).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-    for(const p of pays){const k=contractOf(p),vt=payVAT(p);s+=`<tr class="cx-pay"><td>${escH(p.date||'')} · ${qLabel(p.quarter)} · ${escH((p.payee||'').slice(0,40))}${p.notes&&p.notes!==p.payee?` <span class="ops-muted">${escH(String(p.notes).slice(0,50))}</span>`:''}</td><td></td><td class="rfcs-num">${fN(p.amount-vt)}${vt>0.5?`<small class="ops-muted">+ ${ot('vVatShort')} ${fN(vt)}</small>`:''}</td><td colspan="5"><span class="ops-muted">${k?ot('cxContract')+': '+escH(k.vendor):''}</span></td><td></td></tr>`;}
+    for(const p of pays){const k=contractOf(p),vt=payVATAny(p);s+=`<tr class="cx-pay"><td>${escH(p.date||'')} · ${qLabel(p.quarter)} · ${escH((p.payee||'').slice(0,40))}${p.notes&&p.notes!==p.payee?` <span class="ops-muted">${escH(String(p.notes).slice(0,50))}</span>`:''}</td><td></td><td class="rfcs-num">${fN(p.amount-vt)}${vt>0.5?`<small class="ops-muted">+ ${ot('vVatShort')} ${fN(vt)}</small>`:''}</td><td colspan="5"><span class="ops-muted">${k?ot('cxContract')+': '+escH(k.vendor):''}</span></td><td></td></tr>`;}
     if(fq>0&&rem>0){const w=Array.from({length:fq},(_,j)=>Number(ph[j])||c.getQ(R2,cut+j));const mx=Math.max(1,...w);
       s+=`<tr class="cx-sub"><td colspan="9"><div class="ops-phase-wrap"><div class="ops-phase">${Array.from({length:cut},(_,i)=>`<div class="past" style="height:${Math.max(4,c.getQ(R2,i)/Math.max(mx,...Array.from({length:cut},(_,k)=>c.getQ(R2,k)))*100)}%"><span>Q${i+1}</span></div>`).join('')}${w.map((v,j)=>`<div style="height:${Math.max(4,v/mx*100)}%"><span title="${fmtDateS(qEndDate(cut+j))}">Q${cut+j+1}</span><input type="number" class="ops-ph" placeholder="${(c.getQ(R2,cut+j)/Math.max(1,sumA(w))*100).toFixed(0)}" value="${ph[j]??''}" onchange="setPhasing('${c.key}',${j},this.value);opsRefresh()"></div>`).join('')}</div><div class="ops-muted" style="font-size:.78rem;margin-top:22px">${ot('phasing')}</div></div></td></tr>`;}
     return s;};
@@ -5362,139 +5371,146 @@ function opsSales(){
   return h;
 }
 // ═══════════════════════════════════════════════
-// VAT — monthly actual VAT position from the payments log, ZATCA filing calendar, refund tracking, alerts.
-// Input VAT on cost payments (p.vat if entered, else estimated at the fund VAT rate for VAT-able categories),
-// output VAT on revenue only when entered on the payment (off-plan residential is treated as zero VAT by default).
-// Receipts from ZATCA = 'vat_received'; payments to ZATCA = 'vat_paid'; RETT refund received = 'rett_received'.
+// VAT — quarterly refund claims. The process: invoices are recorded through the quarter → at quarter end the
+// operations team files ONE refund claim with ZATCA → ZATCA reviews (may reject invoices) → accepts → the refund
+// arrives 2–3 months later. One card per quarter shows exactly those steps.
+// Documented VAT only: the VAT printed on the invoice / imported VAT column / entered on the payment. Payments with
+// no VAT value are shown separately as an estimate and never counted in the claim.
 // ═══════════════════════════════════════════════
 const VATABLE=['brokerage','base_con','dev_fee','contingency','design','insurance','supervision','marketing','selling','fund_setup','mgmt_fee','custody','spv','auditor','sharia','engineering','fin_advisor','arr_fee','bank_mgmt','other_exp']; // board compensation is VAT-exempt
-function payVAT(p){ // input VAT carried by a cost payment
-  if(p.include===false)return 0;
-  if(typeof p.vat==='number'&&isFinite(p.vat))return p.vat;
-  if(!VATABLE.includes(p.category))return 0;
-  const V=1+(Number(D.vat_rate)||0)/100;return p.amount-p.amount/V;
-}
+const _VAT_SKIP=['revenue','vat_received','vat_paid','rett_received','rett','land','interest','licensing','perf_fee'];
+function payVAT(p){return (p.include!==false&&typeof p.vat==='number'&&isFinite(p.vat)&&!FIN_KEYS.includes(p.category))?p.vat:0;} // documented only
+function payVATEst(p){ // estimate for a VAT-able payment that carries no VAT value (display only; costs ex-VAT use it)
+  if(p.include===false||typeof p.vat==='number'||!VATABLE.includes(p.category))return 0;const V=1+(Number(D.vat_rate)||0)/100;return p.amount-p.amount/V;}
+function payVATAny(p){return typeof p.vat==='number'?payVAT(p):payVATEst(p);}
 function payVATOut(p){return (p.include!==false&&p.category==='revenue'&&typeof p.vat==='number'&&isFinite(p.vat))?p.vat:0;}
 function setPayVAT(id,v){const p=actuals.find(x=>x.id===id);if(!p)return;if(v==='')delete p.vat;else p.vat=Number(v);opsRefresh();}
-function _mkey(p){ // 'YYYY-MM' of the payment; falls back to the last month of its quarter
-  if(p.date&&/^\d{4}-\d{2}/.test(p.date))return p.date.slice(0,7);
-  const sd=new Date(D.start_date||'2026-01-01');const d=new Date(Date.UTC(sd.getUTCFullYear(),sd.getUTCMonth()+3*p.quarter+2,1));return d.toISOString().slice(0,7);
-}
+function _mkey(p){if(p.date&&/^\d{4}-\d{2}/.test(p.date))return p.date.slice(0,7);const sd=new Date(D.start_date||'2026-01-01');const d=new Date(Date.UTC(sd.getUTCFullYear(),sd.getUTCMonth()+3*p.quarter+2,1));return d.toISOString().slice(0,7);}
 function _mAdd(key,n){const [y,m]=key.split('-').map(Number);const d=new Date(Date.UTC(y,m-1+n,1));return d.toISOString().slice(0,7);}
-function _mEnd(key){const [y,m]=key.split('-').map(Number);return new Date(Date.UTC(y,m,0));} // last day of month
+function _mEnd(key){const [y,m]=key.split('-').map(Number);return new Date(Date.UTC(y,m,0));}
 function _mLabel(key){const d=_mEnd(key);return d.toLocaleDateString(lang==='ar'?'ar-SA-u-nu-latn':'en-GB',{month:'short',year:'numeric'});}
 function _mToQ(key){const sd=new Date(D.start_date||'2026-01-01');const [y,m]=key.split('-').map(Number);const months=(y-sd.getUTCFullYear())*12+(m-1-sd.getUTCMonth());const nq=fundNQ();return Math.min(nq-1,Math.max(0,Math.floor(months/3)));}
-function vatSettings(){_rfNorm();reforecastSettings.vat=reforecastSettings.vat||{};const v=reforecastSettings.vat;if(v.claims==null)v.claims={};return v;} // claims[month]={filed:'YYYY-MM-DD'}
-function vatSetFiled(key,d){const v=vatSettings();v.claims[key]=v.claims[key]||{};if(d)v.claims[key].filed=d;else delete v.claims[key].filed;renderOps();}
+function _addMonths(iso,n){const d=new Date(iso);d.setUTCMonth(d.getUTCMonth()+n);return d.toISOString().slice(0,10);}
+function _refundMonths(){return Math.max(1,Number(D.vat_refund_months)||3);}
 
-// Monthly model. Returns periods in order + totals. Receipts are matched to refund claims FIFO.
-function vatModel(){
-  const today=new Date().toISOString().slice(0,10),refundM=Number(D.vat_refund_months)||0,V=1+(Number(D.vat_rate)||0)/100;
-  const per={};const add=(k,f,v)=>{per[k]=per[k]||{key:k,inCon:0,inExp:0,out:0,paidZ:0,recvZ:0,rettPaid:0,rettRecv:0,n:0};per[k][f]+=v;};
-  for(const p of actuals){if(p.include===false)continue;const k=_mkey(p);
-    if(p.category==='vat_received')add(k,'recvZ',p.amount);else if(p.category==='vat_paid')add(k,'paidZ',p.amount);
-    else if(p.category==='rett_received')add(k,'rettRecv',p.amount);
-    else if(p.category==='rett'){add(k,'rettPaid',p.amount);}
-    else if(p.category==='revenue'){add(k,'out',payVATOut(p));}
-    else{const v=payVAT(p);if(v){add(k,etypeOf(p.category)==='dev'?'inCon':'inExp',v);per[k].n++;}}}
-  // fill month range from fund start to max(last payment, cutoff end)
-  const sd=new Date(D.start_date||'2026-01-01');let k0=sd.toISOString().slice(0,7);const cutEnd=qEndDate((R2?R2._cutoffQ:1)-1).toISOString().slice(0,7);
-  const keys=Object.keys(per);let kEnd=keys.length?keys.sort().pop():k0;if(cutEnd>kEnd)kEnd=cutEnd;
-  const list=[];for(let k=k0;k<=kEnd;k=_mAdd(k,1)){per[k]=per[k]||{key:k,inCon:0,inExp:0,out:0,paidZ:0,recvZ:0,rettPaid:0,rettRecv:0,n:0};list.push(per[k]);}
-  // per period: net position, deadlines, refund matching
-  const cl=vatSettings().claims;let pool=list.reduce((s,m)=>s+m.recvZ,0),recvCum=0;
-  for(const m of list){m.input=m.inCon+m.inExp;m.net=m.out-m.input; // <0 = refund claim, >0 = payment due
-    m.due=_mEnd(_mAdd(m.key,1)).toISOString().slice(0,10); // return + payment due: end of following month
-    m.filed=(cl[m.key]||{}).filed||null;
-    m.refundExp=refundM?_mEnd(_mAdd(m.key,refundM)).toISOString().slice(0,10):null;
-    m.refund=m.net<0?-m.net:0;const got=Math.min(pool,m.refund);m.refundGot=got;pool-=got;
-    m.status=m.net>0?(m.paidZ>=m.net-1?'paid':(today>m.due?'overdue':'due')):m.refund>0?(m.refundGot>=m.refund-1?'received':(m.refundExp&&today>m.refundExp?'late':(m.filed?'claimed':(today>m.due?'unfiled':'open')))):'nil';}
-  const T={input:sumA(list.map(m=>m.input)),out:sumA(list.map(m=>m.out)),recv:sumA(list.map(m=>m.recvZ)),paid:sumA(list.map(m=>m.paidZ)),rettPaid:sumA(list.map(m=>m.rettPaid)),rettRecv:sumA(list.map(m=>m.rettRecv))};
-  T.receivable=Math.max(0,T.input-T.out-T.recv+T.paid); // VAT still to come back from ZATCA
-  const rettRefundable=projects.some(p=>Number(p.rett_refund))?T.rettPaid:0;T.rettReceivable=Math.max(0,rettRefundable-T.rettRecv);
-  return {list,T,today,refundM,V};
+// One claim per quarter. q → {recorded, est, out, sub, submitted, rejected, accepted, confirmed, received, expected, status, months, invoices, payments}
+function vatQuarter(q){
+  const today=new Date().toISOString().slice(0,10),qe=qEndDate(q).toISOString().slice(0,10);
+  const inv=invoices().filter(i=>i.date&&dateToQuarterIdx(i.date,D.start_date)===q);
+  const pays=actuals.filter(p=>p.include!==false&&p.quarter===q&&!p.invoiceId&&!_VAT_SKIP.includes(p.category)&&!FIN_KEYS.includes(p.category));
+  const docPays=pays.filter(p=>typeof p.vat==='number'),estPays=pays.filter(p=>typeof p.vat!=='number'&&payVATEst(p)>0);
+  const recInv=inv.reduce((s,i)=>s+(i.vat||0),0),recPay=docPays.reduce((s,p)=>s+payVAT(p),0),est=estPays.reduce((s,p)=>s+payVATEst(p),0);
+  const out=actuals.filter(p=>p.include!==false&&p.quarter===q).reduce((s,p)=>s+payVATOut(p),0);
+  const paidZ=actuals.filter(p=>p.include!==false&&p.quarter===q&&p.category==='vat_paid').reduce((s,p)=>s+p.amount,0);
+  const sub=submissions().find(s=>s.q===q)||null;
+  const recorded=recInv+recPay,claimable=Math.max(0,recorded-out);
+  const submitted=sub?(sub.submitted||sub.summaryVat||0):0,rejected=sub?(sub.rejectedVat||0):0,accepted=sub?submitted-rejected:0,confirmed=sub&&sub.acceptance?sub.acceptance.accepted:null;
+  const due=confirmed!=null?confirmed:accepted;
+  const received=actuals.filter(p=>p.include!==false&&p.category==='vat_received'&&p.submissionQ===q).reduce((s,p)=>s+p.amount,0);
+  const expected=sub?_addMonths(sub.date||qe,_refundMonths()):_addMonths(qe,_refundMonths());
+  let status,step;
+  if(!sub){status=today<=qe?'recording':'to_submit';step=1;}
+  else if(sub.status==='rejected')status='rejected',step=4;
+  else if(received>=due-1&&due>0)status='refunded',step=5;
+  else if(sub.acceptance)status='accepted',step=4;
+  else if(sub.review)status='reviewed',step=3;
+  else status='submitted',step=2;
+  // months breakdown (documented input VAT by month)
+  const months={};const addM=(k,f,v)=>{months[k]=months[k]||{key:k,inv:0,pay:0,est:0,out:0};months[k][f]+=v;};
+  inv.forEach(i=>addM(i.date.slice(0,7),'inv',i.vat||0));docPays.forEach(p=>addM(_mkey(p),'pay',payVAT(p)));estPays.forEach(p=>addM(_mkey(p),'est',payVATEst(p)));
+  actuals.filter(p=>p.include!==false&&p.quarter===q&&payVATOut(p)>0).forEach(p=>addM(_mkey(p),'out',payVATOut(p)));
+  const missing=sub?inv.filter(i=>!(sub.rows||[]).some(r=>r.invoiceId===i.id)):[],extra=sub?(sub.rows||[]).filter(r=>!r.invoiceId):[];
+  return {q,qe,inv,docPays,estPays,recInv,recPay,recorded,est,out,paidZ,claimable,sub,submitted,rejected,accepted,confirmed,due,received,outstanding:Math.max(0,due-received),expected,status,step,months:Object.values(months).sort((a,b)=>a.key.localeCompare(b.key)),missing,extra,late:sub&&due>received+1&&today>expected};
 }
+function vatQuarters(){const cut=R2?R2._cutoffQ:0,nq=R?R.nq:8;const last=Math.min(nq-1,Math.max(cut,0));const out=[];for(let q=0;q<=last;q++)out.push(vatQuarter(q));return out;}
+function vatTotals(){const qs=vatQuarters();const T={recorded:sumA(qs.map(x=>x.recorded)),est:sumA(qs.map(x=>x.est)),submitted:sumA(qs.map(x=>x.submitted)),rejected:sumA(qs.map(x=>x.rejected)),accepted:sumA(qs.map(x=>x.accepted)),received:sumA(qs.map(x=>x.received)),outstanding:sumA(qs.map(x=>x.outstanding))};
+  T.unclaimed=sumA(qs.filter(x=>!x.sub).map(x=>x.claimable));const rettPaid=actuals.filter(p=>p.include!==false&&p.category==='rett').reduce((s,p)=>s+p.amount,0),rettRecv=actuals.filter(p=>p.include!==false&&p.category==='rett_received').reduce((s,p)=>s+p.amount,0);T.rettReceivable=Math.max(0,(projects.some(p=>Number(p.rett_refund))?rettPaid:0)-rettRecv);T.rettPaid=rettPaid;return {qs,T};}
 function vatAlerts(){
-  if(!R2)return[];const m=vatModel(),out=[],ar=lang==='ar',d15=new Date(Date.now()+15*86400000).toISOString().slice(0,10);
-  const late=m.list.filter(p=>p.status==='late'),unf=m.list.filter(p=>p.status==='unfiled');
-  if(late.length>1)out.push(['bad',late.length+(ar?' استردادات ضريبية متأخرة عن موعدها المتوقع — ':' VAT refunds late vs expected — ')+M_(late.reduce((s,p)=>s+p.refund-p.refundGot,0))+(ar?' (الأقدم ':' (oldest ')+_mLabel(late[0].key)+')','vat']);
-  if(unf.length>1)out.push(['warn',unf.length+(ar?' إقرارات استرداد لم تُسجّل كمقدّمة — ':' refund returns not marked as filed — ')+M_(unf.reduce((s,p)=>s+p.refund,0)),'vat']);
-  for(const p of m.list){
-    if((p.status==='late'&&late.length>1)||(p.status==='unfiled'&&unf.length>1))continue;
-    if(p.status==='overdue')out.push(['bad',(ar?'ضريبة مستحقة الدفع عن ':'VAT payment overdue for ')+_mLabel(p.key)+' — '+M_(p.net)+(ar?' (كان مستحقاً ':' (was due ')+p.due+')','vat']);
-    else if(p.status==='due'&&p.due<=d15)out.push(['warn',(ar?'إقرار ودفع الضريبة عن ':'VAT return and payment for ')+_mLabel(p.key)+' — '+M_(p.net)+(ar?' يستحق في ':' due ')+p.due,'vat']);
-    if(p.status==='unfiled')out.push(['warn',(ar?'إقرار الاسترداد عن ':'Refund return for ')+_mLabel(p.key)+' ('+M_(p.refund)+(ar?') لم يُسجّل تقديمه — الموعد ':') not marked as filed — deadline ')+p.due,'vat']);
-    if(p.status==='late')out.push(['bad',(ar?'استرداد ضريبة عن ':'VAT refund for ')+_mLabel(p.key)+' — '+M_(p.refund-p.refundGot)+(ar?' متأخر عن الموعد المتوقع ':' late vs expected ')+p.refundExp,'vat']);
+  if(!R2)return[];const ar=lang==='ar',today=new Date().toISOString().slice(0,10),out=[];
+  for(const x of vatQuarters()){
+    if(!x.sub&&x.claimable>0.5&&today>_addMonths(x.qe,1))out.push(['warn',(ar?'طلب استرداد ':'Refund claim for ')+qLabel(x.q)+(ar?' لم يُقدَّم بعد — ':' not submitted yet — ')+M_(x.claimable),'vat']);
+    if(x.late)out.push(['bad',(ar?'استرداد ':'Refund for ')+qLabel(x.q)+' — '+M_(x.outstanding)+(ar?' متأخر عن الموعد المتوقع ':' overdue vs expected ')+x.expected,'vat']);
+    if(x.out-x.recorded>0.5&&x.paidZ<x.out-x.recorded-1)out.push(['warn',qLabel(x.q)+(ar?': ضريبة مخرجات مستحقة الدفع ':': output VAT payable ')+M_(x.out-x.recorded-x.paidZ),'vat']);
   }
-  if(m.T.rettReceivable>0.5)out.push(['warn',(ar?'استرداد ضريبة التصرفات العقارية المتوقع ':'RETT refund receivable ')+M_(m.T.rettReceivable),'vat']);
+  const rej=invoices().filter(i=>i.zatca==='rejected');if(rej.length)out.push(['bad',rej.length+(ar?' فواتير رفضتها الهيئة — ':' invoices rejected by ZATCA — ')+M_(rej.reduce((s,i)=>s+(i.vat||0),0))+(ar?' تحتاج إجراء':' need action'),'vat']);
   return out;
 }
-// Engine hook: closed quarters take the actual VAT cash (received − paid to ZATCA, + RETT refunds received);
-// input VAT accrued in closed months but not yet received is placed at its expected month (never before the cutoff).
-// Costs in open quarters keep the plan mechanics (refund after vat_refund_months). Called from runReforecast.
+// Record a refund receipt against a quarter's claim (creates a 'vat_received' payment tagged with the quarter)
+function vatRecordReceipt(q){const x=vatQuarter(q),ar=lang==='ar';
+  docModal((ar?'تسجيل استلام الاسترداد ':'Record refund received ')+qLabel(q),`<div class="dm-grid">${dmF('amt',ar?'المبلغ المستلم':'Amount received',x.outstanding>0?x.outstanding.toFixed(2):'','number','step="0.01"')}${dmF('date',ar?'تاريخ الاستلام':'Date received',new Date().toISOString().slice(0,10),'date')}${dmF('ref',ar?'المرجع البنكي':'Bank reference','')}</div>`,async g=>{
+    const amt=+g('amt').value||0,date=g('date').value;if(!amt||!date)throw new Error(ar?'أدخل المبلغ والتاريخ':'Enter amount and date');
+    actuals.push({id:_actGenId(),date,quarter:dateToQuarterIdx(date,D.start_date),category:'vat_received',amount:amt,payee:'ZATCA',notes:(ar?'استرداد ضريبة ':'VAT refund ')+qLabel(q)+(x.sub&&x.sub.ref?' · '+x.sub.ref:''),invoiceRef:g('ref').value.trim(),submissionQ:q,include:true});opsRefresh();});}
+
+// Engine hook (called from runReforecast via _rfRebuildVATNet): closed quarters carry the actual VAT cash
+// (refunds received − paid to ZATCA, + RETT refunds received); each claim's outstanding balance is placed at its
+// expected month (never before the cutoff); open-quarter costs keep the plan mechanics. Brokerage/RETT plan refunds
+// are replaced by the actual RETT receivable.
 function _rfApplyActualVAT(cutoffQ){
-  if(cutoffQ<=0||!R2)return;const nq=R2.nq,m=vatModel(),lastQ=nq-1;
-  const hasAny=actuals.some(p=>p.include!==false&&(p.category==='vat_received'||p.category==='vat_paid'||p.category==='rett_received'||payVAT(p)>0));
-  if(!hasAny)return;
-  R2._vatStrict=true;
-  // remove plan refunds that originate from closed-quarter costs (they were placed at source+delay by the plan mechanics)
+  if(cutoffQ<=0||!R2)return;const nq=R2.nq,lastQ=nq-1;
+  const hasAny=actuals.some(p=>p.include!==false&&(p.category==='vat_received'||p.category==='vat_paid'||p.category==='rett_received'||typeof p.vat==='number'))||invoices().length>0;
+  if(!hasAny)return;R2._vatStrict=true;
   const delayQ=Math.floor((Number(R2.A.vat_refund_months)||0)/3),V=1+R2.A.vat_rate/100;
   const con=Array(nq).fill(0),exp=Array(nq).fill(0);
   if(Number(R2.A.vat_refund)){for(let s=cutoffQ;s<nq;s++){const t=Math.min(lastQ,s+delayQ);con[t]+=R2.qCon[s]-R2.qCon[s]/V;exp[t]+=(R2.qTotalFundExp[s]||0)-(R2.qTotalFundExp[s]||0)/V;}}
-  R2.qVATRefundCon=con;R2.qVATRefundExp=exp;
-  // brokerage and RETT are paid at closing (closed quarter): their plan refunds are replaced by the actual receivable below
-  R2.qBrokVATRefund=Array(nq).fill(0);R2.qRETTRefund=Array(nq).fill(0);
-  // actual cash in closed quarters
-  for(const p of m.list){const q=_mToQ(p.key);if(q>=cutoffQ)continue;R2.qVATRefundExp[q]+=p.recvZ-p.paidZ;R2.qRETTRefund[q]+=p.rettRecv;}
-  // outstanding refunds from closed months → expected month (clamped to cutoff…last)
-  let pool=m.T.recv;
-  for(const p of m.list){if(p.refund<=0)continue;const got=Math.min(pool,p.refund);pool-=got;const rest=p.refund-got;if(rest<=0.5)continue;
-    if(_mToQ(p.key)>=cutoffQ)continue;const t=Math.max(cutoffQ,Math.min(lastQ,p.refundExp?_mToQ(p.refundExp.slice(0,7)):cutoffQ));R2.qVATRefundCon[t]+=rest;}
-  if(m.T.rettReceivable>0.5){const t=Math.max(cutoffQ,Math.min(lastQ,delayQ));R2.qRETTRefund[t]+=m.T.rettReceivable;}
+  R2.qVATRefundCon=con;R2.qVATRefundExp=exp;R2.qBrokVATRefund=Array(nq).fill(0);R2.qRETTRefund=Array(nq).fill(0);
+  for(const p of actuals){if(p.include===false||p.quarter>=cutoffQ)continue;if(p.category==='vat_received')R2.qVATRefundExp[p.quarter]+=p.amount;else if(p.category==='vat_paid')R2.qVATRefundExp[p.quarter]-=p.amount;else if(p.category==='rett_received')R2.qRETTRefund[p.quarter]+=p.amount;}
+  R2._vatOutstanding=[];
+  for(const x of vatQuarters()){if(x.q>=cutoffQ)continue;const amt=x.sub?x.outstanding:x.claimable;if(amt<=0.5)continue;const t=Math.max(cutoffQ,Math.min(lastQ,dateToQuarterIdx(x.expected,D.start_date)));R2.qVATRefundCon[t]+=amt;R2._vatOutstanding.push({q:x.q,amt,t,expected:x.expected});}
+  const T=vatTotals().T;if(T.rettReceivable>0.5){const t=Math.max(cutoffQ,Math.min(lastQ,delayQ));R2.qRETTRefund[t]+=T.rettReceivable;}
   R2.qVATAdvisor=Array(nq).fill(0);R2.qVATNet=Array(nq).fill(0);
   for(let i=0;i<nq;i++){const tot=R2.qVATRefundCon[i]+R2.qVATRefundExp[i]+R2.qBrokVATRefund[i]+R2.qRETTRefund[i];R2.qVATAdvisor[i]=i<cutoffQ?0:Math.max(0,tot)*((Number(R2.A.vat_advisor_pct)||0)/100);R2.qVATNet[i]=tot-R2.qVATAdvisor[i];}
 }
-// invoice-level breakdown for a VAT cell: kind = inCon | inExp | out | recvZ ; period = 'YYYY-MM' or quarter index
+// invoice-level popup for a quarter / month figure
 function vatPop(kind,period){
-  const isQ=typeof period==='number',ar=lang==='ar';
-  const inPer=p=>isQ?_mToQ(_mkey(p))===period:_mkey(p)===period;
-  const sel=p=>{if(p.include===false||!inPer(p))return false;if(kind==='recvZ')return p.category==='vat_received';if(kind==='out')return p.category==='revenue'&&payVATOut(p)>0;if(p.category==='revenue'||p.category==='vat_received'||p.category==='vat_paid'||p.category==='rett_received'||FIN_KEYS.includes(p.category))return false;const v=payVAT(p);return v>0&&(kind==='inCon'?etypeOf(p.category)==='dev':etypeOf(p.category)!=='dev');};
-  const rows=actuals.filter(sel).sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>{const v=kind==='recvZ'?p.amount:kind==='out'?payVATOut(p):payVAT(p);return [`${escH(p.date||'')} · ${escH((p.payee||'').slice(0,34))}<small>${escH(_actCatLabel(p.category))}${p.invoiceRef?' · '+escH(p.invoiceRef):''} · ${ar?'الإجمالي':'gross'} ${fN(p.amount)}${typeof p.vat==='number'?'':' · '+(ar?'مقدّر':'estimated')}</small>`,v];});
+  const ar=lang==='ar',isQ=typeof period==='number';
+  const inQ=x=>isQ?x===period:false;
+  const rows=[];
+  if(kind==='inv'){invoices().filter(i=>i.date&&(isQ?dateToQuarterIdx(i.date,D.start_date)===period:i.date.slice(0,7)===period)).forEach(i=>rows.push([`${escH(i.date)} · ${escH((i.supplier||'').slice(0,34))}<small>#${escH(i.no||'')} · ${escH(_actCatLabel(i.category))} · ${ar?'الإجمالي':'gross'} ${fN(i.total)}${i.zatca?' · '+i.zatca:''}</small>`,i.vat||0]));}
+  else if(kind==='pay'||kind==='est'){actuals.filter(p=>p.include!==false&&!p.invoiceId&&!_VAT_SKIP.includes(p.category)&&!FIN_KEYS.includes(p.category)&&(isQ?p.quarter===period:_mkey(p)===period)&&(kind==='pay'?typeof p.vat==='number':typeof p.vat!=='number'&&payVATEst(p)>0)).sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(p=>rows.push([`${escH(p.date||'')} · ${escH((p.payee||'').slice(0,34))}<small>${escH(_actCatLabel(p.category))}${p.invoiceRef?' · '+escH(p.invoiceRef):''} · ${ar?'الإجمالي':'gross'} ${fN(p.amount)}${kind==='est'?' · '+(ar?'مقدّر 15/115':'estimated 15/115'):''}</small>`,kind==='pay'?payVAT(p):payVATEst(p)]));}
+  else if(kind==='recv'){actuals.filter(p=>p.include!==false&&p.category==='vat_received'&&(isQ?p.submissionQ===period:_mkey(p)===period)).forEach(p=>rows.push([`${escH(p.date||'')} · ${escH(p.notes||'')}<small>${escH(p.invoiceRef||'')}</small>`,p.amount]));}
   const tot=rows.reduce((s,r)=>s+r[1],0);rows.push([ar?'الإجمالي':'Total',tot,'tot']);
-  const title={inCon:ot('vInCon'),inExp:ot('vInExp'),out:ot('vOutput'),recvZ:ot('vRecv')}[kind]+' — '+(isQ?qLabel(period):_mLabel(period));
-  showPop(title,rows,ar?'الضريبة لكل فاتورة: القيمة المدخلة أو المقدّرة بنسبة الصندوق':'VAT per invoice: entered value or estimate at the fund rate');
+  const ttl={inv:ar?'ضريبة الفواتير المسجّلة':'VAT on recorded invoices',pay:ar?'ضريبة على دفعات (قيمة مُدخلة)':'VAT on payments (value entered)',est:ar?'ضريبة مقدّرة (غير مُدخلة — مستبعدة من الطلب)':'Estimated VAT (no value entered — excluded from the claim)',recv:ar?'استردادات مستلمة':'Refunds received'}[kind];
+  showPop(ttl+' — '+(isQ?qLabel(period):_mLabel(period)),rows,kind==='est'?(ar?'أدخل قيمة الضريبة على الدفعة (نافذة الدفعات) أو سجّل الفاتورة لتدخل في الطلب':'Enter the VAT value on the payment (payments drawer) or record the invoice so it counts in the claim'):'');
+}
+function svgQuadBars(groups){ // [{label,vals:[recorded,claimed,accepted,received]}]
+  const cols=['#9aa79f','#4a6c8c','#775a19','#00322d'],lab=[ot('vRecorded'),ot('vClaimed'),ot('vAccepted'),ot('vRecv')];
+  const W=640,H=220,M={l:52,r:14,t:16,b:30},n=groups.length||1,gw=(W-M.l-M.r)/n,bw=Math.min(18,gw/5.5);
+  const ymax=Math.max(1,...groups.flatMap(g=>g.vals))*1.08,y=v=>M.t+(H-M.t-M.b)*(1-v/ymax);let h='';
+  for(let k=0;k<=4;k++){const t=ymax/4*k;h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-6}" y="${y(t)+4}" text-anchor="end">${M_(t)}</text>`;}
+  groups.forEach((g,i)=>{const cx=M.l+i*gw+gw/2;g.vals.forEach((v,k)=>{const x=cx-2*bw+k*bw;h+=`<rect x="${x}" y="${y(v)}" width="${bw-2}" height="${Math.max(1,y(0)-y(v))}" rx="2" fill="${cols[k]}"/>`;});h+=`<text class="ops-ax" x="${cx}" y="${H-10}" text-anchor="middle">${escH(g.label)}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${h}</svg><div class="ops-legend">${lab.map((l,k)=>`<span><i style="background:${cols[k]}"></i>${l}</span>`).join('')}</div>`;
 }
 function opsVat(){
-  const m=vatModel(),T=m.T,ar=lang==='ar',cut=R2._cutoffQ,nq=R2.nq;
+  const ar=lang==='ar',{qs,T}=vatTotals(),cut=R2._cutoffQ,today=new Date().toISOString().slice(0,10);
   const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
-  const st={paid:['good',ot('vPaid')],overdue:['bad',ot('vOverdue')],due:['warn',ot('vDue')],received:['good',ot('vReceived')],late:['bad',ot('vLate')],claimed:['',ot('vClaimed')],unfiled:['warn',ot('vUnfiled')],open:['',ot('vOpen')],nil:['','—']};
-  let h=`<div class="baseline-bar" style="margin:0 0 14px"><span>${R2._vatStrict?ot('vStrict'):ot('vLenient')}</span></div>
-  <div class="ops-kpis">${kpi(ot('vInput'),M_(T.input),ot('vInputSub'))}${kpi(ot('vOutput'),M_(T.out),ot('vOutputSub'))}${kpi(ot('vRecv'),M_(T.recv),ot('vPaidZ')+' '+M_(T.paid))}${kpi(ot('vRecvbl'),M_(T.receivable),ot('vRecvblSub'),T.receivable>0?'dn':'')}${kpi(ot('vRett'),M_(T.rettReceivable),ot('vRettSub')+' '+M_(T.rettPaid))}</div>`;
-  h+=docSubmissionsCard();
-  // chart: cumulative input VAT vs received, plan refunds line
-  const cumIn=cumul(m.list.map(p=>p.input)),cumRc=cumul(m.list.map(p=>p.recvZ));
-  const W=640,H=200,M={l:52,r:14,t:14,b:26},n=m.list.length||1,x=i=>M.l+i*(W-M.l-M.r)/Math.max(1,n-1),ymax=Math.max(1,...cumIn,...cumRc)*1.05,y=v=>M.t+(H-M.t-M.b)*(1-v/ymax);
-  let g='';for(let k=0;k<=4;k++){const t=ymax/4*k;g+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-6}" y="${y(t)+4}" text-anchor="end">${M_(t)}</text>`;}
-  const ev=Math.ceil(n/10);m.list.forEach((p,i)=>{if(i%ev===0)g+=`<text class="ops-ax" x="${x(i)}" y="${H-8}" text-anchor="middle">${_mLabel(p.key)}</text>`;});
-  g+=`<polyline fill="none" stroke="#775a19" stroke-width="2.2" points="${cumIn.map((v,i)=>x(i)+','+y(v)).join(' ')}"/><polyline fill="none" stroke="#00322d" stroke-width="2.2" points="${cumRc.map((v,i)=>x(i)+','+y(v)).join(' ')}"/>`;
-  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ot('vChart')}<span>SAR</span></h3><svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${g}</svg><div class="ops-legend"><span><i style="background:#775a19"></i>${ot('vInput')}</span><span><i style="background:#00322d"></i>${ot('vRecv')}</span></div></div>
-  <div class="ops-card"><h3>${ot('vCal')}</h3><div class="ops-alerts">${(()=>{const al=vatAlerts();return al.length?al.map(a=>`<div class="ops-al"><span class="dot ${a[0]}"></span><div>${escH(a[1])}</div></div>`).join(''):`<p class="ops-muted">${ot('nothing')}</p>`;})()}</div>
-  <p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ot('vRule').replace('{m}',m.refundM)}</p></div></div>`;
-  // monthly table
-  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ot('vTable')}<span>${ot('vMonthly')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ot('vMonth')}</th><th>${ot('vInCon')}</th><th>${ot('vInExp')}</th><th>${ot('vOutput')}</th><th>${ot('vNet')}</th><th>${ot('vDueDate')}</th><th>${ot('vFiled')}</th><th>${ot('vRefundExp')}</th><th>${ot('vRecv')}</th><th>${ot('vStatus')}</th></tr></thead><tbody>
-  ${(()=>{const groups={};m.list.forEach(p=>{const q=_mToQ(p.key);(groups[q]=groups[q]||[]).push(p);});let out='';
-    for(const q of Object.keys(groups).map(Number).sort((a,b)=>a-b)){const ps=groups[q],open=opsCostF.open['vq:'+q]!==false,S=k=>sumA(ps.map(p=>p[k])),net=S('out')-S('input');
-      out+=`<tr class="cx-grp"><td><a class="cx-tg" onclick="opsCostF.open['vq:${q}']=${open?'false':'true'};renderOps()">${open?'▾':'▸'}</a>${qLabel(q)}<small class="ops-muted"> ${fmtDateS(qStartDate(q))} → ${fmtDateS(qEndDate(q))}${q<cut?'':' · '+ot('forecast')}</small></td><td class="rfcs-num cf-click" onclick="vatPop('inCon',${q})">${fN(S('inCon'))}</td><td class="rfcs-num cf-click" onclick="vatPop('inExp',${q})">${fN(S('inExp'))}</td><td class="rfcs-num cf-click" onclick="vatPop('out',${q})">${fN(S('out'))}</td><td class="rfcs-num ${net>0?'cx-var bad':''}"><span>${net>0?fN(net)+' '+ot('vPay'):net<0?fN(-net)+' '+ot('vClaim'):'—'}</span></td><td></td><td></td><td></td><td class="rfcs-num cf-click" onclick="vatPop('recvZ',${q})">${fN(S('recvZ'))}</td><td></td></tr>`;
-      if(open)out+=ps.map(p=>{const s=st[p.status]||['',p.status];return `<tr class="${_mToQ(p.key)<cut?'':'cx-sub'}"><td><span class="cx-ind" style="--lv:1"></span>${_mLabel(p.key)}</td><td class="rfcs-num cf-click" onclick="vatPop('inCon','${p.key}')">${fN(p.inCon)}</td><td class="rfcs-num cf-click" onclick="vatPop('inExp','${p.key}')">${fN(p.inExp)}</td><td class="rfcs-num cf-click" onclick="vatPop('out','${p.key}')">${fN(p.out)}</td><td class="rfcs-num ${p.net>0?'cx-var bad':''}"><span>${p.net>0?fN(p.net)+' '+ot('vPay'):p.net<0?fN(-p.net)+' '+ot('vClaim'):'—'}</span></td><td>${p.net!==0?p.due:''}</td><td>${p.net<0?`<input type="date" class="ops-mini" style="width:140px" value="${p.filed||''}" onchange="vatSetFiled('${p.key}',this.value)">`:(p.net>0?(p.paidZ?fN(p.paidZ):''):'')}</td><td>${p.refund>0?p.refundExp||'—':''}</td><td class="rfcs-num cf-click" onclick="vatPop('recvZ','${p.key}')">${p.refund>0?fN(p.refundGot):(p.recvZ?fN(p.recvZ):'')}</td><td><span class="ops-pill ${s[0]}">${s[1]}</span></td></tr>`;}).join('');}
-    return out;})()}
-  <tr class="tot"><td><b>${ot('gTotal')}</b></td><td class="rfcs-num"><b>${fN(sumA(m.list.map(p=>p.inCon)))}</b></td><td class="rfcs-num"><b>${fN(sumA(m.list.map(p=>p.inExp)))}</b></td><td class="rfcs-num"><b>${fN(T.out)}</b></td><td class="rfcs-num"><b>${fN(T.out-T.input)}</b></td><td colspan="3"></td><td class="rfcs-num"><b>${fN(T.recv)}</b></td><td></td></tr></tbody></table></div></div>`;
-  // per-payment VAT editor (closed + open), only rows carrying VAT or VAT-able
-  const rows=actuals.filter(p=>p.include!==false&&(VATABLE.includes(p.category)||p.category==='revenue'||typeof p.vat==='number')).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  h+=`<details class="cx-details"><summary>${ot('vEditor')} (${rows.length})</summary><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ot('vMonth')}</th><th>${ot('cxLine')}</th><th>${ot('cxVendor')}</th><th>${ot('vGross')}</th><th>${ot('vVat')}</th><th>${ot('vNetAmt')}</th></tr></thead><tbody>
-  ${rows.slice(0,300).map(p=>{const v=p.category==='revenue'?payVATOut(p):payVAT(p);return `<tr><td>${escH(p.date||'')} · ${_mLabel(_mkey(p))}</td><td>${escH(_actCatLabel(p.category))}</td><td>${escH((p.payee||'').slice(0,36))}</td><td class="rfcs-num">${fN(p.amount)}</td><td><input type="number" class="ops-mini" style="width:120px" value="${typeof p.vat==='number'?p.vat:''}" placeholder="${Math.round(v)}" onchange="setPayVAT('${p.id}',this.value)"></td><td class="rfcs-num">${fN(p.amount-v)}</td></tr>`;}).join('')}</tbody></table></div><p class="ops-muted" style="font-size:.76rem">${ot('vEditorNote')}</p></details>`;
+  const outs=(R2._vatOutstanding||[]);
+  const fcLine=outs.length?(ar?'التوقع يفترض استرداد ':'The forecast assumes refunds of ')+outs.map(o=>M_(o.amt)+' '+(ar?'في':'in')+' Q'+(o.t+1)).join(', ')+(ar?' (حسب تواريخ التقديم + ':' (submission date + ')+_refundMonths()+(ar?' أشهر)':' months)'):(ar?'لا استردادات معلّقة في التوقع':'No outstanding refunds in the forecast');
+  let h=`<div class="baseline-bar" style="margin:0 0 14px"><span>${ar?'دورة الاسترداد: تُسجَّل الفواتير خلال الربع ← يُقدَّم طلب استرداد واحد بنهاية الربع ← مراجعة الهيئة ← القبول ← الاستلام بعد ':'Refund cycle: invoices recorded through the quarter → one claim filed at quarter end → ZATCA review → acceptance → refund received after '}${_refundMonths()}${ar?' أشهر. ':' months. '}${fcLine}</span></div>
+  <div class="ops-kpis">${kpi(ot('vRecorded'),M_(T.recorded),(ar?'موثّق · مقدّر مستبعد ':'documented · excluded estimate ')+M_(T.est),'')}${kpi(ar?'لم يُطالَب به بعد':'Not yet claimed',M_(T.unclaimed),ar?'أرباع بلا طلب':'quarters without a claim',T.unclaimed>0.5?'dn':'')}${kpi(ot('vClaimed'),M_(T.submitted),(ar?'مرفوض ':'rejected ')+M_(T.rejected)+' · '+(ar?'مقبول ':'accepted ')+M_(T.accepted))}${kpi(ot('vRecv'),M_(T.received),ar?'من الهيئة':'from ZATCA')}${kpi(ar?'قيد الاسترداد':'Outstanding refunds',M_(T.outstanding),ar?'مقبول ولم يُستلم':'accepted, not yet received',T.outstanding>0.5?'dn':'')}${T.rettReceivable>0.5?kpi(ot('vRett'),M_(T.rettReceivable),ot('vRettSub')+' '+M_(T.rettPaid)):''}</div>`;
+  const al=vatAlerts();
+  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ar?'الضريبة حسب الربع':'VAT by quarter'}<span>SAR</span></h3>${svgQuadBars(qs.map(x=>({label:'Q'+(x.q+1),vals:[x.recorded,x.submitted,x.confirmed!=null?x.confirmed:x.accepted,x.received]})))}</div>
+  <div class="ops-card"><h3>${ar?'يحتاج إجراء':'Needs action'}<span>${al.length}</span></h3><div class="ops-alerts">${al.length?al.map(a=>`<div class="ops-al"><span class="dot ${a[0]}"></span><div>${escH(a[1])}</div></div>`).join(''):`<p class="ops-muted">${ot('nothing')}</p>`}</div><p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ar?'التنبيهات: طلب لم يُقدَّم بعد شهر من نهاية الربع، استرداد متأخر عن الموعد المتوقع، فواتير مرفوضة تحتاج إجراء، ضريبة مخرجات مستحقة. فترة الاسترداد المتوقعة تُضبط في دراسة الجدوى ← فترة الاسترداد الضريبي (اضبطها على 3 أشهر لهذا الصندوق).':'Alerts: claim not filed a month after quarter end, refund overdue vs expected, rejected invoices needing action, output VAT payable. The expected refund period is the fund assumption in Feasibility → VAT refund period (set it to 3 months for this fund).'}</p></div></div>`;
+  const st={recording:[ar?'قيد التسجيل':'recording',''],to_submit:[ar?'جاهز للتقديم':'ready to submit','warn'],submitted:[ar?'مُقدَّم — بانتظار المراجعة':'submitted — awaiting review',''],reviewed:[ar?'تمت المراجعة':'reviewed','warn'],accepted:[ar?'مقبول — بانتظار الاستلام':'accepted — awaiting refund',''],refunded:[ar?'مُستَرَد':'refunded','good'],rejected:[ar?'مرفوض':'rejected','bad']};
+  const btn=(l,fn)=>`<button class="ops-close" style="padding:4px 10px;font-size:.74rem" onclick="${fn}">${l}</button>`;
+  for(const x of [...qs].reverse()){const s=x.sub,open=opsCostF.open['vq:'+x.q]===true,files=s?['summary','review','notice'].filter(k=>s.files&&s.files[k]).map(k=>`<a class="ops-link" onclick="docOpen('${s.files[k]}')">${{summary:ar?'الملخص':'summary',review:ar?'المراجعة':'review',notice:ar?'الإشعار':'notice'}[k]}</a>`).join(' · '):'';
+    const step=(n,title,val,sub,cls,action)=>`<div class="vq-step ${x.step>n?'done':x.step===n?'cur':''} ${cls||''}"><i>${n}</i><small>${title}</small><b>${val}</b><span>${sub||''}</span>${action||''}</div>`;
+    h+=`<div class="ops-card vq" style="margin-bottom:12px"><div class="vq-head"><div><a class="cx-tg" onclick="cxToggle('vq:${x.q}')">${open?'▾':'▸'}</a><b>${qLabel(x.q)}</b> <small class="ops-muted">${fmtDateS(qStartDate(x.q))} → ${fmtDateS(qEndDate(x.q))}${x.q>=cut?' · '+ot('forecast'):''}${s&&s.ref?' · '+escH(s.ref):''}</small></div><div><span class="ops-pill ${st[x.status][1]}">${st[x.status][0]}</span> ${files}</div></div>
+      <div class="vq-steps">
+      ${step(1,ar?'مسجّل':'Recorded',M_(x.recorded),`<a onclick="vatPop('inv',${x.q})">${x.inv.length} ${ar?'فاتورة':'invoices'} ${M_(x.recInv)}</a> · <a onclick="vatPop('pay',${x.q})">${x.docPays.length} ${ar?'دفعات':'payments'} ${M_(x.recPay)}</a>${x.est>0.5?` · <a onclick="vatPop('est',${x.q})" class="ops-muted">${ar?'مقدّر مستبعد':'excluded est.'} ${M_(x.est)}</a>`:''}${x.out>0.5?` · ${ar?'مخرجات':'output'} ${M_(x.out)}`:''}`,'',x.q<cut||today>x.qe?'':'')}
+      ${step(2,ar?'طلب الاسترداد':'Claim submitted',s?M_(x.submitted):'—',s?(escH(s.date||'')+(Math.abs(x.submitted-x.claimable)>1?` · <span class="cx-var ${x.submitted<x.claimable?'warn':'bad'}"><span>${ar?'فرق عن المسجّل ':'vs recorded '}${(x.submitted-x.claimable>=0?'+':'−')+M_(Math.abs(x.submitted-x.claimable))}</span></span>`:'')):(ar?'ارفع ملخص الطلب المقدَّم للهيئة':'upload the summary sent to ZATCA'),'',btn(ar?'⬆ الملخص':'⬆ Summary',`docStep3(${x.q})`))}
+      ${step(3,ar?'مراجعة الهيئة':'ZATCA review',s&&s.review?M_(x.rejected)+' '+(ar?'مرفوض':'rejected'):'—',s&&s.review?(s.review.rows||[]).length+' '+(ar?'فواتير':'invoices')+(s.review.ref?' · '+escH(s.review.ref):''):'',x.rejected>0.5?'bad':'',s?btn(ar?'⬆ نتائج المراجعة':'⬆ Review results',`docStep4(${x.q})`):'')}
+      ${step(4,ar?'المقبول / المؤكَّد':'Accepted / confirmed',s?M_(x.confirmed!=null?x.confirmed:x.accepted):'—',s?((x.confirmed!=null?(ar?'مؤكَّد بإشعار ':'confirmed by notice ')+escH(s.acceptance.date||''):(ar?'محسوب: المقدَّم − المرفوض':'computed: submitted − rejected'))+(x.confirmed!=null&&Math.abs(x.confirmed-x.accepted)>0.5?` · <span class="cx-var warn"><span>${ar?'فرق ':'diff '}${M_(x.confirmed-x.accepted)}</span></span>`:'')):'','',s?btn(ar?'⬆ إشعار القبول':'⬆ Acceptance notice',`docStep5(${x.q})`):'')}
+      ${step(5,ar?'المستلم':'Refund received',M_(x.received),(x.outstanding>0.5?(ar?'متبقٍ ':'outstanding ')+M_(x.outstanding)+' · '+(ar?'متوقع ':'expected ')+x.expected:(x.due>0?(ar?'مكتمل':'complete'):''))+(x.received>0.5?` · <a onclick="vatPop('recv',${x.q})">${ar?'التفاصيل':'details'}</a>`:''),x.late?'bad':'',s?btn(ar?'＋ تسجيل استلام':'＋ Record receipt',`vatRecordReceipt(${x.q})`):'')}
+      </div>`;
+    if(open){
+      h+=`<div class="vq-detail">`;
+      if(x.missing.length||x.extra.length)h+=`<p class="ops-muted" style="font-size:.78rem">${x.missing.length?`<b>${ar?'فواتير مسجّلة غير موجودة في الملخص: ':'Recorded invoices missing from the summary: '}</b>${x.missing.map(i=>escH(i.no||'?')+' ('+fN(i.vat)+')').join(', ')}. `:''}${x.extra.length?`<b>${ar?'صفوف في الملخص بلا فاتورة مسجّلة: ':'Summary rows with no recorded invoice: '}</b>${x.extra.map(r=>escH(r.no||'?')+' · '+escH((r.supplier||'').slice(0,20))+' ('+fN(r.vat)+')').join(', ')}`:''}</p>`;
+      if(x.inv.length){h+=`<table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الفاتورة':'Invoice'}</th><th>${ar?'المورّد':'Supplier'}</th><th>${ar?'قبل الضريبة':'Base'}</th><th>${ar?'الضريبة':'VAT'}</th><th>${ar?'الدفع':'Payment'}</th><th>${ar?'حالة الهيئة':'ZATCA status'}</th></tr></thead><tbody>${x.inv.map(i=>`<tr class="${i.zatca==='rejected'?'cx-rej':''}"><td>#${escH(i.no||'—')}<small class="ops-muted">${escH(i.date)}</small></td><td>${escH((i.supplier||'').slice(0,30))}</td><td class="rfcs-num">${fN(i.base)}</td><td class="rfcs-num">${fN(i.vat)}</td><td>${i.status==='paid'?`<span class="ops-pill good">${ar?'مدفوعة':'paid'}</span>`:`<span class="ops-pill warn">${ar?'قائمة':'outstanding'}</span>`}</td><td>${i.zatca==='rejected'?`<span class="ops-pill bad">${ar?'مرفوضة':'rejected'}</span> <small class="ops-muted">${escH(i.zatcaReason||'')}</small>`:i.zatca==='accepted'?`<span class="ops-pill good">${ar?'مقبولة':'accepted'}</span>`:i.zatca==='submitted'?`<span class="ops-pill">${ar?'مُقدَّمة':'submitted'}</span>`:(s?`<span class="ops-muted">${ar?'ليست في الطلب':'not in claim'}</span>`:'')}</td></tr>`).join('')}</tbody></table>`;}
+      if(x.months.length)h+=`<details style="margin-top:10px"><summary class="ops-muted" style="cursor:pointer;font-size:.8rem">${ar?'التفصيل الشهري':'Monthly breakdown'}</summary><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الشهر':'Month'}</th><th>${ar?'فواتير':'Invoices'}</th><th>${ar?'دفعات':'Payments'}</th><th>${ar?'مقدّر (مستبعد)':'Estimated (excluded)'}</th><th>${ar?'مخرجات':'Output'}</th></tr></thead><tbody>${x.months.map(m=>`<tr><td>${_mLabel(m.key)}</td><td class="rfcs-num cf-click" onclick="vatPop('inv','${m.key}')">${fN(m.inv)}</td><td class="rfcs-num cf-click" onclick="vatPop('pay','${m.key}')">${fN(m.pay)}</td><td class="rfcs-num ops-muted cf-click" onclick="vatPop('est','${m.key}')">${fN(m.est)}</td><td class="rfcs-num">${fN(m.out)}</td></tr>`).join('')}</tbody></table></details>`;
+      h+=`</div>`;}
+    h+=`</div>`;}
   return h;
 }
-
 // ═══════════════════════════════════════════════
 // NAV — quarterly NAV statement (actual for closed quarters, forecast after), NAV per unit, plan vs actual.
 // Basis: cost (land + brokerage + RETT at cost, construction in progress at cost, cash, VAT/RETT receivable) − loan − provisions.
@@ -5506,7 +5522,7 @@ function navSet(f,v){const n=navSettings();n[f]=v===''?null:Number(v);renderOps(
 function navMark(q,f,v){const n=navSettings();n.marks[q]=n.marks[q]||{};if(v==='')delete n.marks[q][f];else n.marks[q][f]=Number(v);if(!Object.keys(n.marks[q]).length)delete n.marks[q];renderOps();}
 function navAccr(q,f,v){const n=navSettings();n.accr[q]=n.accr[q]||{};if(v==='')delete n.accr[q][f];else n.accr[q][f]=Number(v);renderOps();}
 function navModel(){
-  const cut=R2._cutoffQ,nq=R2.nq,n=navSettings(),vm=vatModel(),strict=!!R2._finStrict;
+  const cut=R2._cutoffQ,nq=R2.nq,n=navSettings(),vq=vatQuarters(),strict=!!R2._finStrict;
   const landCats=['land','brokerage','rett'],cipCats=['base_con','dev_fee','contingency','licensing','design','insurance','supervision','engineering'];
   const commit=(Number(R.A.equity)||0)+(Number(R.A.gp_commit_cash)||0);
   const rows=[];let cumLand=0,cumCip=0,cumEq=0,cumIK=0,cumVatIn=0,cumVatRc=0,cumRettPaid=0,cumRettRc=0;let mkL=null,mkC=null; // {v,base}: a valuer's mark carries forward, plus cost added after it
@@ -5516,7 +5532,7 @@ function navModel(){
     else{cumLand+=q===0?(R2.baseLand+R2.brokerageIncVAT+R2.rettAmount):0;cumCip+=R2.qCon[q]||0;}
     cumEq+=R2.qEquity[q]||0;cumIK+=R2.qIKTotal[q]||0;
     // VAT receivable: accrued input (closed: actual; open: plan VAT on costs) − received (plan qVATNet for open)
-    if(closed){for(const p of vm.list){if(_mToQ(p.key)===q){cumVatIn+=p.input-p.out;cumVatRc+=p.recvZ-p.paidZ;cumRettPaid+=p.rettPaid;cumRettRc+=p.rettRecv;}}}
+    if(closed){const x=vq.find(v=>v.q===q);if(x){cumVatIn+=x.recorded-x.out;}cumVatRc+=actuals.filter(p=>p.include!==false&&p.quarter===q&&p.category==='vat_received').reduce((s,p)=>s+p.amount,0)-actuals.filter(p=>p.include!==false&&p.quarter===q&&p.category==='vat_paid').reduce((s,p)=>s+p.amount,0);cumRettPaid+=actualOf('rett',q,q+1);cumRettRc+=actualOf('rett_received',q,q+1);}
     else{const V=1+R2.A.vat_rate/100;cumVatIn+=(R2.qCon[q]-R2.qCon[q]/V)+((R2.qTotalFundExp[q]||0)-(R2.qTotalFundExp[q]||0)/V);cumVatRc+=(R2.qVATNet[q]||0)-(R2.qRETTRefund[q]||0);cumRettRc+=R2.qRETTRefund[q]||0;}
     const mk=n.marks[q]||{},ac=n.accr[q]||{};
     if(mk.land!=null)mkL={v:mk.land,base:cumLand};if(mk.cip!=null)mkC={v:mk.cip,base:cumCip};
@@ -5728,8 +5744,6 @@ function docStep3(q){_pick('.pdf,.xlsx,.xlsm,.xls,.csv',async file=>{docBusy(tru
     let sub=submissions().find(s=>s.q===q);if(!sub){sub={id:'s'+_actGenId(),q,files:{}};submissions().push(sub);}
     sub.rows=rows;sub.summaryVat=tot('vat');sub.submitted=+g('sub').value||0;sub.date=g('date').value;sub.ref=g('ref').value.trim();sub.status='submitted';
     const st=await docStore(file,'sub'+q,sub.id);sub.files.summary=st.path;if(st.note)alert(st.note);
-    // mark the quarter's months as filed for the VAT calendar
-    const v=vatSettings();for(let k=qStartDate(q).toISOString().slice(0,7);k<=qEndDate(q).toISOString().slice(0,7);k=_mAdd(k,1)){v.claims[k]=v.claims[k]||{};v.claims[k].filed=sub.date;}
     rows.forEach(r=>{const i=r.invoiceId&&invoiceById(r.invoiceId);if(i){i.submission=sub.id;i.zatca='submitted';}});renderOps();});});}
 // ---- Step 4: ZATCA review (rejections) ----
 function docStep4(q){const sub=submissions().find(s=>s.q===q);if(!sub){alert(lang==='ar'?'ارفع ملخص التقديم (الخطوة 3) أولاً':'Upload the submission summary (Step 3) first');return;}
@@ -5753,22 +5767,9 @@ function docStep5(q){const sub=submissions().find(s=>s.q===q);if(!sub){alert(lan
       const st=await docStore(file,'acc'+q,sub.id);sub.files.notice=st.path;if(st.note)alert(st.note);
       (sub.rows||[]).forEach(s=>{const i=s.invoiceId&&invoiceById(s.invoiceId);if(i&&!s.rejected)i.zatca=sub.status==='accepted'?'accepted':'rejected';});renderOps();});});}
 
-// ---- reconciliation per quarter ----
-function vatRecon(q){
-  const inv=invoices().filter(i=>_qOfDate(i.date)===q),sub=submissions().find(s=>s.q===q)||null;
-  const recordedInv=inv.reduce((s,i)=>s+i.vat,0);
-  const otherPay=actuals.filter(p=>p.include!==false&&!p.invoiceId&&p.quarter===q&&!['revenue','vat_received','vat_paid','rett_received'].includes(p.category)&&!FIN_KEYS.includes(p.category)).reduce((s,p)=>s+payVAT(p),0);
-  const recorded=recordedInv+otherPay,inSummary=sub?(sub.summaryVat||0):0,submitted=sub?(sub.submitted||sub.summaryVat||0):0,rejected=sub?(sub.rejectedVat||0):0,accepted=sub?submitted-rejected:0,confirmed=sub&&sub.acceptance?sub.acceptance.accepted:null;
-  const received=actuals.filter(p=>p.include!==false&&p.category==='vat_received'&&(p.submissionQ===q||(p.notes||'').includes(sub&&sub.ref||'§'))).reduce((s,p)=>s+p.amount,0);
-  const missing=sub?inv.filter(i=>!(sub.rows||[]).some(r=>r.invoiceId===i.id)):[],extra=sub?(sub.rows||[]).filter(r=>!r.invoiceId):[];
-  return {q,inv,sub,recordedInv,otherPay,recorded,inSummary,submitted,rejected,accepted,confirmed,received,missing,extra,remaining:recorded-(confirmed!=null?confirmed:accepted)};
-}
 function docAlerts(){const out=[],ar=lang==='ar',today=new Date().toISOString().slice(0,10);
   const os=invoices().filter(i=>i.status==='outstanding');if(os.length)out.push(['warn',os.length+(ar?' فواتير قائمة غير مدفوعة — ':' outstanding invoices unpaid — ')+M_(os.reduce((s,i)=>s+i.total,0)),'costs']);
   const old=os.filter(i=>i.date&&(new Date(today)-new Date(i.date))/86400000>30);if(old.length)out.push(['bad',old.length+(ar?' فواتير قائمة منذ أكثر من 30 يوماً':' invoices outstanding for more than 30 days'),'costs']);
-  const rej=invoices().filter(i=>i.zatca==='rejected');if(rej.length)out.push(['bad',rej.length+(ar?' فواتير رفضت الهيئة استرداد ضريبتها — ':' invoices rejected by ZATCA — ')+M_(rej.reduce((s,i)=>s+i.vat,0))+(ar?' تحتاج إجراء':' need action'),'vat']);
-  if(R2){const cut=R2._cutoffQ;for(let q=0;q<cut;q++){const r=vatRecon(q);if(!r.sub&&r.recorded>0.5&&qEndDate(q).toISOString().slice(0,10)<today)out.push(['warn',(ar?'لم يُرفع ملخص طلب الاسترداد عن ':'No refund submission uploaded for ')+qLabel(q)+' — '+M_(r.recorded),'vat']);
-    if(r.sub&&Math.abs(r.recorded-r.inSummary)>1)out.push(['warn',qLabel(q)+(ar?': فرق بين الضريبة المسجّلة والملخص ':': recorded VAT differs from the summary by ')+M_(r.recorded-r.inSummary),'vat']);}}
   return out;}
 
 // ---- UI: invoices card (Costs) ----
@@ -5785,21 +5786,6 @@ function docInvoicesCard(){
       <td style="white-space:nowrap">${i.status==='outstanding'?`<button class="ops-close" style="padding:4px 10px;font-size:.76rem" onclick="docStep2('${i.id}')">${ar?'⬆ إيصال (الخطوة 2)':'⬆ Receipt (Step 2)'}</button> <a class="ops-link" onclick="docMarkPaid('${i.id}')">${ar?'دفع يدوي':'manual'}</a> <a class="ops-link" onclick="docInvoiceRemove('${i.id}')">✕</a>`:''}</td></tr>`).join('')}</tbody></table></div></div>`;
   return h;}
 // ---- UI: submissions & reconciliation card (VAT) ----
-function docSubmissionsCard(){
-  const ar=lang==='ar',cut=R2._cutoffQ,nq=R2.nq;let h=`<div class="ops-card" style="margin-bottom:16px"><h3>${ar?'طلبات الاسترداد ومطابقة الهيئة (الخطوات 3–5)':'ZATCA refund submissions & reconciliation (Steps 3–5)'}</h3>`;
-  const stl={submitted:[ar?'مُقدَّم':'submitted',''],reviewed:[ar?'تمت المراجعة':'reviewed','warn'],accepted:[ar?'مقبول':'accepted','good'],rejected:[ar?'مرفوض':'rejected','bad']};
-  h+=`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الربع':'Quarter'}</th><th>${ar?'المسجّل (فواتير + دفعات)':'Recorded (invoices + payments)'}</th><th>${ar?'في الملخص':'In summary'}</th><th>${ar?'المقدَّم للهيئة':'Submitted'}</th><th>${ar?'المرفوض':'Rejected'}</th><th>${ar?'المقبول':'Accepted'}</th><th>${ar?'المؤكَّد':'Confirmed'}</th><th>${ar?'المستلم':'Received'}</th><th>${ar?'المتبقي / فرق':'Remaining / diff'}</th><th>${ar?'الحالة':'Status'}</th><th>${ar?'المستندات':'Documents'}</th><th></th></tr></thead><tbody>`;
-  for(let q=0;q<Math.min(nq,Math.max(cut,1)+1);q++){const r=vatRecon(q),s=r.sub,open=!!opsCostF.open['sq:'+q];
-    const files=s?['summary','review','notice'].filter(k=>s.files&&s.files[k]).map(k=>`<a class="ops-link" onclick="docOpen('${s.files[k]}')">${{summary:ar?'ملخص':'summary',review:ar?'مراجعة':'review',notice:ar?'إشعار':'notice'}[k]}</a>`).join(' · '):'';
-    h+=`<tr class="cx-cat"><td><a class="cx-tg" onclick="cxToggle('sq:${q}')">${open?'▾':'▸'}</a>${qLabel(q)}<small class="ops-muted">${r.inv.length} ${ar?'فاتورة':'invoices'}${s&&s.ref?' · '+escH(s.ref):''}</small></td><td class="rfcs-num">${fN(r.recorded)}<small class="ops-muted">${ar?'فواتير':'inv'} ${fN(r.recordedInv)} · ${ar?'أخرى':'other'} ${fN(r.otherPay)}</small></td><td class="rfcs-num ${s&&Math.abs(r.recorded-r.inSummary)>1?'cx-var warn':''}"><span>${s?fN(r.inSummary):'—'}</span></td><td class="rfcs-num">${s?fN(r.submitted):'—'}</td><td class="rfcs-num ${r.rejected>0.5?'cx-var bad':''}"><span>${s?fN(r.rejected):'—'}</span></td><td class="rfcs-num">${s?fN(r.accepted):'—'}</td><td class="rfcs-num ${r.confirmed!=null&&Math.abs(r.confirmed-r.accepted)>0.5?'cx-var warn':''}"><span>${r.confirmed!=null?fN(r.confirmed):'—'}</span></td><td class="rfcs-num">${fN(r.received)}</td><td class="rfcs-num ${Math.abs(r.remaining)>0.5&&s?'cx-var bad':''}"><span>${s?fN(r.remaining):'—'}</span></td><td>${s?`<span class="ops-pill ${stl[s.status]?stl[s.status][1]:''}">${stl[s.status]?stl[s.status][0]:s.status}</span>`:`<span class="ops-muted">${ar?'لم يُرفع':'not uploaded'}</span>`}</td><td>${files}</td>
-      <td style="white-space:nowrap"><button class="ops-close" style="padding:4px 8px;font-size:.72rem" onclick="docStep3(${q})">3</button> <button class="ops-close" style="padding:4px 8px;font-size:.72rem" onclick="docStep4(${q})">4</button> <button class="ops-close" style="padding:4px 8px;font-size:.72rem" onclick="docStep5(${q})">5</button></td></tr>`;
-    if(open){
-      if(r.missing.length)h+=`<tr class="cx-pay"><td colspan="12"><b>${ar?'فواتير مسجّلة غير موجودة في الملخص:':'Recorded invoices missing from the summary:'}</b> ${r.missing.map(i=>escH(i.no||'?')+' ('+fN(i.vat)+')').join(', ')}</td></tr>`;
-      if(r.extra.length)h+=`<tr class="cx-pay"><td colspan="12"><b>${ar?'صفوف في الملخص بلا فاتورة مسجّلة:':'Summary rows with no recorded invoice:'}</b> ${r.extra.map(x=>escH(x.no||'?')+' · '+escH((x.supplier||'').slice(0,20))+' ('+fN(x.vat)+')').join(', ')}</td></tr>`;
-      if(s&&s.rows&&s.rows.length)h+=s.rows.map(x=>`<tr class="cx-pay ${x.rejected?'cx-rej':''}"><td><span class="cx-ind" style="--lv:1"></span>${escH(x.date)} · #${escH(x.no)}</td><td colspan="2">${escH((x.supplier||'').slice(0,40))}${x.invoiceId?' <small class="ops-muted">✓</small>':''}</td><td class="rfcs-num">${fN(x.base)}</td><td class="rfcs-num">${fN(x.vat)}</td><td colspan="7">${x.rejected?`<span class="ops-pill bad">${ar?'مرفوضة':'rejected'}</span> <span class="ops-muted">${escH(x.reason||'')}</span>`:''}</td></tr>`).join('');
-      if(!s)h+=`<tr class="cx-pay"><td colspan="12" class="ops-muted">${ar?'ارفع ملخص طلب الاسترداد المقدَّم للهيئة (PDF أو Excel) لهذا الربع.':'Upload the refund submission summary sent to ZATCA (PDF or Excel) for this quarter.'}</td></tr>`;}}
-  h+=`</tbody></table></div><p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ar?'المسجّل = ضريبة الفواتير المسجّلة في الربع + الضريبة على الدفعات الأخرى غير المرتبطة بفاتورة. المقبول = المقدَّم − المرفوض. المتبقي = المسجّل − المؤكَّد (أو المقبول). الاستردادات المستلمة تُسجّل كدفعة «ضريبة مستردة».':'Recorded = VAT on invoices dated in the quarter + VAT on other payments not linked to an invoice. Accepted = submitted − rejected. Remaining = recorded − confirmed (or accepted). Refunds received are logged as “VAT received” payments.'}</p></div>`;
-  return h;}
 function opsFinancing(){
   const cut=R2._cutoffQ,nq=R2.nq,b=R,loanAt=cut>0?R2.qLoanClose[cut-1]:0,planAt=cut>0?(R.qLoanClose[cut-1]||0):0,drawn=sumA(R2.drawdowns.slice(0,cut)),intTo=sumA(R2.qInterest.slice(0,cut)),intPlan=sumA(R.qInterest.slice(0,cut));
   const ltc=R2.totalCost?sumA(R2.drawdowns)/R2.totalCost:0,peak=R2.peakDebt,peakQ=R2.qLoanClose.indexOf(peak)+1;
