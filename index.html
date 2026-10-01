@@ -154,6 +154,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .vq-step.done{border-color:#c9d9d3;background:#f2f7f4}.vq-step.done i{background:#00322d;color:#fff}.vq-step.cur{border-color:#775a19;background:#fff}.vq-step.cur i{background:#775a19;color:#fff}.vq-step.bad{border-color:#e8b4b4;background:#fdf5f5}
 .vq-step small{display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--on-surface-vl);font-weight:700}.vq-step b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums;margin:2px 0}.vq-step span{display:block;font-size:.74rem;color:#40514a;min-height:1.1em}.vq-step span a{cursor:pointer;text-decoration:underline dotted}.vq-step button{margin-top:8px}
 .vq-detail{margin-top:12px;border-top:1px solid #eef1ef;padding-top:10px}
+.au-check{border-left:4px solid #d9e0dc}.au-check.good{border-color:var(--success)}.au-check.warn{border-color:#c9a227}.au-check.bad{border-color:var(--error)}.au-check b{margin:4px 0}
 .cx-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.cx-filters .ops-mini{width:auto;min-width:120px}.cx-filters .cx-q{min-width:220px}
 .cx-seg{display:inline-flex;background:#e8eeec;border-radius:999px;padding:3px}.cx-seg a{padding:4px 11px;border-radius:999px;font-size:.76rem;font-weight:700;cursor:pointer;color:#40514a}.cx-seg a.on{background:#00322d;color:#fff}
 .cx-wrap{overflow:auto}.cx-tbl td,.cx-tbl th{white-space:nowrap;padding:7px 9px;vertical-align:middle}.cx-tbl th,.cx-tbl td:first-child{text-align:start!important;unicode-bidi:plaintext}
@@ -792,6 +793,7 @@ canvas{max-width:100%;display:block}
   <div class="pnl" id="p-actuals"></div>
   <div class="pnl" id="p-forecast"></div>
   <div class="pnl" id="p-ops"></div>
+  <div class="pnl" id="p-audit"></div>
   <div id="reforecastPanel" style="display:none"></div>
 </main>
 <div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span>💳</span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
@@ -1732,12 +1734,12 @@ function compLabel(comp){
 // =============================================
 // i18n
 // =============================================
-const tabIcons=['⚙','📅','📊','💰','🏦','🔬','📋','✅','🎯','🏛'];
+const tabIcons=['⚙','📅','📊','💰','🏦','🔬','📋','✅','🎯','🏛','🧾'];
 const TX={
   en:{title:'Real Estate Fund Financial Study',sub:'Professional Fund Modeling Platform',calc:'Calculate',dl:'Excel',langB:'العربية',
     projLbl:'Project:',projSave:'💾 Save',projSaveShared:'💾 Save to My Projects',projSaveSharedPrompt:'Save this shared project to your account as:',projSavedShared:'Project "%name%" saved to your account!',projOverwrite:'A project named "%name%" already exists. Overwrite?',projNew:'+ New',projDel:'🗑 Delete',projShare:'🔗 Share',pdf:'PDF',
     shareTitle:'Share Projects',shareDesc:'Select one or more projects to share via a unique link. Recipients can view the financial model.',shareProjHead:'Select Projects',shareToggle:'Allow recipient to modify assumptions',shareGenLink:'Generate Link',shareCopyLink:'Copy Link',shareClose:'Close',shareNoProj:'No saved projects to share. Save a project first.',shareCopied:'Link copied!',shareShortening:'Shortening link...',shareViewBadge:'SHARED VIEW',shareViewMsg:'You are viewing shared projects',shareViewMsgRO:' (read-only assumptions)',shareExit:'Exit Shared View',
-    tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast','Control room'],
+    tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast','Control room','Audit'],
     ws:{feasibility:'Feasibility',operations:'Operations'},
     roles:['Fund Manager','Developer','Financer'],
     roleKeys:['fund_manager','developer','financer'],
@@ -1823,7 +1825,7 @@ const TX={
   ar:{title:'الدراسة المالية للصندوق العقاري',sub:'منصة النمذجة المالية للصناديق',calc:'احسب',dl:'إكسل',langB:'English',
     projLbl:'المشروع:',projSave:'💾 حفظ',projSaveShared:'💾 حفظ في مشاريعي',projSaveSharedPrompt:'حفظ المشروع المشارك في حسابك باسم:',projSavedShared:'تم حفظ المشروع "%name%" في حسابك!',projOverwrite:'يوجد مشروع باسم "%name%" بالفعل. هل تريد استبداله؟',projNew:'+ جديد',projDel:'🗑 حذف',projShare:'🔗 مشاركة',pdf:'PDF',
     shareTitle:'مشاركة المشاريع',shareDesc:'اختر مشروعًا أو أكثر لمشاركته عبر رابط فريد. يمكن للمستلمين عرض النموذج المالي.',shareProjHead:'اختر المشاريع',shareToggle:'السماح للمستلم بتعديل الافتراضات',shareGenLink:'إنشاء رابط',shareCopyLink:'نسخ الرابط',shareClose:'إغلاق',shareNoProj:'لا توجد مشاريع محفوظة للمشاركة. احفظ مشروعًا أولًا.',shareCopied:'تم نسخ الرابط!',shareShortening:'جارٍ اختصار الرابط...',shareViewBadge:'عرض مشترك',shareViewMsg:'أنت تشاهد مشاريع مشتركة',shareViewMsgRO:' (الافتراضات للقراءة فقط)',shareExit:'خروج من العرض المشترك',
-    tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع','غرفة التحكم'],
+    tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع','غرفة التحكم','التدقيق'],
     ws:{feasibility:'دراسة الجدوى',operations:'التشغيل والمتابعة'},
     roles:['مدير الصندوق','المطور','الممول'],
     roleKeys:['fund_manager','developer','financer'],
@@ -1911,9 +1913,9 @@ const TX={
 // =============================================
 // TAB NAVIGATION
 // =============================================
-const tabKeys=['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','actuals','forecast','ops'];
+const tabKeys=['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','actuals','forecast','ops','audit'];
 // Workspaces: Feasibility (new deal) vs Operations (a launched fund: actuals, reforecast, distributions). One engine, one project — different screens.
-const WORKSPACES={feasibility:['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary'],operations:['ops','cashflow','debt','summary','forecast','actuals']};
+const WORKSPACES={feasibility:['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary'],operations:['ops','audit','cashflow','debt','summary','forecast','actuals']};
 const OPS_HIDDEN_TABS=['forecast','actuals']; // reachable from the control room, not shown in the tab bar
 let workspace='feasibility';
 const RESULT_TABS=['dashboard','cashflow','debt','sensitivity','summary'];
@@ -1946,6 +1948,7 @@ function showTab(k){
   if(k==='actuals') buildActualsTab();
   if(k==='forecast') renderForecastTab();
   if(k==='ops') renderOps();
+  if(k==='audit') renderAudit();
   if(workspace==='operations'&&(k==='cashflow'||k==='debt'||k==='summary')&&R){ensureForecast();if(k==='cashflow')renderCashFlow();if(k==='debt')renderDebt();if(k==='summary')renderSummary();}
 }
 
@@ -3868,6 +3871,9 @@ const ACT_CATS=[
   {key:'vat_paid',    en:'VAT Paid',            ar:'ضريبة مدفوعة',       group:'cost',    actualOnly:true, getQ:(R,i)=>0},
   {key:'vat_received',en:'VAT Received',        ar:'ضريبة مستردة',       group:'revenue', actualOnly:true, getQ:(R,i)=>0},
   {key:'rett_received',en:'RETT Refund Received',ar:'استرداد ضريبة التصرفات',group:'revenue', actualOnly:true, getQ:()=>0},
+  // Treasury — cash moved into / back from murabaha, wakala or money-market funds (fund cash either way; not a cost, not income — the profit is 'murabaha')
+  {key:'inv_out',     en:'Investment placed (MMF / wakala)', ar:'توظيف استثمار (صناديق / وكالة)', group:'treasury', actualOnly:true, getQ:()=>0},
+  {key:'inv_in',      en:'Investment returned',            ar:'استرداد استثمار',               group:'treasury', actualOnly:true, getQ:()=>0},
   // Financing — entered like costs; closed quarters use these instead of the plan once any financing row exists (strict mode)
   {key:'equity_in',   en:'Equity Injection (cash)',   ar:'ضخ رأس مال (نقدي)',    group:'financing', fin:true, getQ:(R,i)=>(R.qEquity||[])[i]||0},
   {key:'equity_ik',   en:'In-Kind Contribution',      ar:'مساهمة عينية',          group:'financing', fin:true, nonCash:true, getQ:(R,i)=>(R.qIKTotal||[])[i]||0},
@@ -5786,6 +5792,264 @@ function docInvoicesCard(){
       <td style="white-space:nowrap">${i.status==='outstanding'?`<button class="ops-close" style="padding:4px 10px;font-size:.76rem" onclick="docStep2('${i.id}')">${ar?'⬆ إيصال (الخطوة 2)':'⬆ Receipt (Step 2)'}</button> <a class="ops-link" onclick="docMarkPaid('${i.id}')">${ar?'دفع يدوي':'manual'}</a> <a class="ops-link" onclick="docInvoiceRemove('${i.id}')">✕</a>`:''}</td></tr>`).join('')}</tbody></table></div></div>`;
   return h;}
 // ---- UI: submissions & reconciliation card (VAT) ----
+// ═══════════════════════════════════════════════
+// AUDIT — the fund manager's independent check of the operations team.
+// Sources: bank statements (Al Rajhi corporate PDF or any xlsx/csv), the operations expense register (their Excel as-is),
+// the treasury sheet (MMF / wakala). No invoice numbers, no document reading.
+// Ledger lines are explained in layers (reference → amount ± fee tolerance → two-to-one sums → returned payments →
+// transfers between fund accounts → your classification). The headline per account per quarter is "unexplained".
+// Checks: cash, VAT, loan profit, treasury, NAV vs the operations team's figure.
+// ═══════════════════════════════════════════════
+function bank(){_rfNorm();const b=reforecastSettings.bank=reforecastSettings.bank||{};b.accounts=b.accounts||[];b.cls=b.cls||{};b.links=b.links||{};if(b.tol==null)b.tol=30;b.opsNav=b.opsNav||{};return b;}
+function bankAcct(id){return bank().accounts.find(a=>a.id===id)||null;}
+function _lineKey(l){return l.date+'|'+(l.debit||0).toFixed(2)+'|'+(l.credit||0).toFixed(2)+'|'+(l.ref||'')+'|'+String(l.desc||'').slice(0,30);}
+function _hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return (h>>>0).toString(36);}
+
+// ---- Al Rajhi corporate statement (text PDF): running balance · credit · debit · description · YYMMDD · hijri ----
+async function parseRajhiStatement(file){
+  await libPdf();const buf=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  const rows=[];let iban='',holder='',period='';
+  for(let n=1;n<=pdf.numPages;n++){const pg=await pdf.getPage(n);const tc=await pg.getTextContent();
+    const its=tc.items.filter(i=>i.str&&i.str.trim()).map(i=>({x:i.transform[4],y:Math.round(i.transform[5]),s:i.str.trim()}));
+    const ys={};its.forEach(i=>{const k=Math.round(i.y/2)*2;(ys[k]=ys[k]||[]).push(i);});
+    const lines=Object.keys(ys).map(Number).sort((a,b)=>b-a).map(y=>ys[y].sort((a,b)=>a.x-b.x));
+    for(const ln of lines){const txt=ln.map(t=>t.s).join(' ');
+      if(!iban){const m=txt.match(/SA\d{2}(?:\s?\d{4}){5}/);if(m)iban=m[0].replace(/\s/g,'');}
+      if(!period){const m=txt.match(/(\d{4}\/\d{2}\/\d{2})\s*-\s*(\d{4}\/\d{2}\/\d{2})/);if(m)period=m[1].replace(/\//g,'-')+' → '+m[2].replace(/\//g,'-');}
+      if(!holder&&n===1&&/FUND|CO\b|COMPANY|LLC/i.test(txt)&&!/DEAR CUST|BOX/i.test(txt))holder=txt.slice(0,60);
+      rows.push({y:ln[0].y,page:n,toks:ln,txt});}
+  }
+  // walk rows: a transaction starts on a row with ≥1 amount and a YYMMDD date token
+  const amt=/^\d{1,3}(?:,\d{3})*\.\d{2}$|^\d+\.\d{2}$/,dtk=/^2\d{5}$/;
+  const lines=[];let cur=null,opening=null,prevBal=null,closing=null,totals=null;
+  const skip=/GRAND TOTALS|Currency|Saudi Riyal|Opening Balance|Closing Balance|Total of|Transfer in|Transfer out|Deposit Others|Withdrawals Other|Total Withdrawals|Total of Deposit|Total of Payments/i;
+  for(const r of rows){
+    const toks=r.toks,amts=toks.filter(t=>amt.test(t.s)),dts=toks.filter(t=>dtk.test(t.s));
+    if(/BEGINNING BALANCE/i.test(r.txt)){const a=amts[0];opening=a?_dnum(a.s):0;prevBal=opening;cur=null;continue;}
+    if(/Closing Balance/i.test(r.txt)){const a=amts[0];if(a)closing=_dnum(a.s);cur=null;continue;}
+    if(/Total of Deposit/i.test(r.txt)&&amts.length){totals=totals||{};totals.credits=_dnum(amts[0].s);cur=null;continue;}
+    if(/Total Withdrawals/i.test(r.txt)&&amts.length){totals=totals||{};totals.debits=_dnum(amts[0].s);cur=null;continue;}
+    if(skip.test(r.txt)){cur=null;continue;}
+    if(amts.length>=1&&dts.length>=1&&prevBal!==null){
+      const bal=_dnum(amts[0].s);const others=amts.slice(1).map(a=>_dnum(a.s));
+      let credit=0,debit=0;const delta=+(bal-prevBal).toFixed(2);
+      if(others.length===1){if(Math.abs(others[0]-delta)<0.011)credit=others[0];else if(Math.abs(others[0]+delta)<0.011)debit=others[0];else{if(delta>0)credit=others[0];else debit=others[0];}}
+      else if(others.length>=2){credit=others[0];debit=others[1];}
+      const date=dts[0].s;const iso=`20${date.slice(0,2)}-${date.slice(2,4)}-${date.slice(4,6)}`;
+      const descToks=toks.filter(t=>!amt.test(t.s)&&!dtk.test(t.s)&&!/^\d{8}$/.test(t.s));
+      cur={date:iso,desc:descToks.map(t=>t.s).join(' '),ref:(toks.find(t=>/^\d{8}$/.test(t.s))||{}).s||'',credit,debit,balance:bal};
+      lines.push(cur);prevBal=bal;continue;}
+    if(cur&&amts.length===0&&dts.length===0&&r.txt.length<120){cur.desc=(cur.desc+' '+r.txt).replace(/\s+/g,' ').trim();}
+  }
+  // enrich: pull the counterparty reference / IBAN out of the description
+  for(const l of lines){const m=l.desc.match(/\b(\d{13})\b/);if(m)l.txn=m[1];const ib=l.desc.replace(/\s/g,'').match(/SA\d{22}/);if(ib)l.cpIban=ib[0];l.id='l'+_hash(_lineKey(l));}
+  const sumC=sumA(lines.map(l=>l.credit)),sumD=sumA(lines.map(l=>l.debit));
+  const ok=closing!=null&&Math.abs((opening||0)+sumC-sumD-closing)<0.02;
+  return {iban,holder,period,opening:opening||0,closing,lines,sumC,sumD,ok,totals};
+}
+// ---- generic xlsx/csv statement: Date, Description, Debit, Credit, Balance, Reference (any order, header names matched) ----
+async function parseXlsxStatement(file){
+  await libXlsx();const wb=XLSX.read(new Uint8Array(await file.arrayBuffer()),{type:'array',cellDates:true});const js=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,cellDates:true});
+  let hi=js.findIndex(r=>r&&r.some(c=>/date|التاريخ/i.test(String(c)))&&r.some(c=>/debit|credit|amount|مدين|دائن|المبلغ/i.test(String(c))));if(hi<0)throw new Error('No header row with Date and Debit/Credit found');
+  const hdr=js[hi].map(c=>String(c||'').toLowerCase());const col=re=>hdr.findIndex(h=>re.test(h));
+  const cD=col(/date|التاريخ/),cDs=col(/desc|narr|details|البيان|الوصف/),cDb=col(/debit|withdraw|مدين|خصم/),cCr=col(/credit|deposit|دائن|إيداع/),cB=col(/balance|الرصيد/),cR=col(/ref|reference|المرجع/),cA=col(/^amount$|المبلغ/);
+  const lines=[];for(const r of js.slice(hi+1)){if(!r||r.every(c=>c==null||c===''))continue;const d=r[cD]instanceof Date?r[cD].toISOString().slice(0,10):_isoDate(String(r[cD]||''));if(!d)continue;
+    let debit=cDb>=0?_dnum(r[cDb]):0,credit=cCr>=0?_dnum(r[cCr]):0;if(cDb<0&&cCr<0&&cA>=0){const a=_dnum(r[cA]);if(a<0)debit=-a;else credit=a;}
+    const l={date:d,desc:String(r[cDs]||''),ref:String(r[cR]||''),debit,credit,balance:cB>=0?_dnum(r[cB]):null};l.id='l'+_hash(_lineKey(l));lines.push(l);}
+  const opening=lines.length&&lines[0].balance!=null?lines[0].balance-lines[0].credit+lines[0].debit:0,closing=lines.length&&lines[lines.length-1].balance!=null?lines[lines.length-1].balance:null;
+  return {iban:'',holder:file.name,period:'',opening,closing,lines,sumC:sumA(lines.map(l=>l.credit)),sumD:sumA(lines.map(l=>l.debit)),ok:closing!=null,totals:null};
+}
+async function auditImportStatement(){_pick('.pdf,.xlsx,.xls,.csv',async file=>{docBusy(true,lang==='ar'?'جارٍ قراءة كشف الحساب…':'Reading the statement…');let st;try{st=/\.pdf$/i.test(file.name)?await parseRajhiStatement(file):await parseXlsxStatement(file);}catch(e){docBusy(false);alert((lang==='ar'?'تعذّرت قراءة الكشف: ':'Could not read the statement: ')+(e.message||e));return;}docBusy(false);
+  const ar=lang==='ar',b=bank();let acct=b.accounts.find(a=>st.iban&&a.iban===st.iban);
+  const roles=[['operating',ar?'حساب التشغيل (لدى المدير لصالح الصندوق)':'Operating (manager, on behalf of the fund)'],['fund',ar?'حساب الصندوق / رأس المال':'Fund company / capital'],['facility',ar?'حساب التسهيل البنكي':'Facility / drawdown'],['escrow',ar?'حساب ضمان المبيعات':'Sales escrow']];
+  const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)} · ${st.lines.length} ${ar?'حركة':'lines'} · ${st.period||''}${st.ok?' · ✓ '+(ar?'الرصيد الختامي يطابق':'closing balance reconciles'):' · <span class="cx-var bad"><span>'+(ar?'الرصيد لا يطابق — راجع':'balance does not reconcile — review')+'</span></span>'}</p>
+    <div class="dm-grid">${dmF('iban','IBAN',st.iban||(acct?acct.iban:''))}${dmF('name',ar?'اسم الحساب':'Account name',acct?acct.name:(st.holder||''))}<label class="dm-f">${ar?'الدور':'Role'}<select id="dm_role">${roles.map(([v,l])=>`<option value="${v}"${(acct?acct.role:'operating')===v?' selected':''}>${l}</option>`).join('')}</select></label>${dmF('open',ar?'الرصيد الافتتاحي':'Opening balance',st.opening,'number','step="0.01"')}</div>
+    <table class="rfcs-tbl cx-tbl" style="margin-top:8px"><tbody><tr><td>${ar?'إيداعات':'Credits'}</td><td class="rfcs-num">${fN(st.sumC)}</td><td>${ar?'سحوبات':'Debits'}</td><td class="rfcs-num">${fN(st.sumD)}</td><td>${ar?'الرصيد الختامي':'Closing'}</td><td class="rfcs-num">${st.closing!=null?fN(st.closing):'—'}</td></tr></tbody></table>
+    <div class="cx-wrap" style="max-height:34vh;margin-top:8px"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'دائن':'Credit'}</th><th>${ar?'مدين':'Debit'}</th><th>${ar?'الرصيد':'Balance'}</th></tr></thead><tbody>${st.lines.map(l=>`<tr><td>${l.date}</td><td>${escH(l.desc.slice(0,70))}</td><td class="rfcs-num">${l.credit?fN(l.credit):''}</td><td class="rfcs-num">${l.debit?fN(l.debit):''}</td><td class="rfcs-num">${l.balance!=null?fN(l.balance):''}</td></tr>`).join('')}</tbody></table></div>`;
+  docModal(ar?'استيراد كشف حساب بنكي':'Import bank statement',body,async g=>{
+    const iban=g('iban').value.trim();if(!acct)acct=b.accounts.find(a=>a.iban===iban);
+    if(!acct){acct={id:'a'+_actGenId(),iban,name:g('name').value.trim()||iban,role:g('role').value,lines:[],opening:+g('open').value||0};b.accounts.push(acct);}else{acct.name=g('name').value.trim()||acct.name;acct.role=g('role').value;}
+    const have=new Set(acct.lines.map(l=>l.id));let added=0;for(const l of st.lines){if(!have.has(l.id)){acct.lines.push(l);added++;}}
+    acct.lines.sort((a,b)=>a.date.localeCompare(b.date)); // stable: same-day lines keep statement orderacct.lastImport=new Date().toISOString().slice(0,10);acct.period=st.period;acct.closing=st.closing;
+    const st2=await docStore(file,'stmt',acct.id+'_'+_hash(file.name));acct.files=acct.files||[];if(st2.path)acct.files.push({path:st2.path,name:file.name,period:st.period});
+    alert((ar?'تمت إضافة ':'Added ')+added+(ar?' حركة (المكررة تم تجاهلها)':' lines (duplicates skipped)'));showTab('audit');});});}
+function bankSetRole(id,role){const a=bankAcct(id);if(a){a.role=role;renderAudit();}}
+function bankRemove(id){if(!confirm(lang==='ar'?'حذف الحساب وكل حركاته؟':'Remove this account and all its lines?'))return;const b=bank();b.accounts=b.accounts.filter(a=>a.id!==id);renderAudit();}
+
+// ---- operations expense register (their Excel): Date · Beneficiary · Details · Amount · VAT · Total · one-hot category columns ----
+const REG_CATS=[[/management fee/i,'mgmt_fee'],[/audit fee/i,'auditor'],[/structure fee/i,'fund_setup'],[/arranging fee/i,'arr_fee'],[/shari/i,'sharia'],[/bod fee|board/i,'board'],[/custody/i,'custody'],[/other expense/i,'other_exp'],[/land acquisition/i,'land'],[/development\s*&\s*construction|construction/i,'base_con'],[/developer fee/i,'dev_fee'],[/engineering|design|supervision/i,'design'],[/government/i,'licensing'],[/marketing/i,'marketing'],[/reserve|insurance/i,'insurance'],[/administration fee/i,'bank_mgmt'],[/financing cost|profit|interest/i,'interest'],[/princip/i,'debt_repay']];
+async function parseRegister(file){
+  await libXlsx();const wb=XLSX.read(new Uint8Array(await file.arrayBuffer()),{type:'array',cellDates:true});
+  const out={expenses:[],treasury:[],facility:null,sheets:wb.SheetNames};
+  for(const name of wb.SheetNames){const js=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,cellDates:true});
+    const hi=js.findIndex(r=>r&&r.some(c=>/^date/i.test(String(c||'').trim()))&&r.some(c=>/beneficiary|payee|المستفيد/i.test(String(c||''))));
+    if(hi>=0){ // expense register
+      const hdr=js[hi].map(c=>String(c||'').trim());const col=re=>hdr.findIndex(h=>re.test(h));const cD=col(/^date/i),cB=col(/beneficiary|payee/i),cDs=col(/details|description/i),cA=col(/^amount\s*$/i),cV=col(/^vat/i),cT=col(/total amount|^total/i),cCat=col(/^category/i);
+      const catCols=hdr.map((h,i)=>{const m=REG_CATS.find(([re])=>re.test(h));return m&&![cA,cV,cT].includes(i)?[i,m[1]]:null;}).filter(Boolean);
+      for(const r of js.slice(hi+1)){if(!r||!(r[cD]instanceof Date))continue;const d=r[cD].toISOString().slice(0,10);const net=_dnum(r[cA]),vat=cV>=0?_dnum(r[cV]):0,tot=cT>=0?_dnum(r[cT]):net+vat;if(!tot)continue;
+        let cat='';if(cCat>=0&&r[cCat]){const k=String(r[cCat]).trim().toLowerCase();cat=(ACT_CATS.find(c=>c.key===k||c.en.toLowerCase()===k)||{}).key||'';}
+        if(!cat){for(const [i,k] of catCols){if(_dnum(r[i])>0){cat=k;break;}}}
+        const details=String(r[cDs]||'').trim(),payee=String(r[cB]||'').trim();
+        if(cat==='land'&&/commission|brokerage|سعي/i.test(details))cat='brokerage';
+        if(cat==='design'&&/supervis/i.test(details))cat='supervision';else if(cat==='design'&&/geotech|consult|study/i.test(details))cat='engineering';
+        if(!cat)cat=(IMPORT_RULES.find(x=>x.keywords.some(k=>(details+' '+payee).toLowerCase().includes(k.toLowerCase())))||{}).cat||'other_exp';
+        const base={date:d,payee,description:details,src:'register'};
+        if(cat==='land'&&vat>0&&Math.abs(vat/net-0.05)<0.002){ // RETT booked in the VAT column → its own row
+          out.expenses.push({...base,category:'land',amount:net,net,vat:0});out.expenses.push({...base,category:'rett',amount:vat,net:vat,vat:0,description:(details+' — RETT').trim()});}
+        else out.expenses.push({...base,category:cat,amount:tot,net,vat});}
+      continue;}
+    // treasury sheet: MMF rows (Investment, Date, Subscription Units, NAV, Investment cost, Redemption …) and Wakala rows (Deal Value, Start, End, …)
+    const txt=js.map(r=>(r||[]).map(c=>String(c||'')).join('|')).join('\n');
+    if(/Investment cost|Wakala|Deal Value|Murabaha/i.test(txt)){
+      let mode='';for(const r of js){if(!r)continue;const s=r.map(c=>String(c||'')).join('|');
+        if(/Subscription Units/i.test(s)){mode='mmf';continue;}if(/Deal Value/i.test(s)){mode='wak';continue;}
+        if(mode==='mmf'&&r[2]instanceof Date&&_dnum(r[5])>0){const cost=_dnum(r[5]);out.treasury.push({kind:'mmf',date:r[2].toISOString().slice(0,10),out:cost,label:String(r[1]||'MMF')});
+          if(r[10]instanceof Date&&_dnum(r[9])!==0){const red=Math.abs(_dnum(r[9])),gain=_dnum(r[12]);out.treasury.push({kind:'mmf',date:r[10].toISOString().slice(0,10),in:red,profit:gain,label:String(r[1]||'MMF')+' redemption'});}}
+        if(mode==='wak'&&r[2]instanceof Date&&_dnum(r[1])>0){const v=_dnum(r[1]),end=r[3]instanceof Date?r[3].toISOString().slice(0,10):'',profit=_dnum(r[6]),status=String(r[7]||'');
+          const key=`${r[2].toISOString().slice(0,10)}|${end}|${v.toFixed(2)}`;if(out.treasury.some(t=>t.key===key))continue; // the sheet repeats each deal row
+          out.treasury.push({kind:'wakala',key,date:r[2].toISOString().slice(0,10),out:v,label:'Wakala'});if(end&&/matur/i.test(status))out.treasury.push({kind:'wakala',key:key+'|in',date:end,in:v+profit,profit,label:'Wakala maturity'});}}
+      continue;}
+    if(/Facility/i.test(txt)&&/Utilized/i.test(txt)){for(let i=0;i<js.length;i++){const r=js[i]||[];const s=r.map(c=>String(c||'')).join('|');if(/^\|?Facility/i.test(s)||/\|Facility\|/.test(s)){const n=js[i+1]||[];const f=_dnum(n[1]),u=_dnum(n[3]);if(f>0)out.facility={facility:f,utilized:u};}}}
+  }
+  return out;
+}
+async function auditImportRegister(){_pick('.xlsx,.xlsm,.xls',async file=>{docBusy(true);let x;try{x=await parseRegister(file);}catch(e){docBusy(false);alert((lang==='ar'?'تعذّرت قراءة الملف: ':'Could not read the file: ')+(e.message||e));return;}docBusy(false);
+  const ar=lang==='ar';const keyOf=p=>p.date+'|'+(p.payee||'').trim().toLowerCase()+'|'+Number(p.amount).toFixed(2)+'|'+p.category;
+  const have=new Set(actuals.filter(p=>p.src==='register').map(keyOf));const newE=x.expenses.filter(e=>!have.has(keyOf(e)));
+  const haveT=new Set(actuals.filter(p=>p.src==='treasury').map(p=>p.tkey));const tr=[];for(const t of x.treasury){if(t.out){tr.push({tkey:'o|'+t.date+'|'+t.out.toFixed(2),date:t.date,category:'inv_out',amount:t.out,payee:t.label,notes:t.label});}if(t.in){tr.push({tkey:'i|'+t.date+'|'+t.in.toFixed(2),date:t.date,category:'inv_in',amount:t.in,payee:t.label,notes:t.label});if(t.profit)tr.push({tkey:'p|'+t.date+'|'+t.profit.toFixed(2),date:t.date,category:'murabaha',amount:t.profit,payee:t.label,notes:(ar?'ربح ':'profit ')+t.label});}}
+  const newT=tr.filter(t=>!haveT.has(t.tkey));
+  const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)} · ${x.sheets.join(', ')}</p>
+    <table class="rfcs-tbl cx-tbl"><tbody><tr><td>${ar?'مصروفات في الملف':'Expense rows in file'}</td><td class="rfcs-num">${x.expenses.length}</td><td>${ar?'جديدة':'new'}</td><td class="rfcs-num"><b>${newE.length}</b></td><td class="rfcs-num">${fN(sumA(newE.map(e=>e.amount)))}</td></tr><tr><td>${ar?'حركات استثمار (صناديق / وكالة)':'Treasury movements (MMF / wakala)'}</td><td class="rfcs-num">${tr.length}</td><td>${ar?'جديدة':'new'}</td><td class="rfcs-num"><b>${newT.length}</b></td><td class="rfcs-num">${fN(sumA(newT.filter(t=>t.category==='murabaha').map(t=>t.amount)))} ${ar?'ربح':'profit'}</td></tr>${x.facility?`<tr><td>${ar?'التسهيل':'Facility'}</td><td class="rfcs-num" colspan="2">${fN(x.facility.facility)}</td><td>${ar?'المستخدم':'utilised'}</td><td class="rfcs-num">${fN(x.facility.utilized)}</td></tr>`:''}</tbody></table>
+    <div class="cx-wrap" style="max-height:34vh;margin-top:8px"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'المستفيد':'Payee'}</th><th>${ar?'البند':'Category'}</th><th>${ar?'قبل الضريبة':'Net'}</th><th>${ar?'الضريبة':'VAT'}</th><th>${ar?'الإجمالي':'Total'}</th></tr></thead><tbody>${newE.map((e,i)=>`<tr><td>${e.date}</td><td>${escH(e.payee.slice(0,28))}<small class="ops-muted">${escH(e.description.slice(0,40))}</small></td><td><select id="dm_c${i}" class="ops-mini">${ACT_CATS.filter(c=>(c.group==='cost'&&(!c.fundOnly||Number(D.is_fund)))||['rett','interest','debt_repay','other_exp'].includes(c.key)).filter((c,i2,a)=>a.findIndex(x=>x.key===c.key)===i2).map(c=>`<option value="${c.key}"${c.key===e.category?' selected':''}>${escH(ar?c.ar:c.en)}</option>`).join('')}</select></td><td class="rfcs-num">${fN(e.net)}</td><td class="rfcs-num">${fN(e.vat)}</td><td class="rfcs-num">${fN(e.amount)}</td></tr>`).join('')}</tbody></table></div>`;
+  docModal(ar?'استيراد سجل مصروفات فريق العمليات':'Import the operations expense register',body,async g=>{
+    newE.forEach((e,i)=>{const c=g('c'+i);if(c)e.category=c.value;actuals.push({id:_actGenId(),date:e.date,quarter:dateToQuarterIdx(e.date,D.start_date),category:e.category,amount:e.amount,net:e.net,vat:e.category==='rett'||e.category==='land'||e.category==='interest'?undefined:e.vat,payee:e.payee,notes:e.description,src:'register',include:true});});
+    newT.forEach(t=>actuals.push({id:_actGenId(),date:t.date,quarter:dateToQuarterIdx(t.date,D.start_date),category:t.category,amount:t.amount,payee:t.payee,notes:t.notes,src:'treasury',tkey:t.tkey,include:true}));
+    if(x.facility)bank().facility=x.facility;
+    opsRefresh();showTab('audit');});});}
+
+// ---- explanation engine ----
+// movements = every recorded cash event (payments, financing, treasury, VAT receipts); ledger lines get explained by them
+function auditMovements(){return actuals.filter(p=>p.include!==false&&!['equity_ik'].includes(p.category)).map(p=>{const inflow=['revenue','murabaha','other_inc','vat_received','rett_received','equity_in','debt_draw','inv_in'].includes(p.category);return {id:p.id,date:p.date||'',amount:Number(p.amount)||0,inflow,label:(p.payee||'')+(p.notes?' · '+String(p.notes).slice(0,40):''),cat:p.category,p};});}
+function auditExplain(){
+  const b=bank(),tol=Number(b.tol)||0,mv=auditMovements(),used=new Set(),res={};const dd=(a,c)=>Math.abs((new Date(a)-new Date(c))/86400000);
+  const all=[];b.accounts.forEach(a=>a.lines.forEach(l=>all.push({a,l})));
+  const cls=b.cls,links=b.links;
+  // 0. explicit links / classifications
+  for(const {a,l} of all){const k=links[l.id];if(k){const m=mv.find(x=>x.id===k);if(m){res[l.id]={how:'manual',m,diff:+( (l.debit||l.credit)-m.amount).toFixed(2)};used.add(m.id);continue;}}if(cls[l.id]){res[l.id]={how:'class',type:cls[l.id].type,note:cls[l.id].note||''};}}
+  // 1. returned payments: debit then equal credit within 10 days (REJ / returned)
+  for(const a of b.accounts){for(const l of a.lines){if(res[l.id]||!l.debit)continue;const back=a.lines.find(x=>!res[x.id]&&x.credit&&Math.abs(x.credit-l.debit)<0.011&&x.date>=l.date&&dd(x.date,l.date)<=10&&/REJ|RETURN|مرتجع/i.test(x.desc+' '+l.desc)||(!res[x.id]&&x.credit&&Math.abs(x.credit-l.debit)<0.011&&x.date>l.date&&dd(x.date,l.date)<=10&&x.desc.replace(/\s/g,'').includes((l.txn||'§'))));if(back){res[l.id]={how:'returned',pair:back.id};res[back.id]={how:'returned',pair:l.id};}}}
+  // 2. transfers between the fund's own accounts: equal debit / credit within 2 days
+  for(const {a,l} of all){if(res[l.id]||!l.debit)continue;for(const {a:a2,l:l2} of all){if(a2===a||res[l2.id]||!l2.credit)continue;if(Math.abs(l2.credit-l.debit)<0.011&&dd(l.date,l2.date)<=2){res[l.id]={how:'transfer',to:a2.id,pair:l2.id};res[l2.id]={how:'transfer',from:a.id,pair:l.id};break;}}}
+  // 3. by bank reference / counterparty txn id present in a movement
+  for(const {l} of all){if(res[l.id])continue;const m=mv.find(x=>!used.has(x.id)&&x.p.txn&&(l.desc.includes(x.p.txn)||l.txn===x.p.txn));if(m){res[l.id]={how:'ref',m,diff:+((l.debit||l.credit)-m.amount).toFixed(2)};used.add(m.id);}}
+  // 4. amount ± tolerance within ±10 days, same direction
+  for(const {l} of all){if(res[l.id])continue;const amt=l.debit||l.credit,inflow=!!l.credit;let best=null;for(const m of mv){if(used.has(m.id)||m.inflow!==inflow)continue;const d=Math.abs(amt-m.amount);if(d<=tol+0.011&&dd(l.date,m.date)<=10){const s=d*10+dd(l.date,m.date);if(!best||s<best.s)best={m,s,d};}}if(best){res[l.id]={how:best.d<0.011?'amount':'fee',m:best.m,diff:+(amt-best.m.amount).toFixed(2)};used.add(best.m.id);}}
+  // 5. one ledger line = two movements (same direction, within 10 days), or two ledger lines = one movement (same day)
+  for(const {l} of all){if(res[l.id])continue;const amt=l.debit||l.credit,inflow=!!l.credit;const cand=mv.filter(m=>!used.has(m.id)&&m.inflow===inflow&&dd(l.date,m.date)<=10&&m.amount<amt+tol);let hit=null;
+    for(let i=0;i<cand.length&&!hit;i++)for(let j=i+1;j<cand.length;j++){const d=amt-cand[i].amount-cand[j].amount;if(Math.abs(d)<=tol+0.011){hit=[cand[i],cand[j],d];break;}}
+    if(hit){res[l.id]={how:'sum',ms:[hit[0],hit[1]],diff:+hit[2].toFixed(2)};used.add(hit[0].id);used.add(hit[1].id);}}
+  for(const a of b.accounts){const open=a.lines.filter(l=>!res[l.id]);for(let i=0;i<open.length;i++){const l=open[i];if(res[l.id])continue;for(let j=i+1;j<open.length;j++){const l2=open[j];if(res[l2.id]||l2.date!==l.date||(!!l2.credit)!==(!!l.credit))continue;const amt=(l.debit||l.credit)+(l2.debit||l2.credit),inflow=!!l.credit;const m=mv.find(x=>!used.has(x.id)&&x.inflow===inflow&&Math.abs(x.amount-amt)<=tol+0.011&&dd(l.date,x.date)<=10);if(m){res[l.id]={how:'split',m,part:1,diff:+(amt-m.amount).toFixed(2)};res[l2.id]={how:'split',m,part:2,diff:0};used.add(m.id);break;}}}}
+  // 6. obvious bank charges: small debits with fee words
+  for(const {l} of all){if(res[l.id])continue;if(l.debit&&l.debit<=Math.max(tol,100)&&/fee|charge|رسوم|عمولة/i.test(l.desc))res[l.id]={how:'charge'};}
+  const unmatchedMv=mv.filter(m=>!used.has(m.id));
+  return {res,mv,used,unmatchedMv};
+}
+function auditLineRole(a,l,e){ // which model flow a ledger line represents, for the aggregate view
+  if(!e)return 'unexplained';if(e.how==='returned')return 'returned';if(e.how==='transfer')return 'transfer';if(e.how==='charge')return 'charge';if(e.how==='class')return e.type;
+  const m=e.m||(e.ms&&e.ms[0]);return m?m.cat:'unexplained';}
+const AUDIT_FLOW_TYPES=['equity_in','debt_draw','debt_repay','interest','vat_received','rett_received','revenue','murabaha','inv_out','inv_in','other_exp','land','brokerage','rett','base_con','dev_fee','design','supervision','engineering','licensing','marketing','insurance','contingency','fund_setup','mgmt_fee','custody','spv','auditor','sharia','board','fin_advisor','arr_fee','bank_mgmt'];
+function _auditLine(lineId){for(const a of bank().accounts){const l=a.lines.find(x=>x.id===lineId);if(l)return {a,l};}return null;}
+// Classifying a line as a real flow records it in the log (so the model, VAT and financing see it) and links the two; charge / transfer / ignore are bank-side only.
+function auditSetClass(lineId,type){const b=bank();const prev=actuals.findIndex(p=>p.fromLine===lineId);if(prev>=0)actuals.splice(prev,1);delete b.cls[lineId];delete b.links[lineId];
+  if(type&&AUDIT_FLOW_TYPES.includes(type)){const f=_auditLine(lineId);if(f){const {l}=f;const amt=l.credit||l.debit;const p={id:_actGenId(),date:l.date,quarter:dateToQuarterIdx(l.date,D.start_date),category:type,amount:amt,payee:String(l.desc||'').replace(/\s+/g,' ').slice(0,60),notes:(lang==='ar'?'من كشف الحساب ':'from bank statement ')+(f.a.name||''),txn:l.txn||'',fromLine:lineId,src:'bank',include:true};actuals.push(p);b.links[lineId]=p.id;}}
+  else if(type)b.cls[lineId]={type};
+  if(type&&AUDIT_FLOW_TYPES.includes(type))opsRefresh();renderAudit();}
+function auditLink(lineId,mvId){const b=bank();const prev=actuals.findIndex(p=>p.fromLine===lineId);if(prev>=0&&mvId!==actuals[prev].id){actuals.splice(prev,1);}if(mvId){b.links[lineId]=mvId;delete b.cls[lineId];}else delete b.links[lineId];renderAudit();}
+function auditGuess(a,l){const ar=lang==='ar',d=(l.desc||'').toLowerCase();
+  if(l.credit&&/zatca|الزكاة|gazt/.test(d))return ['vat_received',ar?'استرداد ضريبة':'VAT refund'];
+  if(l.credit&&a.role==='fund'&&/musharaka capital|capital co|subscription|اكتتاب/.test(d))return ['equity_in',ar?'ضخ رأس مال':'equity injection'];
+  if(l.credit&&/rajhi|facility|loan|تمويل|تسهيل/.test(d)&&l.credit>1e6)return ['debt_draw',ar?'سحب تمويل':'drawdown'];
+  if(l.debit&&/jabal omar|جبل عمر|land|أرض|ارض/.test(d))return ['land',ar?'تكلفة: الأرض':'cost: land'];
+  if(l.debit&&l.debit<=100&&/fee|charge|رسوم/.test(d))return ['charge',ar?'رسوم بنكية':'bank charge'];
+  if(l.debit&&/transfer to customer|تحويل/.test(d)&&l.debit>1e6)return ['transfer',ar?'تحويل داخلي':'internal transfer'];
+  return null;}
+function auditSetTol(v){bank().tol=Number(v)||0;renderAudit();}
+function auditSetOpsNav(q,v){const b=bank();if(v==='')delete b.opsNav[q];else b.opsNav[q]=Number(v);renderAudit();}
+
+// ---- per account per quarter aggregate ----
+function auditCoverage(){const ds=[];bank().accounts.forEach(a=>a.lines.forEach(l=>ds.push(l.date)));if(!ds.length)return null;ds.sort();return [ds[0],ds[ds.length-1]];}
+function auditQuarterRows(ex){
+  const b=bank(),nq=R?R.nq:8,rows=[];
+  for(const a of b.accounts){let bal=a.opening||0;const first=a.lines.length?dateToQuarterIdx(a.lines[0].date,D.start_date):0;
+    for(let q=0;q<nq;q++){const ls=a.lines.filter(l=>dateToQuarterIdx(l.date,D.start_date)===q);if(!ls.length&&q<first)continue;
+      const r={acct:a,q,open:bal,inflow:0,outflow:0,inEx:0,outEx:0,unIn:0,unOut:0,charges:0,transfers:0,returned:0,n:ls.length};
+      for(const l of ls){const e=ex.res[l.id];const role=auditLineRole(a,l,e);if(l.credit){r.inflow+=l.credit;if(role==='unexplained')r.unIn+=l.credit;else if(role==='returned')r.returned+=l.credit;else if(role==='transfer')r.transfers+=l.credit;else r.inEx+=l.credit;}if(l.debit){r.outflow+=l.debit;if(role==='unexplained')r.unOut+=l.debit;else if(role==='charge')r.charges+=l.debit;else if(role==='returned')r.returned-=l.debit;else if(role==='transfer')r.transfers-=l.debit;else r.outEx+=l.debit;}}
+      bal=bal+r.inflow-r.outflow;r.close=ls.length?(ls[ls.length-1].balance!=null?ls[ls.length-1].balance:bal):bal;bal=r.close;r.hasLines=ls.length>0;rows.push(r);
+      if(a.lines.length&&q>dateToQuarterIdx(a.lines[a.lines.length-1].date,D.start_date))break;}}
+  return rows;
+}
+// ---- checks ----
+function auditChecks(ex){
+  const ar=lang==='ar',b=bank(),cut=R2?R2._cutoffQ:0,out=[],qrows=auditQuarterRows(ex);
+  // cash: bank closings + investments outstanding vs platform cash, per closed quarter
+  const invOut=q=>actuals.filter(p=>p.include!==false&&p.quarter<=q&&(p.category==='inv_out'||p.category==='inv_in')).reduce((s,p)=>s+(p.category==='inv_out'?p.amount:-p.amount),0);
+  const cashRows=[];for(let q=0;q<cut;q++){const rs=qrows.filter(r=>r.q===q);if(!rs.length)continue;const bankClose=sumA(rs.map(r=>r.close)),inv=invOut(q),model=R2.qCashClose[q]||0;cashRows.push({q,bankClose,inv,total:bankClose+inv,model,diff:bankClose+inv-model,accts:rs.length});}
+  const lastCash=cashRows[cashRows.length-1];
+  out.push({key:'cash',title:ar?'النقد':'Cash',state:!cashRows.length?'na':Math.abs(lastCash.diff)<1?'ok':Math.abs(lastCash.diff)<Math.max(1e4,Math.abs(lastCash.model)*0.005)?'warn':'bad',
+    headline:lastCash?(ar?'البنك + الاستثمارات ':'bank + investments ')+M_(lastCash.total)+(ar?' مقابل المنصة ':' vs platform ')+M_(lastCash.model)+' · '+(ar?'فرق ':'diff ')+M_(lastCash.diff)+' (Q'+(lastCash.q+1)+')':(ar?'لا كشوف حساب للأرباع المقفلة':'no statements for the closed quarters'),rows:cashRows});
+  // unexplained ledger lines
+  const un=qrows.reduce((s,r)=>s+r.unIn+r.unOut,0),unN=b.accounts.reduce((s,a)=>s+a.lines.filter(l=>!ex.res[l.id]).length,0);
+  out.push({key:'ledger',title:ar?'حركات البنك':'Ledger lines',state:unN===0?'ok':un<1e4?'warn':'bad',headline:unN?unN+(ar?' حركة غير مفسّرة — ':' unexplained lines — ')+M_(un):(ar?'كل الحركات مفسّرة':'every line is explained')});
+  // register rows with no bank line
+  const cov=auditCoverage();const miss=ex.unmatchedMv.filter(m=>(m.p.src==='register'||m.p.src==='treasury')&&cov&&m.date>=cov[0]&&m.date<=cov[1]);
+  out.push({key:'register',title:ar?'سجل المصروفات':'Expense register',state:miss.length===0?'ok':'warn',headline:miss.length?miss.length+(ar?' صفوف في السجل بلا حركة بنكية — ':' register rows with no bank line — ')+M_(sumA(miss.map(m=>m.amount))):(ar?'كل صفوف السجل موجودة في البنك':'every register row is in the bank')});
+  // VAT: documented VAT vs claims vs ZATCA credits in the ledger
+  const zat=[];b.accounts.forEach(a=>a.lines.forEach(l=>{if(l.credit&&/ZATCA|الزكاة|GAZT|TAX/i.test(l.desc))zat.push(l);}));const zatSum=sumA(zat.map(l=>l.credit));
+  const T=vatTotals().T;out.push({key:'vat',title:ar?'الضريبة':'VAT',state:T.received>0&&Math.abs(T.received-zatSum)>1?'warn':'ok',headline:(ar?'موثّق ':'documented ')+M_(T.recorded)+' · '+(ar?'مُطالَب ':'claimed ')+M_(T.submitted)+' · '+(ar?'مستلم (السجل) ':'received (log) ')+M_(T.received)+' · '+(ar?'إيداعات الهيئة في البنك ':'ZATCA credits in bank ')+M_(zatSum)});
+  // loan profit: interest payments in the log vs model interest to date
+  const paid=actualOf('interest',0,cut),model=sumA((R2?R2.qInterest:[]).slice(0,cut));out.push({key:'loan',title:ar?'أرباح التمويل':'Loan profit',state:cut?(Math.abs(paid-model)<Math.max(1e4,model*0.02)?'ok':'warn'):'na',headline:(ar?'مدفوع ':'paid ')+M_(paid)+(ar?' مقابل المحتسب ':' vs computed ')+M_(model)+(b.facility?' · '+(ar?'التسهيل ':'facility ')+M_(b.facility.facility)+' · '+(ar?'مستخدم ':'utilised ')+M_(b.facility.utilized):'')});
+  // treasury: profit in sheet vs inv_in credits found in bank
+  const prof=actuals.filter(p=>p.include!==false&&p.src==='treasury'&&p.category==='murabaha').reduce((s,p)=>s+p.amount,0),placed=actuals.filter(p=>p.include!==false&&p.category==='inv_out').reduce((s,p)=>s+p.amount,0),ret=actuals.filter(p=>p.include!==false&&p.category==='inv_in').reduce((s,p)=>s+p.amount,0);
+  out.push({key:'treasury',title:ar?'الاستثمارات (مرابحة / صناديق)':'Treasury (murabaha / MMF)',state:placed?'ok':'na',headline:(ar?'موظّف ':'placed ')+M_(placed)+' · '+(ar?'مستردّ ':'returned ')+M_(ret)+' · '+(ar?'ربح ':'profit ')+M_(prof)+' · '+(ar?'قائم ':'outstanding ')+M_(placed-ret+0)});
+  // NAV vs operations team
+  const nm=R2?navModel():null,navRows=[];if(nm){for(let q=0;q<cut;q++){const r=nm.rows[q];const ops=b.opsNav[q];navRows.push({q,platform:r.nav,navU:r.navU,ops:ops==null?null:ops,diff:ops==null?null:r.nav-ops});}}
+  const lastNav=navRows.filter(r=>r.ops!=null).pop();
+  out.push({key:'nav',title:ar?'صافي الأصول مقابل فريق العمليات':'NAV vs operations team',state:!lastNav?'na':Math.abs(lastNav.diff)<Math.max(1e4,Math.abs(lastNav.ops)*0.005)?'ok':'warn',headline:lastNav?(ar?'المنصة ':'platform ')+M_(lastNav.platform)+(ar?' مقابل العمليات ':' vs operations ')+M_(lastNav.ops)+' · '+(ar?'فرق ':'diff ')+M_(lastNav.diff)+' (Q'+(lastNav.q+1)+')':(ar?'أدخل صافي الأصول من تقرير فريق العمليات لكل ربع':'enter the operations team’s NAV per quarter below'),rows:navRows});
+  return out;
+}
+// ---- page ----
+let auditF={open:{},show:'unexplained'};
+function renderAudit(){
+  const pnl=document.getElementById('p-audit');if(!pnl)return;const ar=lang==='ar';
+  if(!R){pnl.innerHTML=`<div class="sec"><p>${ot('calcFirst')}</p></div>`;return;}ensureForecast();
+  const b=bank(),ex=auditExplain(),checks=auditChecks(ex),qrows=auditQuarterRows(ex),cut=R2._cutoffQ;
+  const stc={ok:'good',warn:'warn',bad:'bad',na:''},stl={ok:ar?'مطابق':'reconciled',warn:ar?'فروقات':'differences',bad:ar?'غير مطابق':'not reconciled',na:ar?'لا بيانات':'no data'};
+  let h=`<div class="sec"><div class="vq-head"><div><h2 style="margin:0;font-family:'Noto Serif',serif;color:#00322d">${ar?'التدقيق — فحص مستقل لأرقام فريق العمليات':'Audit — independent check of the operations team'}</h2><p class="ops-muted" style="margin:4px 0 0;font-size:.82rem">${ar?'المصادر: كشوف الحساب البنكية (الحقيقة للنقد)، سجل المصروفات، ورقة الاستثمارات. تُفسَّر حركات البنك طبقة بعد طبقة، وما يتبقى يظهر هنا.':'Sources: bank statements (the truth for cash), the expense register, the treasury sheet. Ledger lines are explained in layers; whatever is left shows up here.'}</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ops-close" onclick="auditImportStatement()">⬆ ${ar?'كشف حساب':'Bank statement'}</button><button class="ops-close" onclick="auditImportRegister()">⬆ ${ar?'سجل المصروفات (Excel)':'Expense register (Excel)'}</button></div></div>`;
+  // sources
+  h+=`<div class="ops-card" style="margin:14px 0"><h3>${ar?'المصادر':'Sources'}<span>${ar?'سماحية الفروق الصغيرة (رسوم بنكية)':'small-difference tolerance (bank fees)'} <input type="number" class="ops-mini" style="width:70px" value="${b.tol}" onchange="auditSetTol(this.value)"> SAR</span></h3>
+    ${b.accounts.length?`<table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الحساب':'Account'}</th><th>IBAN</th><th>${ar?'الدور':'Role'}</th><th>${ar?'الفترة':'Period'}</th><th>${ar?'حركات':'Lines'}</th><th>${ar?'الرصيد الختامي':'Closing'}</th><th>${ar?'آخر استيراد':'Last import'}</th><th></th></tr></thead><tbody>${b.accounts.map(a=>`<tr><td><b>${escH(a.name)}</b></td><td><small>${escH(a.iban)}</small></td><td><select class="ops-mini" onchange="bankSetRole('${a.id}',this.value)">${[['operating',ar?'تشغيل':'operating'],['fund',ar?'الصندوق / رأس المال':'fund / capital'],['facility',ar?'تسهيل':'facility'],['escrow',ar?'ضمان':'escrow']].map(([v,l])=>`<option value="${v}"${a.role===v?' selected':''}>${l}</option>`).join('')}</select></td><td>${escH(a.period||'')}</td><td class="rfcs-num">${a.lines.length}</td><td class="rfcs-num">${a.closing!=null?fN(a.closing):'—'}</td><td>${escH(a.lastImport||'')}${(a.files||[]).map(f=>` · <a class="ops-link" onclick="docOpen('${f.path}')">${ar?'ملف':'file'}</a>`).join('')}</td><td><a class="ops-link" onclick="bankRemove('${a.id}')">✕</a></td></tr>`).join('')}</tbody></table>`:`<p class="ops-muted">${ar?'ارفع كشف حساب (PDF الراجحي أو Excel) لكل حساب من حسابات الصندوق.':'Upload a statement (Al Rajhi PDF or Excel) for each of the fund’s accounts.'}</p>`}
+    <p class="ops-muted" style="font-size:.78rem;margin:8px 0 0">${ar?'سجل المصروفات: ':'Expense register: '}${actuals.filter(p=>p.src==='register').length} ${ar?'صف':'rows'} · ${ar?'الاستثمارات: ':'treasury: '}${actuals.filter(p=>p.src==='treasury').length} ${ar?'حركة':'movements'} · ${ar?'دفعات أخرى في السجل: ':'other logged payments: '}${actuals.filter(p=>!p.src).length}</p></div>`;
+  // checks
+  h+=`<div class="ops-kpis" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${checks.map(c=>`<div class="ops-kpi au-check ${stc[c.state]}"><small>${c.title}</small><b><span class="ops-pill ${stc[c.state]}">${stl[c.state]}</span></b><i>${c.headline}</i></div>`).join('')}</div>`;
+  // cash table + NAV entry
+  const cash=checks.find(c=>c.key==='cash');if(cash.rows.length)h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'النقد: البنك + الاستثمارات مقابل المنصة':'Cash: bank + investments vs platform'}</h3><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الربع':'Quarter'}</th><th>${ar?'أرصدة البنوك':'Bank closings'}</th><th>${ar?'استثمارات قائمة':'Investments outstanding'}</th><th>${ar?'الإجمالي':'Total'}</th><th>${ar?'المنصة (التدفقات النقدية)':'Platform (cash flow)'}</th><th>${ar?'الفرق':'Difference'}</th></tr></thead><tbody>${cash.rows.map(r=>`<tr><td>${qLabel(r.q)}<small class="ops-muted">${r.accts} ${ar?'حساب':'accounts'}</small></td><td class="rfcs-num">${fN(r.bankClose)}</td><td class="rfcs-num">${fN(r.inv)}</td><td class="rfcs-num"><b>${fN(r.total)}</b></td><td class="rfcs-num">${fN(r.model)}</td><td class="rfcs-num cx-var ${Math.abs(r.diff)<1?'good':Math.abs(r.diff)<1e4?'warn':'bad'}"><span>${fN(r.diff)}</span></td></tr>`).join('')}</tbody></table><p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'الفرق يعني حركة في البنك غير موجودة في السجل (أو العكس) — راجع الحركات غير المفسّرة وصفوف السجل بلا حركة بنكية أدناه.':'A difference means a bank movement that is not in the register (or the reverse) — see the unexplained lines and the register rows without a bank line below.'}</p></div>`;
+  const nav=checks.find(c=>c.key==='nav');if(nav.rows.length)h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'صافي الأصول: المنصة مقابل فريق العمليات':'NAV: platform vs operations team'}</h3><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الربع':'Quarter'}</th><th>${ar?'المنصة':'Platform NAV'}</th><th>${ar?'للوحدة':'per unit'}</th><th>${ar?'فريق العمليات':'Operations team NAV'}</th><th>${ar?'الفرق':'Difference'}</th></tr></thead><tbody>${nav.rows.map(r=>`<tr><td>${qLabel(r.q)}</td><td class="rfcs-num">${fN(r.platform)}</td><td class="rfcs-num">${r.navU.toFixed(3)}</td><td><input type="number" class="ops-mini" style="width:150px" value="${r.ops==null?'':r.ops}" placeholder="—" onchange="auditSetOpsNav(${r.q},this.value)"></td><td class="rfcs-num cx-var ${r.diff==null?'':Math.abs(r.diff)<1e4?'good':'warn'}"><span>${r.diff==null?'':fN(r.diff)}</span></td></tr>`).join('')}</tbody></table></div>`;
+  // per account per quarter
+  if(qrows.length){h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'كل حساب، كل ربع':'Each account, each quarter'}</h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الحساب · الربع':'Account · quarter'}</th><th>${ar?'افتتاحي':'Opening'}</th><th>${ar?'إيداعات':'Inflows'}</th><th>${ar?'منها مفسّر':'explained'}</th><th>${ar?'غير مفسّر':'unexplained'}</th><th>${ar?'سحوبات':'Outflows'}</th><th>${ar?'منها مفسّر':'explained'}</th><th>${ar?'رسوم بنكية':'bank charges'}</th><th>${ar?'تحويلات داخلية':'internal transfers'}</th><th>${ar?'غير مفسّر':'unexplained'}</th><th>${ar?'ختامي':'Closing'}</th></tr></thead><tbody>${qrows.map(r=>`<tr class="${r.hasLines?'':'cx-sub'}"><td><b>${escH(r.acct.name.slice(0,22))}</b> · ${qLabel(r.q)}</td><td class="rfcs-num">${fN(r.open)}</td><td class="rfcs-num">${fN(r.inflow)}</td><td class="rfcs-num">${fN(r.inEx)}</td><td class="rfcs-num cx-var ${r.unIn>0.5?'bad':''}"><span>${r.unIn>0.5?fN(r.unIn):'—'}</span></td><td class="rfcs-num">${fN(r.outflow)}</td><td class="rfcs-num">${fN(r.outEx)}</td><td class="rfcs-num">${fN(r.charges)}</td><td class="rfcs-num">${fN(r.transfers)}</td><td class="rfcs-num cx-var ${r.unOut>0.5?'bad':''}"><span>${r.unOut>0.5?fN(r.unOut):'—'}</span></td><td class="rfcs-num"><b>${fN(r.close)}</b></td></tr>`).join('')}</tbody></table></div></div>`;}
+  // exceptions
+  const types=[['',ar?'— اختر —':'— classify —'],['charge',ar?'رسوم بنكية':'bank charge'],['equity_in',ar?'ضخ رأس مال':'equity injection'],['debt_draw',ar?'سحب تمويل':'drawdown'],['debt_repay',ar?'سداد تمويل':'repayment'],['interest',ar?'أرباح تمويل':'loan profit'],['vat_received',ar?'استرداد ضريبة':'VAT refund'],['revenue',ar?'تحصيل مبيعات':'sales collection'],['inv_out',ar?'توظيف استثمار':'investment placed'],['inv_in',ar?'استرداد استثمار':'investment returned'],['transfer',ar?'تحويل داخلي':'internal transfer'],['murabaha',ar?'ربح مرابحة':'murabaha profit'],['rett_received',ar?'استرداد ضريبة التصرفات':'RETT refund'],['other_exp',ar?'مصروف آخر':'other expense'],...opsCats().filter(c=>c.group==='cost').map(c=>[c.key,(ar?'تكلفة: ':'cost: ')+(ar?c.ar:c.en)]),['rett',ar?'ضريبة التصرفات':'RETT'],['ignore',ar?'تجاهل':'ignore']];
+  const unl=[];b.accounts.forEach(a=>a.lines.forEach(l=>{if(!ex.res[l.id])unl.push({a,l});}));
+  const mvOpts=ex.unmatchedMv.map(m=>`<option value="${m.id}">${escH(m.date+' · '+m.label.slice(0,36)+' · '+fN(m.amount))}</option>`).join('');
+  h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'حركات بنكية غير مفسّرة':'Unexplained bank lines'}<span>${unl.length} · ${M_(sumA(unl.map(x=>x.l.debit||x.l.credit)))}</span></h3>${unl.length?`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'الحساب':'Account'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'دائن':'Credit'}</th><th>${ar?'مدين':'Debit'}</th><th>${ar?'التصنيف':'Classify as'}</th><th>${ar?'أو اربطها بـ':'or link to'}</th></tr></thead><tbody>${unl.slice(0,200).map(({a,l})=>`<tr><td>${l.date}</td><td>${escH(a.name.slice(0,18))}</td><td>${escH(l.desc.slice(0,80))}</td><td class="rfcs-num">${l.credit?fN(l.credit):''}</td><td class="rfcs-num">${l.debit?fN(l.debit):''}</td><td><select class="ops-mini" onchange="auditSetClass('${l.id}',this.value)">${types.map(([v,t])=>`<option value="${v}"${v===''?' selected':''}>${t}</option>`).join('')}</select>${(()=>{const g=auditGuess(a,l);return g?`<small class="ops-muted" style="display:block">${ar?'مقترح: ':'suggested: '}<a class="ops-link" onclick="auditSetClass('${l.id}','${g[0]}')">${escH(g[1])}</a></small>`:'';})()}</td><td><select class="ops-mini" style="max-width:260px" onchange="if(this.value)auditLink('${l.id}',this.value)"><option value="">…</option>${mvOpts}</select></td></tr>`).join('')}</tbody></table></div>`:`<p class="ops-muted">${b.accounts.length?(ar?'لا شيء — كل حركات البنك مفسّرة.':'Nothing — every bank line is explained.'):(ar?'ارفع كشف حساب أولاً.':'Upload a statement first.')}</p>`}</div>`;
+  const cov=auditCoverage();const miss=ex.unmatchedMv.filter(m=>(m.p.src==='register'||m.p.src==='treasury'||m.p.invoiceId)&&cov&&m.date>=cov[0]&&m.date<=cov[1]);const later=ex.unmatchedMv.filter(m=>(m.p.src==='register'||m.p.src==='treasury')&&cov&&m.date>cov[1]).length;
+  h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'صفوف في السجل بلا حركة بنكية':'Register rows with no bank line'}${cov?` <small class="ops-muted">${ar?'ضمن فترة الكشوف ':'within statement coverage '}${cov[0]} → ${cov[1]}${later?' · '+later+(ar?' صفوف بعد الفترة':' rows after the period'):''}</small>`:''}<span>${miss.length} · ${M_(sumA(miss.map(m=>m.amount)))}</span></h3>${miss.length?`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'المستفيد':'Payee'}</th><th>${ar?'البند':'Category'}</th><th>${ar?'المبلغ':'Amount'}</th></tr></thead><tbody>${miss.map(m=>`<tr><td>${m.date}</td><td>${escH(m.label.slice(0,60))}</td><td>${escH(_actCatLabel(m.cat))}</td><td class="rfcs-num">${fN(m.amount)}</td></tr>`).join('')}</tbody></table></div><p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'غالباً: مدفوعة من حساب لم يُرفع كشفه (مثل حساب التسهيل)، أو فرق تاريخ أكبر من 10 أيام، أو مبلغ مختلف.':'Usually: paid from an account whose statement is not uploaded (e.g. the facility account), a date gap over 10 days, or a different amount.'}</p>`:`<p class="ops-muted">${ar?'لا شيء.':'Nothing.'}</p>`}</div>`;
+  // explained lines (collapsible)
+  const expl=[];b.accounts.forEach(a=>a.lines.forEach(l=>{const e=ex.res[l.id];if(e)expl.push({a,l,e});}));
+  const howL={manual:ar?'ربط يدوي':'manual link',class:ar?'مصنّف':'classified',returned:ar?'مرتجع':'returned',transfer:ar?'تحويل داخلي':'internal transfer',ref:ar?'بالمرجع':'by reference',amount:ar?'بالمبلغ':'by amount',fee:ar?'بالمبلغ + رسوم':'amount + fee',sum:ar?'مجموع صفّين':'sum of two rows',split:ar?'حركتان لصف':'two lines, one row',charge:ar?'رسوم بنكية':'bank charge'};
+  h+=`<details class="cx-details"><summary>${ar?'الحركات المفسّرة':'Explained lines'} (${expl.length})</summary><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'الحساب':'Account'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'المبلغ':'Amount'}</th><th>${ar?'كيف':'How'}</th><th>${ar?'يقابل':'Matches'}</th><th>${ar?'فرق':'Diff'}</th><th></th></tr></thead><tbody>${expl.map(({a,l,e})=>`<tr><td>${l.date}</td><td>${escH(a.name.slice(0,18))}</td><td>${escH(l.desc.slice(0,60))}</td><td class="rfcs-num">${fN(l.credit||l.debit)}</td><td>${howL[e.how]||e.how}${e.type?' · '+escH(e.type):''}</td><td>${e.m?escH(e.m.date+' · '+e.m.label.slice(0,40)+' · '+_actCatLabel(e.m.cat)):e.ms?escH(e.ms.map(m=>m.label.slice(0,25)+' '+fN(m.amount)).join(' + ')):''}</td><td class="rfcs-num">${e.diff?fN(e.diff):''}</td><td>${e.how==='manual'||e.how==='class'?`<a class="ops-link" onclick="auditSetClass('${l.id}','');auditLink('${l.id}','')">${ar?'إلغاء':'undo'}</a>`:''}</td></tr>`).join('')}</tbody></table></div></details>`;
+  pnl.innerHTML=h;
+}
 function opsFinancing(){
   const cut=R2._cutoffQ,nq=R2.nq,b=R,loanAt=cut>0?R2.qLoanClose[cut-1]:0,planAt=cut>0?(R.qLoanClose[cut-1]||0):0,drawn=sumA(R2.drawdowns.slice(0,cut)),intTo=sumA(R2.qInterest.slice(0,cut)),intPlan=sumA(R.qInterest.slice(0,cut));
   const ltc=R2.totalCost?sumA(R2.drawdowns)/R2.totalCost:0,peak=R2.peakDebt,peakQ=R2.qLoanClose.indexOf(peak)+1;
