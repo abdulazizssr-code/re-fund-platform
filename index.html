@@ -5898,20 +5898,114 @@ async function parseXlsxStatement(file){
   const opening=lines.length&&lines[0].balance!=null?lines[0].balance-lines[0].credit+lines[0].debit:0,closing=lines.length&&lines[lines.length-1].balance!=null?lines[lines.length-1].balance:null;
   return {iban:'',holder:file.name,period:'',opening,closing,lines,sumC:sumA(lines.map(l=>l.credit)),sumD:sumA(lines.map(l=>l.debit)),ok:closing!=null,totals:null};
 }
-async function auditImportStatement(){_pick('.pdf,.xlsx,.xls,.csv',async file=>{docBusy(true,lang==='ar'?'جارٍ قراءة كشف الحساب…':'Reading the statement…');let st;try{st=/\.pdf$/i.test(file.name)?await parseRajhiStatement(file):await parseXlsxStatement(file);}catch(e){docBusy(false);alert((lang==='ar'?'تعذّرت قراءة الكشف: ':'Could not read the statement: ')+(e.message||e));return;}docBusy(false);
-  const ar=lang==='ar',b=bank();let acct=b.accounts.find(a=>st.iban&&a.iban===st.iban);
-  const roles=[['operating',ar?'حساب التشغيل (لدى المدير لصالح الصندوق)':'Operating (manager, on behalf of the fund)'],['fund',ar?'حساب الصندوق / رأس المال':'Fund company / capital'],['facility',ar?'حساب التسهيل البنكي':'Facility / drawdown'],['escrow',ar?'حساب ضمان المبيعات':'Sales escrow']];
-  const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)} · ${st.lines.length} ${ar?'حركة':'lines'} · ${st.period||''}${st.ok?' · ✓ '+(ar?'الرصيد الختامي يطابق':'closing balance reconciles'):' · <span class="cx-var bad"><span>'+(ar?'الرصيد لا يطابق — راجع':'balance does not reconcile — review')+'</span></span>'}</p>
-    <div class="dm-grid">${dmF('iban','IBAN',st.iban||(acct?acct.iban:''))}${dmF('name',ar?'اسم الحساب':'Account name',acct?acct.name:(st.holder||''))}<label class="dm-f">${ar?'الدور':'Role'}<select id="dm_role">${roles.map(([v,l])=>`<option value="${v}"${(acct?acct.role:'operating')===v?' selected':''}>${l}</option>`).join('')}</select></label>${dmF('open',ar?'الرصيد الافتتاحي':'Opening balance',st.opening,'number','step="0.01"')}</div>
+// ---- shared: pdf.js text items per page (x,y,s) ----
+async function _pdfItems(file){await libPdf();const buf=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data:buf}).promise;const pages=[];
+  for(let n=1;n<=pdf.numPages;n++){const pg=await pdf.getPage(n);const tc=await pg.getTextContent();pages.push(tc.items.map(i=>({x:Math.round(i.transform[4]),y:Math.round(i.transform[5]),s:(i.str||'').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\ue000-\uf8ff]/g,'').trim()})).filter(i=>i.s));}
+  return pages;}
+function _pdfRowsOf(items){const ys={};items.forEach(i=>{const k=Math.round(i.y/2)*2;(ys[k]=ys[k]||[]).push(i);});return Object.keys(ys).map(Number).sort((a,b)=>b-a).map(y=>{const toks=ys[y].sort((a,b)=>a.x-b.x);return {y,toks,txt:toks.map(t=>t.s).join(' ')};});}
+const _arN=s=>String(s||'').normalize('NFKC'); // Arabic presentation forms → base letters, so keywords match
+// ---- Al Rajhi business-app statement ("كشف حساب جاري", Octagon): rows = balance SAR | credit SAR | debit SAR | date; type line above, notes below ----
+async function parseRajhiAppStatement(file,pages){
+  pages=pages||await _pdfItems(file);const amtS=/^-?\d{1,3}(?:,\d{3})*\.\d{2} SAR$|^-?\d+\.\d{2} SAR$/,dt=/^\d{4}\/\d{2}\/\d{2}$/;
+  let iban='',acctNo='',holder='',period='',opening=null,closing=null,totals={};const lines=[];
+  for(const items of pages){const rows=_pdfRowsOf(items);
+    for(let i=0;i<rows.length;i++){const r=rows[i],t=_arN(r.txt);
+      if(/IBAN Number/i.test(t)){const m=t.match(/SA\d{22}/);if(m)iban=m[0];continue;}
+      if(/Account Number/i.test(t)){const m=t.match(/\b\d{12,16}\b/);if(m)acctNo=m[0];continue;}
+      if(/Customer Name/i.test(t)){holder=r.toks.filter(x=>!/Customer Name|اسم العميل/.test(_arN(x.s))).map(x=>_arN(x.s)).join(' ').trim();continue;}
+      if(/Opening Balance/i.test(t)){const a=r.toks.find(x=>amtS.test(x.s));if(a)opening=_dnum(a.s);continue;}
+      if(/Closing Balance/i.test(t)){const a=r.toks.find(x=>amtS.test(x.s));if(a)closing=_dnum(a.s);continue;}
+      if(/Total Deposits/i.test(t)){const a=r.toks.find(x=>amtS.test(x.s));if(a)totals.credits=_dnum(a.s);continue;}
+      if(/Total Withdrawals/i.test(t)){const a=r.toks.find(x=>amtS.test(x.s));if(a)totals.debits=_dnum(a.s);continue;}
+      if(/On The Period/i.test(t)){const ds=r.toks.filter(x=>dt.test(x.s));if(ds.length>=2)period=ds[0].s.replace(/\//g,'-')+' → '+ds[1].s.replace(/\//g,'-');continue;}
+      const amts=r.toks.filter(x=>amtS.test(x.s));const d=r.toks.find(x=>dt.test(x.s));
+      if(amts.length>=3&&d){const bal=_dnum(amts[0].s),credit=_dnum(amts[1].s),debit=_dnum(amts[2].s);
+        const l={date:d.s.replace(/\//g,'-'),desc:'',type:'',ref:'',credit,debit,balance:bal,_y:r.y,_pg:pages.indexOf(items),_notes:[]};
+        lines.push(l);}
+    }
+    // attach the text rows: a short pure-Arabic row above an amounts row is that transaction's type; any other row goes to the nearest amounts row
+    const pg=pages.indexOf(items),mine=lines.filter(l=>l._pg===pg);if(!mine.length)continue;
+    const isAmt=r=>r.toks.filter(x=>amtS.test(x.s)).length>=3&&r.toks.some(x=>dt.test(x.s));
+    const junk=/^(Notes|This document|responsibility|Ref\. No)|الرصيد|الرقم التسلسلي|هذه الوثيقة|^\d{1,3}$/;
+    for(let i=0;i<rows.length;i++){const r=rows[i];if(isAmt(r))continue;const t=_arN(r.txt);if(junk.test(t)||r.toks[0].x<300)continue;
+      let above=null,below=null;for(let j=i-1;j>=0;j--)if(isAmt(rows[j])){above=rows[j];break;}for(let j=i+1;j<rows.length;j++)if(isAmt(rows[j])){below=rows[j];break;}
+      const typeLike=/^[\u0600-\u06FF\s\-–]+$/.test(t)&&t.length<40&&below&&(below.y>r.y-30);
+      const target=typeLike?below:(!above?below:!below?above:(Math.abs(above.y-r.y)<=Math.abs(r.y-below.y)?above:below));if(!target)continue;
+      const l=mine.find(x=>x._y===target.y);if(!l)continue;if(typeLike&&!l.type)l.type=t;else l._notes.push({y:r.y,s:t});}
+  }
+  for(const l of lines){const note=l._notes.sort((a,b)=>b.y-a.y).map(n=>n.s).join(' ').replace(/^(الوقت)\s*:?/,'').replace(/\s+/g,' ').trim();delete l._notes;delete l._y;delete l._pg;
+    l.desc=(l.type+' · '+note).replace(/^ · /,'').replace(/ · $/,'').trim();
+    const tm=note.match(/\b(T\d{8,12})\b/);if(tm)l.ref=tm[1];const dm=note.match(/\b(T\d{8,12})\.(D\d{8,12})\b/);if(dm){l.ref=dm[1];l.settle=dm[2];}
+    const ib=note.replace(/\s/g,'').match(/SA\d{22}/);if(ib)l.cpIban=ib[0];const tx=note.match(/\b(\d{11,13})\b/);if(tx)l.txn=tx[1];}
+  for(const l of lines)l.id='l'+_hash(_lineKey(l));
+  const sumC=sumA(lines.map(l=>l.credit)),sumD=sumA(lines.map(l=>l.debit));
+  // running-balance check, chronological as printed
+  let ok=closing!=null&&Math.abs((opening||0)+sumC-sumD-closing)<0.02;let bal=opening||0;for(const l of lines){bal=+(bal+l.credit-l.debit).toFixed(2);if(Math.abs(bal-l.balance)>0.011){ok=false;break;}}
+  return {bank:'rajhi',iban,acctNo,holder,period,opening:opening||0,closing,lines,sumC,sumD,ok,totals};
+}
+// ---- Alinma account statement: rotated page, one transaction per column (x); zones by the y of the column labels; newest first ----
+async function parseAlinmaStatement(file,pages){
+  pages=pages||await _pdfItems(file);const dt=/^\d{2}\/\d{2}\/\d{4}$/,num=/^-?\d{1,3}(?:,\d{3})*\.\d{2}$|^-?\d+\.\d{2}$/;
+  let acctNo='',holder='',period='',opening=null,closing=null,totals={};const txs=[];
+  for(const items of pages){
+    const lbl=n=>{const t=items.find(i=>new RegExp('^'+n+'$','i').test(i.s));return t?t.y:null;};
+    const yB=lbl('Balance'),yC=lbl('Credit'),yD=lbl('Debit'),yDs=lbl('Transaction Description'),yR=lbl('# Reference'),yDt=lbl('Transaction Date');
+    const m1=items.map(i=>i.s).join(' ');if(!acctNo){const m=m1.match(/\b(\d{14})\b/);if(m)acctNo=m[1];}
+    if(!period){const m=m1.match(/(\d{4}-\d{2}-\d{2}) - (\d{4}-\d{2}-\d{2})/);if(m)period=m[1]+' → '+m[2];}
+    if(!holder){const h=items.find(i=>/^[A-Z][A-Z .&-]{5,}$/.test(i.s)&&/FUND|CO\b|COMPANY|LLC/.test(i.s)&&!/Alinma/i.test(i.s));if(h)holder=h.s;}
+    // summary page
+    const ob=items.find(i=>/^Opening Balance$/.test(i.s)),cb=items.find(i=>/^Closing Balance$/.test(i.s));
+    const near=l=>{if(!l)return null;const c=items.filter(i=>Math.abs(i.x-l.x)<16&&i.y<l.y&&/^\s*-?\d[\d,]*(\.\d+)?$/.test(i.s)).sort((a,b)=>b.y-a.y)[0];return c?_dnum(c.s):null;};
+    if(ob&&cb){opening=near(ob);closing=near(cb);const tc=items.find(i=>/^Total Credit Amount$/.test(i.s)),td=items.find(i=>/^Total Debit Amount$/.test(i.s));if(tc)totals.credits=near(tc);if(td)totals.debits=near(td);continue;}
+    if(yDt==null||yB==null)continue;
+    const anchors=items.filter(i=>dt.test(i.s)&&i.y<=yDt+6&&i.y>yR+6).sort((a,b)=>a.x-b.x);if(!anchors.length)continue;
+    const zone=i=>i.y<=yB+6?'bal':i.y<=yC+6?'credit':i.y<=yD+6?'debit':i.y<=yDs+6?'desc':i.y<=yR+6?'ref':i.y<=yDt+6?'date':'time';
+    const of=i=>{let a=null;for(const an of anchors){if(an.x<=i.x+3)a=an;else break;}return a;};
+    const per=new Map();anchors.forEach(a=>per.set(a,{date:a.s,desc:[],ref:'',credit:0,debit:0,balance:null,time:''}));
+    for(const i of items){if(i.x<anchors[0].x-3)continue;const a=of(i);if(!a)continue;const t=per.get(a),z=zone(i);
+      if(z==='bal'&&num.test(i.s))t.balance=_dnum(i.s);else if(z==='credit'&&num.test(i.s))t.credit=Math.abs(_dnum(i.s));else if(z==='debit'&&num.test(i.s))t.debit=Math.abs(_dnum(i.s));
+      else if(z==='desc')t.desc.push({x:i.x,s:_arN(i.s)});else if(z==='ref'&&/^FT\w{6,}$/.test(i.s))t.ref=i.s;else if(z==='time'&&/^\d{2}:\d{2}:\d{2}$/.test(i.s))t.time=i.s;}
+    for(const t of per.values()){const [mm,dd,yy]=t.date.split('/');t.date=`${yy}-${mm}-${dd}`;t.desc=t.desc.sort((a,b)=>a.x-b.x).map(d=>d.s).join(' ').replace(/\s+/g,' ').trim();txs.push(t);}
+  }
+  txs.reverse(); // statement is newest first
+  const lines=txs.map(t=>{const l={date:t.date,desc:t.desc,ref:t.ref,credit:t.credit,debit:t.debit,balance:t.balance};const ib=t.desc.replace(/\s/g,'').match(/SA\d{22}/);if(ib)l.cpIban=ib[0];const sd=t.desc.match(/مرجع سداد\s*(\d{8,12})/);if(sd)l.txn=sd[1];l.id='l'+_hash(_lineKey(l));return l;});
+  // every line should carry exactly one side; fall back to the balance delta when a zone was missed
+  let bal=opening!=null?opening:(lines.length?lines[0].balance-lines[0].credit+lines[0].debit:0);let ok=true;
+  for(const l of lines){const delta=+(l.balance-bal).toFixed(2);if(!l.credit&&!l.debit){if(delta>0)l.credit=delta;else l.debit=-delta;}if(Math.abs(bal+l.credit-l.debit-l.balance)>0.011)ok=false;bal=l.balance;}
+  const sumC=sumA(lines.map(l=>l.credit)),sumD=sumA(lines.map(l=>l.debit));if(closing!=null&&lines.length&&Math.abs(lines[lines.length-1].balance-closing)>0.011)ok=false;
+  return {bank:'alinma',iban:'',acctNo,holder,period,opening:opening||0,closing:closing!=null?closing:(lines.length?lines[lines.length-1].balance:null),lines,sumC,sumD,ok,totals};
+}
+// ---- dispatcher: which layout is this? ----
+async function parseBankStatement(file){
+  if(!/\.pdf$/i.test(file.name))return parseXlsxStatement(file);
+  const pages=await _pdfItems(file);const first=_arN(pages.slice(0,2).flat().map(i=>i.s).join(' '));
+  if(/BEGINNING BALANCE/i.test(first)||/Corporate Business Solutions/i.test(first))return parseRajhiStatement(file);
+  if(/alinma/i.test(first))return parseAlinmaStatement(file,pages);
+  if(/On The Period|كشف حساب جاري|Opening Balance/i.test(first)&&/\d\.\d{2} SAR/.test(first))return parseRajhiAppStatement(file,pages);
+  throw new Error((lang==='ar'?'تنسيق كشف غير معروف — المدعوم: الراجحي (الشركات أو تطبيق الأعمال) والإنماء. ':'Unknown statement layout — supported: Al Rajhi (corporate or business app) and Alinma. ')+(first.length?'':(lang==='ar'?'الملف لا يحتوي نصاً (صورة ممسوحة؟).':'The file has no text layer (scanned image?).')));
+}
+function _pickMany(accept,cb){const i=document.createElement('input');i.type='file';i.accept=accept;i.multiple=true;i.onchange=()=>{if(i.files.length)cb([...i.files]);};i.click();}
+// import one or many statements at once; each file is matched to an account by IBAN / account number
+async function auditImportStatement(){_pickMany('.pdf,.xlsx,.xls,.csv',async files=>{const ar=lang==='ar',b=bank();const parsed=[];
+  for(const file of files){docBusy(true,(ar?'جارٍ قراءة ':'Reading ')+file.name+'…');try{parsed.push({file,st:await parseBankStatement(file)});}catch(e){parsed.push({file,err:e.message||String(e)});}}docBusy(false);
+  const roles=[['operating',ar?'حساب التشغيل (لدى المدير لصالح الصندوق)':'Operating (manager, on behalf of the fund)'],['fund',ar?'حساب الصندوق / رأس المال':'Fund company / capital'],['facility',ar?'حساب التسهيل البنكي (تورّق / مرابحة)':'Facility (tawarruq / murabaha)'],['escrow',ar?'حساب ضمان المبيعات':'Sales escrow']];
+  const guessRole=st=>{const t=(st.holder+' '+st.lines.slice(0,6).map(l=>l.desc).join(' ')).toLowerCase();if(/بيع سلعة|رسوم وساطة/.test(_arN(t)))return 'facility';if(st.bank==='alinma')return 'operating';return 'fund';};
+  const sec=parsed.map((x,k)=>{if(x.err)return `<div class="ops-card" style="margin-bottom:10px"><b>${escH(x.file.name)}</b><p class="cx-var bad" style="margin:4px 0 0"><span>${escH(x.err)}</span></p></div>`;const st=x.st;const acct=b.accounts.find(a=>(st.iban&&a.iban===st.iban)||(st.acctNo&&a.acctNo===st.acctNo));x.acct=acct;
+    return `<div class="ops-card" style="margin-bottom:10px"><p class="ops-muted" style="margin:0 0 8px;font-size:.78rem"><b>${escH(x.file.name)}</b> · ${st.bank==='alinma'?'Alinma':st.bank==='rajhi'?'Al Rajhi':''} · ${st.lines.length} ${ar?'حركة':'lines'} · ${st.period||''}${st.ok?' · ✓ '+(ar?'الرصيد الختامي يطابق':'closing balance reconciles'):' · <span class="cx-var bad"><span>'+(ar?'الرصيد لا يطابق — راجع':'balance does not reconcile — review')+'</span></span>'}${acct?' · '+(ar?'حساب موجود: ':'existing account: ')+escH(acct.name):' · '+(ar?'حساب جديد':'new account')}</p>
+    <div class="dm-grid">${dmF('iban'+k,'IBAN / '+(ar?'رقم الحساب':'account no.'),st.iban||st.acctNo||(acct?acct.iban:''))}${dmF('name'+k,ar?'اسم الحساب':'Account name',acct?acct.name:(st.holder||''))}<label class="dm-f">${ar?'الدور':'Role'}<select id="dm_role${k}">${roles.map(([v,l])=>`<option value="${v}"${(acct?acct.role:guessRole(st))===v?' selected':''}>${l}</option>`).join('')}</select></label>${dmF('open'+k,ar?'الرصيد الافتتاحي':'Opening balance',st.opening,'number','step="0.01"')}</div>
     <table class="rfcs-tbl cx-tbl" style="margin-top:8px"><tbody><tr><td>${ar?'إيداعات':'Credits'}</td><td class="rfcs-num">${fN(st.sumC)}</td><td>${ar?'سحوبات':'Debits'}</td><td class="rfcs-num">${fN(st.sumD)}</td><td>${ar?'الرصيد الختامي':'Closing'}</td><td class="rfcs-num">${st.closing!=null?fN(st.closing):'—'}</td></tr></tbody></table>
-    <div class="cx-wrap" style="max-height:34vh;margin-top:8px"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'دائن':'Credit'}</th><th>${ar?'مدين':'Debit'}</th><th>${ar?'الرصيد':'Balance'}</th></tr></thead><tbody>${st.lines.map(l=>`<tr><td>${l.date}</td><td>${escH(l.desc.slice(0,70))}</td><td class="rfcs-num">${l.credit?fN(l.credit):''}</td><td class="rfcs-num">${l.debit?fN(l.debit):''}</td><td class="rfcs-num">${l.balance!=null?fN(l.balance):''}</td></tr>`).join('')}</tbody></table></div>`;
-  docModal(ar?'استيراد كشف حساب بنكي':'Import bank statement',body,async g=>{
-    const iban=g('iban').value.trim();if(!acct)acct=b.accounts.find(a=>a.iban===iban);
-    if(!acct){acct={id:'a'+_actGenId(),iban,name:g('name').value.trim()||iban,role:g('role').value,lines:[],opening:+g('open').value||0};b.accounts.push(acct);}else{acct.name=g('name').value.trim()||acct.name;acct.role=g('role').value;}
-    const have=new Set(acct.lines.map(l=>l.id));let added=0;for(const l of st.lines){if(!have.has(l.id)){acct.lines.push(l);added++;}}
-    acct.lines.sort((a,b)=>a.date.localeCompare(b.date)); // stable: same-day lines keep statement orderacct.lastImport=new Date().toISOString().slice(0,10);acct.period=st.period;acct.closing=st.closing;
+    <details style="margin-top:6px"><summary class="ops-muted" style="cursor:pointer;font-size:.78rem">${ar?'الحركات':'Lines'}</summary><div class="cx-wrap" style="max-height:30vh;margin-top:6px"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'دائن':'Credit'}</th><th>${ar?'مدين':'Debit'}</th><th>${ar?'الرصيد':'Balance'}</th></tr></thead><tbody>${st.lines.map(l=>`<tr><td>${l.date}</td><td>${escH(l.desc.slice(0,70))}</td><td class="rfcs-num">${l.credit?fN(l.credit):''}</td><td class="rfcs-num">${l.debit?fN(l.debit):''}</td><td class="rfcs-num">${l.balance!=null?fN(l.balance):''}</td></tr>`).join('')}</tbody></table></div></details></div>`;}).join('');
+  if(!parsed.some(x=>x.st)){alert(parsed.map(x=>x.file.name+': '+x.err).join('\n'));return;}
+  docModal(ar?'استيراد كشوف الحسابات':'Import bank statements',sec,async g=>{let total=0;
+    for(let k=0;k<parsed.length;k++){const x=parsed[k];if(!x.st)continue;const st=x.st;const key=g('iban'+k).value.trim();let acct=x.acct||b.accounts.find(a=>a.iban===key||a.acctNo===key);
+      if(!acct){acct={id:'a'+_actGenId(),iban:/^SA\d{22}$/.test(key)?key:(st.iban||''),acctNo:st.acctNo||(/^\d{10,16}$/.test(key)?key:''),name:g('name'+k).value.trim()||key,role:g('role'+k).value,lines:[],opening:+g('open'+k).value||0};b.accounts.push(acct);}else{acct.name=g('name'+k).value.trim()||acct.name;acct.role=g('role'+k).value;}
+      total+=await _auditMergeStatement(acct,st,x.file);}
+    murabahaSync();opsRefresh();alert((ar?'تمت إضافة ':'Added ')+total+(ar?' حركة (المكررة تم تجاهلها)':' lines (duplicates skipped)'));showTab('audit');},ar?'استيراد الكل':'Import all');});}
+async function _auditMergeStatement(acct,st,file){const k2=l=>l.date+'|'+(l.debit||0).toFixed(2)+'|'+(l.credit||0).toFixed(2)+'|'+(l.balance==null?'?':l.balance.toFixed(2));const have=new Set(acct.lines.map(l=>l.id)),have2=new Set(acct.lines.filter(l=>l.balance!=null).map(k2));let added=0;for(const l of st.lines){if(!have.has(l.id)&&!(l.balance!=null&&have2.has(k2(l)))){acct.lines.push(l);have2.add(k2(l));added++;}}
+    acct.lines.sort((a,b)=>a.date.localeCompare(b.date)); // stable: same-day lines keep statement order
+    acct.lastImport=new Date().toISOString().slice(0,10);acct.period=st.period;acct.closing=st.closing;if(st.acctNo)acct.acctNo=st.acctNo;if(st.bank)acct.bank=st.bank;
     const st2=await docStore(file,'stmt',acct.id+'_'+_hash(file.name));acct.files=acct.files||[];if(st2.path)acct.files.push({path:st2.path,name:file.name,period:st.period});
-    alert((ar?'تمت إضافة ':'Added ')+added+(ar?' حركة (المكررة تم تجاهلها)':' lines (duplicates skipped)'));showTab('audit');});});}
+    return added;}
 function bankSetRole(id,role){const a=bankAcct(id);if(a){a.role=role;renderAudit();}}
 function bankRemove(id){if(!confirm(lang==='ar'?'حذف الحساب وكل حركاته؟':'Remove this account and all its lines?'))return;const b=bank();b.accounts=b.accounts.filter(a=>a.id!==id);renderAudit();}
 
@@ -5981,10 +6075,48 @@ async function auditImportRegister(){_pick('.xlsx,.xlsm,.xls',async file=>{docBu
 // ---- explanation engine ----
 // movements = every recorded cash event (payments, financing, treasury, VAT receipts); ledger lines get explained by them
 function auditMovements(){return actuals.filter(p=>p.include!==false&&!['equity_ik'].includes(p.category)).map(p=>{const inflow=['revenue','murabaha','other_inc','vat_received','rett_received','equity_in','debt_draw','inv_in'].includes(p.category);return {id:p.id,date:p.date||'',amount:Number(p.amount)||0,inflow,label:(p.payee||'')+(p.notes?' · '+String(p.notes).slice(0,40):''),cat:p.category,p};});}
+// ---- Tawarruq / murabaha facility: the bank sells a commodity (بيع سلعة = a draw or a rollover), charges brokerage (رسوم وساطة, note = deal id T…),
+// and each deal is settled later from the fund account (debit lines whose note is T…​.D…). Profit = settled − principal. ----
+function murabahaDeals(){
+  const b=bank(),deals={},order=[],lineMap={};const dd=(a,c)=>Math.abs((new Date(a)-new Date(c))/86400000);
+  for(const a of b.accounts){const ls=a.lines;
+    for(let i=0;i<ls.length;i++){const l=ls[i],t=_arN(l.desc);
+      if(l.credit>0&&/بيع سلعة/.test(t)){let br=null;for(let j=i+1;j<ls.length&&j<=i+3;j++){const x=ls[j];if(x.debit>0&&/رسوم وساطة/.test(_arN(x.desc))&&dd(x.date,l.date)<=3&&!lineMap[x.id]){br=x;break;}}
+        const tid=(br&&br.ref)||(t.match(/_(POA\d+)_/)||[])[1]||('deal-'+l.date);
+        const d={tid,acct:a,date:l.date,principal:l.credit,drawLine:l,brokerage:br?br.debit:0,brokerageLine:br,settlements:[],settled:0};
+        deals[tid]=d;order.push(tid);lineMap[l.id]={type:'debt_draw',tid};if(br)lineMap[br.id]={type:'bank_mgmt',tid};}}}
+  for(const a of b.accounts)for(const l of a.lines){if(lineMap[l.id]||!(l.debit>0))continue;const m=(l.settle&&l.ref)?[0,l.ref]:_arN(l.desc).match(/\b(T\d{8,12})\.D\d{8,12}\b/);if(m&&deals[m[1]]){const d=deals[m[1]];d.settlements.push({line:l,date:l.date,amount:l.debit});d.settled+=l.debit;lineMap[l.id]={type:'settle',tid:m[1]};}}
+  const list=order.map(k=>{const d=deals[k];d.settlements.sort((x,y)=>x.date.localeCompare(y.date));d.closed=d.settled>=d.principal-0.011;d.profit=d.closed?+(d.settled-d.principal).toFixed(2):0;d.outstanding=d.closed?0:+(d.principal-Math.min(d.settled,d.principal)).toFixed(2);
+    d.end=d.settlements.length?d.settlements[d.settlements.length-1].date:null;d.days=d.end?Math.round(dd(d.end,d.date)):null;d.rate=d.closed&&d.days?d.profit/d.principal*365/d.days:null;
+    // allocate each settlement: principal first, then profit
+    let rem=d.principal;d.settlements.forEach(s=>{s.principal=Math.min(s.amount,rem);s.profit=+(s.amount-s.principal).toFixed(2);rem=+(rem-s.principal).toFixed(2);});return d;});
+  return {deals:list,lineMap};
+}
+// make the deals visible to the model: draw → debt_draw, brokerage → bank_mgmt, settlement → debt_repay (+ interest for the profit part). Idempotent (keyed by fromLine).
+function murabahaSync(){const md=murabahaDeals();const b=bank();const want={};
+  const mk=(l,cat,amt,suffix,note)=>{const key=l.id+(suffix||'');want[key]={date:l.date,category:cat,amount:+amt.toFixed(2),payee:note,fromLine:key};};
+  for(const d of md.deals){mk(d.drawLine,'debt_draw',d.principal,'',(lang==='ar'?'سحب تورّق ':'Tawarruq draw ')+d.tid);if(d.brokerageLine)mk(d.brokerageLine,'bank_mgmt',d.brokerage,'',(lang==='ar'?'رسوم وساطة ':'Brokerage ')+d.tid);
+    for(const st of d.settlements){if(st.principal>0)mk(st.line,'debt_repay',st.principal,'',(lang==='ar'?'سداد تورّق ':'Tawarruq settlement ')+d.tid);if(st.profit>0)mk(st.line,'interest',st.profit,'_p',(lang==='ar'?'ربح تورّق ':'Tawarruq profit ')+d.tid);}}
+  let changed=false;
+  for(let i=actuals.length-1;i>=0;i--){const p=actuals[i];if(p.src!=='bank'||!p.deal)continue;const w=want[p.fromLine];if(!w){actuals.splice(i,1);changed=true;}else{if(p.amount!==w.amount||p.category!==w.category){p.amount=w.amount;p.category=w.category;changed=true;}delete want[p.fromLine];}}
+  for(const k in want){const w=want[k];const line=_auditLine(k.replace(/_p$/,''));if(line&&actuals.some(p=>p.fromLine===k&&p.src!=='bank'))continue;
+    actuals.push({id:_actGenId(),date:w.date,quarter:dateToQuarterIdx(w.date,D.start_date),category:w.category,amount:w.amount,payee:w.payee,notes:(lang==='ar'?'من كشف الحساب ':'from bank statement ')+(line?line.a.name:''),txn:'',fromLine:k,src:'bank',deal:true,include:true});changed=true;}
+  return changed;}
+function murabahaTable(){const ar=lang==='ar',md=murabahaDeals();if(!md.deals.length)return '';
+  const open=md.deals.filter(d=>!d.closed),outst=sumA(open.map(d=>d.principal)),prof=sumA(md.deals.map(d=>sumA(d.settlements.map(s=>s.profit)))),brk=sumA(md.deals.map(d=>d.brokerage));
+  const kpi=(l,v,s)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i>${s}</i></div>`;
+  return `<div class="ops-card" style="margin-bottom:16px"><h3>${ar?'صفقات التورّق (المرابحة) من كشوف الحساب':'Tawarruq (murabaha) deals from the bank statements'}<span>${md.deals.length}</span></h3>
+  <div class="ops-kpis" style="margin-bottom:10px">${kpi(ar?'الدين القائم':'Debt outstanding',M_(outst),open.length+(ar?' صفقة مفتوحة':' open deals'))}${kpi(ar?'الأرباح المدفوعة':'Profit paid',M_(prof),ar?'من التسويات':'from settlements')}${kpi(ar?'رسوم الوساطة':'Brokerage fees',M_(brk),ar?'على كل صفقة':'per deal')}</div>
+  <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الصفقة':'Deal'}</th><th>${ar?'تاريخ السحب':'Drawn'}</th><th>${ar?'الأصل':'Principal'}</th><th>${ar?'وساطة':'Brokerage'}</th><th>${ar?'التسوية':'Settled on'}</th><th>${ar?'المسدّد':'Settled'}</th><th>${ar?'الربح':'Profit'}</th><th>${ar?'أيام':'Days'}</th><th>${ar?'المعدل السنوي':'Annualised'}</th><th>${ar?'الحالة':'Status'}</th></tr></thead><tbody>
+  ${md.deals.map(d=>`<tr><td><b>${escH(d.tid)}</b><small class="ops-muted" style="display:block">${escH(d.acct.name.slice(0,22))}</small></td><td>${d.date}</td><td class="rfcs-num">${fN(d.principal)}</td><td class="rfcs-num">${d.brokerage?fN(d.brokerage):'—'}</td><td>${d.settlements.map(s=>s.date+' <small class="ops-muted">'+fN(s.amount)+'</small>').join('<br>')||'—'}</td><td class="rfcs-num">${d.settled?fN(d.settled):'—'}</td><td class="rfcs-num">${d.closed?fN(d.profit):'—'}</td><td class="rfcs-num">${d.days!=null?d.days:'—'}</td><td class="rfcs-num">${d.rate!=null?(d.rate*100).toFixed(2)+'%':'—'}</td><td><span class="ops-pill ${d.closed?'good':'warn'}">${d.closed?(ar?'مسدّدة':'settled'):(ar?'قائمة':'open')}</span></td></tr>`).join('')}</tbody></table></div>
+  <p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'كل بيع سلعة = سحب أو تدوير للدين؛ تُسوّى الصفقة لاحقاً من حساب الصندوق (الملاحظة T….D…). الربح = المسدّد − الأصل. تُسجَّل هذه الحركات تلقائياً في السجل كسحب / سداد / ربح تمويل / رسوم بنكية.':'Each commodity sale is a draw or a rollover; the deal is settled later from the fund account (note T…​.D…). Profit = settled − principal. These movements are logged automatically as drawdown / repayment / loan profit / bank fee.'}</p></div>`;}
 function auditExplain(){
   const b=bank(),tol=Number(b.tol)||0,mv=auditMovements(),used=new Set(),res={};const dd=(a,c)=>Math.abs((new Date(a)-new Date(c))/86400000);
   const all=[];b.accounts.forEach(a=>a.lines.forEach(l=>all.push({a,l})));
   const cls=b.cls,links=b.links;
+  // 0a. tawarruq deal lines (draw, brokerage, settlement) are explained by the deal itself
+  {const md=murabahaDeals();for(const {l} of all){const e=md.lineMap[l.id];if(!e)continue;const ms=mv.filter(x=>x.p.fromLine===l.id||x.p.fromLine===l.id+'_p');ms.forEach(x=>used.add(x.id));
+    res[l.id]={how:'deal',type:e.type==='settle'?'debt_repay':e.type,tid:e.tid,m:ms[0]||null,ms:ms.length>1?ms:null,diff:ms.length?+((l.debit||l.credit)-sumA(ms.map(x=>x.amount))).toFixed(2):0};}}
   // 0. explicit links / classifications
   for(const {a,l} of all){const k=links[l.id];if(k){const m=mv.find(x=>x.id===k);if(m){res[l.id]={how:'manual',m,diff:+( (l.debit||l.credit)-m.amount).toFixed(2)};used.add(m.id);continue;}}if(cls[l.id]){res[l.id]={how:'class',type:cls[l.id].type,note:cls[l.id].note||''};}}
   // 1. returned payments: debit then equal credit within 10 days (REJ / returned)
@@ -6006,7 +6138,7 @@ function auditExplain(){
   return {res,mv,used,unmatchedMv};
 }
 function auditLineRole(a,l,e){ // which model flow a ledger line represents, for the aggregate view
-  if(!e)return 'unexplained';if(e.how==='returned')return 'returned';if(e.how==='transfer')return 'transfer';if(e.how==='charge')return 'charge';if(e.how==='class')return e.type;
+  if(!e)return 'unexplained';if(e.how==='returned')return 'returned';if(e.how==='transfer')return 'transfer';if(e.how==='charge')return 'charge';if(e.how==='class'||e.how==='deal')return e.type;
   const m=e.m||(e.ms&&e.ms[0]);return m?m.cat:'unexplained';}
 const AUDIT_FLOW_TYPES=['equity_in','debt_draw','debt_repay','interest','vat_received','rett_received','revenue','murabaha','inv_out','inv_in','other_exp','land','brokerage','rett','base_con','dev_fee','design','supervision','engineering','licensing','marketing','insurance','contingency','fund_setup','mgmt_fee','custody','spv','auditor','sharia','board','fin_advisor','arr_fee','bank_mgmt'];
 function _auditLine(lineId){for(const a of bank().accounts){const l=a.lines.find(x=>x.id===lineId);if(l)return {a,l};}return null;}
@@ -6021,6 +6153,9 @@ function auditGuess(a,l){const ar=lang==='ar',d=(l.desc||'').toLowerCase();
   if(l.credit&&a.role==='fund'&&/musharaka capital|capital co|subscription|اكتتاب/.test(d))return ['equity_in',ar?'ضخ رأس مال':'equity injection'];
   if(l.credit&&/rajhi|facility|loan|تمويل|تسهيل/.test(d)&&l.credit>1e6)return ['debt_draw',ar?'سحب تمويل':'drawdown'];
   if(l.debit&&/jabal omar|جبل عمر|land|أرض|ارض/.test(d))return ['land',ar?'تكلفة: الأرض':'cost: land'];
+  if(l.debit&&/الراجحي المالية|rajhi capital/.test(_arN(d))&&l.debit>1e5)return ['arr_fee',ar?'رسوم ترتيب التمويل':'arrangement fee'];
+  if(l.credit&&/استرداد ضريبة القيمة|vat refund/.test(_arN(d)))return ['vat_received',ar?'استرداد ضريبة':'VAT refund'];
+  if(l.debit&&/رسوم ادارة السيولة|liquidity/.test(_arN(d)))return ['charge',ar?'رسوم بنكية':'bank charge'];
   if(l.debit&&l.debit<=100&&/fee|charge|رسوم/.test(d))return ['charge',ar?'رسوم بنكية':'bank charge'];
   if(l.debit&&/transfer to customer|تحويل/.test(d)&&l.debit>1e6)return ['transfer',ar?'تحويل داخلي':'internal transfer'];
   return null;}
@@ -6073,19 +6208,20 @@ let auditF={open:{},show:'unexplained'};
 function renderAudit(){
   const pnl=document.getElementById('p-audit');if(!pnl)return;const ar=lang==='ar';
   if(!R){pnl.innerHTML=`<div class="sec"><p>${ot('calcFirst')}</p></div>`;return;}ensureForecast();
-  const b=bank(),ex=auditExplain(),checks=auditChecks(ex),qrows=auditQuarterRows(ex),cut=R2._cutoffQ;
+  const b=bank();if(murabahaSync())opsRefresh();const ex=auditExplain(),checks=auditChecks(ex),qrows=auditQuarterRows(ex),cut=R2._cutoffQ;
   const stc={ok:'good',warn:'warn',bad:'bad',na:''},stl={ok:ar?'مطابق':'reconciled',warn:ar?'فروقات':'differences',bad:ar?'غير مطابق':'not reconciled',na:ar?'لا بيانات':'no data'};
   let h=`<div class="sec"><div class="vq-head"><div><h2 style="margin:0;font-family:'Noto Serif',serif;color:#00322d">${ar?'التدقيق — فحص مستقل لأرقام فريق العمليات':'Audit — independent check of the operations team'}</h2><p class="ops-muted" style="margin:4px 0 0;font-size:.82rem">${ar?'المصادر: كشوف الحساب البنكية (الحقيقة للنقد)، سجل المصروفات، ورقة الاستثمارات. تُفسَّر حركات البنك طبقة بعد طبقة، وما يتبقى يظهر هنا.':'Sources: bank statements (the truth for cash), the expense register, the treasury sheet. Ledger lines are explained in layers; whatever is left shows up here.'}</p></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ops-close" onclick="auditImportStatement()">⬆ ${ar?'كشف حساب':'Bank statement'}</button><button class="ops-close" onclick="auditImportRegister()">⬆ ${ar?'سجل المصروفات (Excel)':'Expense register (Excel)'}</button></div></div>`;
   // sources
   h+=`<div class="ops-card" style="margin:14px 0"><h3>${ar?'المصادر':'Sources'}<span>${ar?'سماحية الفروق الصغيرة (رسوم بنكية)':'small-difference tolerance (bank fees)'} <input type="number" class="ops-mini" style="width:70px" value="${b.tol}" onchange="auditSetTol(this.value)"> SAR</span></h3>
-    ${b.accounts.length?`<table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الحساب':'Account'}</th><th>IBAN</th><th>${ar?'الدور':'Role'}</th><th>${ar?'الفترة':'Period'}</th><th>${ar?'حركات':'Lines'}</th><th>${ar?'الرصيد الختامي':'Closing'}</th><th>${ar?'آخر استيراد':'Last import'}</th><th></th></tr></thead><tbody>${b.accounts.map(a=>`<tr><td><b>${escH(a.name)}</b></td><td><small>${escH(a.iban)}</small></td><td><select class="ops-mini" onchange="bankSetRole('${a.id}',this.value)">${[['operating',ar?'تشغيل':'operating'],['fund',ar?'الصندوق / رأس المال':'fund / capital'],['facility',ar?'تسهيل':'facility'],['escrow',ar?'ضمان':'escrow']].map(([v,l])=>`<option value="${v}"${a.role===v?' selected':''}>${l}</option>`).join('')}</select></td><td>${escH(a.period||'')}</td><td class="rfcs-num">${a.lines.length}</td><td class="rfcs-num">${a.closing!=null?fN(a.closing):'—'}</td><td>${escH(a.lastImport||'')}${(a.files||[]).map(f=>` · <a class="ops-link" onclick="docOpen('${f.path}')">${ar?'ملف':'file'}</a>`).join('')}</td><td><a class="ops-link" onclick="bankRemove('${a.id}')">✕</a></td></tr>`).join('')}</tbody></table>`:`<p class="ops-muted">${ar?'ارفع كشف حساب (PDF الراجحي أو Excel) لكل حساب من حسابات الصندوق.':'Upload a statement (Al Rajhi PDF or Excel) for each of the fund’s accounts.'}</p>`}
+    ${b.accounts.length?`<table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الحساب':'Account'}</th><th>IBAN</th><th>${ar?'الدور':'Role'}</th><th>${ar?'الفترة':'Period'}</th><th>${ar?'حركات':'Lines'}</th><th>${ar?'الرصيد الختامي':'Closing'}</th><th>${ar?'آخر استيراد':'Last import'}</th><th></th></tr></thead><tbody>${b.accounts.map(a=>`<tr><td><b>${escH(a.name)}</b></td><td><small>${escH(a.iban)}</small></td><td><select class="ops-mini" onchange="bankSetRole('${a.id}',this.value)">${[['operating',ar?'تشغيل':'operating'],['fund',ar?'الصندوق / رأس المال':'fund / capital'],['facility',ar?'تسهيل':'facility'],['escrow',ar?'ضمان':'escrow']].map(([v,l])=>`<option value="${v}"${a.role===v?' selected':''}>${l}</option>`).join('')}</select></td><td>${escH(a.period||'')}</td><td class="rfcs-num">${a.lines.length}</td><td class="rfcs-num">${a.closing!=null?fN(a.closing):'—'}</td><td>${escH(a.lastImport||'')}${(a.files||[]).map(f=>` · <a class="ops-link" onclick="docOpen('${f.path}')">${ar?'ملف':'file'}</a>`).join('')}</td><td><a class="ops-link" onclick="bankRemove('${a.id}')">✕</a></td></tr>`).join('')}</tbody></table>`:`<p class="ops-muted">${ar?'ارفع كشف حساب (PDF الراجحي أو Excel) لكل حساب من حسابات الصندوق.':'Upload statements (Al Rajhi or Alinma PDF, or Excel) — several files at once; each is matched to its account.'}</p>`}
     <p class="ops-muted" style="font-size:.78rem;margin:8px 0 0">${ar?'سجل المصروفات: ':'Expense register: '}${actuals.filter(p=>p.src==='register').length} ${ar?'صف':'rows'} · ${ar?'الاستثمارات: ':'treasury: '}${actuals.filter(p=>p.src==='treasury').length} ${ar?'حركة':'movements'} · ${ar?'دفعات أخرى في السجل: ':'other logged payments: '}${actuals.filter(p=>!p.src).length}</p></div>`;
   // checks
   h+=`<div class="ops-kpis" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${checks.map(c=>`<div class="ops-kpi au-check ${stc[c.state]}"><small>${c.title}</small><b><span class="ops-pill ${stc[c.state]}">${stl[c.state]}</span></b><i>${c.headline}</i></div>`).join('')}</div>`;
   // cash table + NAV entry
   const cash=checks.find(c=>c.key==='cash');if(cash.rows.length)h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'النقد: البنك + الاستثمارات مقابل المنصة':'Cash: bank + investments vs platform'}</h3><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الربع':'Quarter'}</th><th>${ar?'أرصدة البنوك':'Bank closings'}</th><th>${ar?'استثمارات قائمة':'Investments outstanding'}</th><th>${ar?'الإجمالي':'Total'}</th><th>${ar?'المنصة (التدفقات النقدية)':'Platform (cash flow)'}</th><th>${ar?'الفرق':'Difference'}</th></tr></thead><tbody>${cash.rows.map(r=>`<tr><td>${qLabel(r.q)}<small class="ops-muted">${r.accts} ${ar?'حساب':'accounts'}</small></td><td class="rfcs-num">${fN(r.bankClose)}</td><td class="rfcs-num">${fN(r.inv)}</td><td class="rfcs-num"><b>${fN(r.total)}</b></td><td class="rfcs-num">${fN(r.model)}</td><td class="rfcs-num cx-var ${Math.abs(r.diff)<1?'good':Math.abs(r.diff)<1e4?'warn':'bad'}"><span>${fN(r.diff)}</span></td></tr>`).join('')}</tbody></table><p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'الفرق يعني حركة في البنك غير موجودة في السجل (أو العكس) — راجع الحركات غير المفسّرة وصفوف السجل بلا حركة بنكية أدناه.':'A difference means a bank movement that is not in the register (or the reverse) — see the unexplained lines and the register rows without a bank line below.'}</p></div>`;
   const nav=checks.find(c=>c.key==='nav');if(nav.rows.length)h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'صافي الأصول: المنصة مقابل فريق العمليات':'NAV: platform vs operations team'}</h3><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الربع':'Quarter'}</th><th>${ar?'المنصة':'Platform NAV'}</th><th>${ar?'للوحدة':'per unit'}</th><th>${ar?'فريق العمليات':'Operations team NAV'}</th><th>${ar?'الفرق':'Difference'}</th></tr></thead><tbody>${nav.rows.map(r=>`<tr><td>${qLabel(r.q)}</td><td class="rfcs-num">${fN(r.platform)}</td><td class="rfcs-num">${r.navU.toFixed(3)}</td><td><input type="number" class="ops-mini" style="width:150px" value="${r.ops==null?'':r.ops}" placeholder="—" onchange="auditSetOpsNav(${r.q},this.value)"></td><td class="rfcs-num cx-var ${r.diff==null?'':Math.abs(r.diff)<1e4?'good':'warn'}"><span>${r.diff==null?'':fN(r.diff)}</span></td></tr>`).join('')}</tbody></table></div>`;
+  h+=murabahaTable();
   // per account per quarter
   if(qrows.length){h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'كل حساب، كل ربع':'Each account, each quarter'}</h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الحساب · الربع':'Account · quarter'}</th><th>${ar?'افتتاحي':'Opening'}</th><th>${ar?'إيداعات':'Inflows'}</th><th>${ar?'منها مفسّر':'explained'}</th><th>${ar?'غير مفسّر':'unexplained'}</th><th>${ar?'سحوبات':'Outflows'}</th><th>${ar?'منها مفسّر':'explained'}</th><th>${ar?'رسوم بنكية':'bank charges'}</th><th>${ar?'تحويلات داخلية':'internal transfers'}</th><th>${ar?'غير مفسّر':'unexplained'}</th><th>${ar?'ختامي':'Closing'}</th></tr></thead><tbody>${qrows.map(r=>`<tr class="${r.hasLines?'':'cx-sub'}"><td><b>${escH(r.acct.name.slice(0,22))}</b> · ${qLabel(r.q)}</td><td class="rfcs-num">${fN(r.open)}</td><td class="rfcs-num">${fN(r.inflow)}</td><td class="rfcs-num">${fN(r.inEx)}</td><td class="rfcs-num cx-var ${r.unIn>0.5?'bad':''}"><span>${r.unIn>0.5?fN(r.unIn):'—'}</span></td><td class="rfcs-num">${fN(r.outflow)}</td><td class="rfcs-num">${fN(r.outEx)}</td><td class="rfcs-num">${fN(r.charges)}</td><td class="rfcs-num">${fN(r.transfers)}</td><td class="rfcs-num cx-var ${r.unOut>0.5?'bad':''}"><span>${r.unOut>0.5?fN(r.unOut):'—'}</span></td><td class="rfcs-num"><b>${fN(r.close)}</b></td></tr>`).join('')}</tbody></table></div></div>`;}
   // exceptions
@@ -6097,7 +6233,7 @@ function renderAudit(){
   h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'صفوف في السجل بلا حركة بنكية':'Register rows with no bank line'}${cov?` <small class="ops-muted">${ar?'ضمن فترة الكشوف ':'within statement coverage '}${cov[0]} → ${cov[1]}${later?' · '+later+(ar?' صفوف بعد الفترة':' rows after the period'):''}</small>`:''}<span>${miss.length} · ${M_(sumA(miss.map(m=>m.amount)))}</span></h3>${miss.length?`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'المستفيد':'Payee'}</th><th>${ar?'البند':'Category'}</th><th>${ar?'المبلغ':'Amount'}</th></tr></thead><tbody>${miss.map(m=>`<tr><td>${m.date}</td><td>${escH(m.label.slice(0,60))}</td><td>${escH(_actCatLabel(m.cat))}</td><td class="rfcs-num">${fN(m.amount)}</td></tr>`).join('')}</tbody></table></div><p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'غالباً: مدفوعة من حساب لم يُرفع كشفه (مثل حساب التسهيل)، أو فرق تاريخ أكبر من 10 أيام، أو مبلغ مختلف.':'Usually: paid from an account whose statement is not uploaded (e.g. the facility account), a date gap over 10 days, or a different amount.'}</p>`:`<p class="ops-muted">${ar?'لا شيء.':'Nothing.'}</p>`}</div>`;
   // explained lines (collapsible)
   const expl=[];b.accounts.forEach(a=>a.lines.forEach(l=>{const e=ex.res[l.id];if(e)expl.push({a,l,e});}));
-  const howL={manual:ar?'ربط يدوي':'manual link',class:ar?'مصنّف':'classified',returned:ar?'مرتجع':'returned',transfer:ar?'تحويل داخلي':'internal transfer',ref:ar?'بالمرجع':'by reference',amount:ar?'بالمبلغ':'by amount',fee:ar?'بالمبلغ + رسوم':'amount + fee',sum:ar?'مجموع صفّين':'sum of two rows',split:ar?'حركتان لصف':'two lines, one row',charge:ar?'رسوم بنكية':'bank charge'};
+  const howL={deal:ar?'صفقة تورّق':'tawarruq deal',manual:ar?'ربط يدوي':'manual link',class:ar?'مصنّف':'classified',returned:ar?'مرتجع':'returned',transfer:ar?'تحويل داخلي':'internal transfer',ref:ar?'بالمرجع':'by reference',amount:ar?'بالمبلغ':'by amount',fee:ar?'بالمبلغ + رسوم':'amount + fee',sum:ar?'مجموع صفّين':'sum of two rows',split:ar?'حركتان لصف':'two lines, one row',charge:ar?'رسوم بنكية':'bank charge'};
   h+=`<details class="cx-details"><summary>${ar?'الحركات المفسّرة':'Explained lines'} (${expl.length})</summary><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'الحساب':'Account'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'المبلغ':'Amount'}</th><th>${ar?'كيف':'How'}</th><th>${ar?'يقابل':'Matches'}</th><th>${ar?'فرق':'Diff'}</th><th></th></tr></thead><tbody>${expl.map(({a,l,e})=>`<tr><td>${l.date}</td><td>${escH(a.name.slice(0,18))}</td><td>${escH(l.desc.slice(0,60))}</td><td class="rfcs-num">${fN(l.credit||l.debit)}</td><td>${howL[e.how]||e.how}${e.type?' · '+escH(e.type):''}</td><td>${e.m?escH(e.m.date+' · '+e.m.label.slice(0,40)+' · '+_actCatLabel(e.m.cat)):e.ms?escH(e.ms.map(m=>m.label.slice(0,25)+' '+fN(m.amount)).join(' + ')):''}</td><td class="rfcs-num">${e.diff?fN(e.diff):''}</td><td>${e.how==='manual'||e.how==='class'?`<a class="ops-link" onclick="auditSetClass('${l.id}','');auditLink('${l.id}','')">${ar?'إلغاء':'undo'}</a>`:''}</td></tr>`).join('')}</tbody></table></div></details>`;
   pnl.innerHTML=h;
 }
@@ -6119,6 +6255,7 @@ function opsFinancing(){
     <div class="ops-card" style="margin-bottom:16px"><h3>${ot('fDrawTbl')}<span>${strict?ot('finStrict'):ot('finLenient')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ot('fPlanDraw')}</th><th>${ot('fActDraw')}</th><th>${ot('fPlanRepay')}</th><th>${ot('fActRepay')}</th><th>${ot('fPlanBal')}</th><th>${ot('fBal')}</th><th>${ot('fPlanInt')}</th><th>${ot('fActInt')}</th></tr></thead><tbody>
     ${Array.from({length:nq},(_,i)=>`<tr class="${i<cut?'':'cx-sub'}"><td>${qLabel(i)}${i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(pd(i))}</td><td class="rfcs-num ${i<cut&&ad(i)>pd(i)+0.5?'cx-var bad':''}"><span>${fN(ad(i))}</span></td><td class="rfcs-num">${fN(pr(i))}</td><td class="rfcs-num">${fN(arp(i))}</td><td class="rfcs-num">${fN(R.qLoanClose[i]||0)}</td><td class="rfcs-num"><b>${fN(R2.qLoanClose[i]||0)}</b></td><td class="rfcs-num">${fN(R.qInterest[i]||0)}</td><td class="rfcs-num">${fN(R2.qInterest[i]||0)}</td></tr>`).join('')}
     <tr class="tot"><td><b>${ot('gTotal')}</b></td><td class="rfcs-num"><b>${fN(sumA(R.drawdowns))}</b></td><td class="rfcs-num"><b>${fN(sumA(Array.from({length:nq},(_,i)=>ad(i))))}</b></td><td class="rfcs-num"><b>${fN(sumA(R.qRepay))}</b></td><td class="rfcs-num"><b>${fN(sumA(Array.from({length:nq},(_,i)=>arp(i))))}</b></td><td></td><td></td><td class="rfcs-num"><b>${fN(sumA(R.qInterest))}</b></td><td class="rfcs-num"><b>${fN(R2.totalInterest)}</b></td></tr></tbody></table></div></div>`;})()}
+  ${murabahaTable()}
   <div class="ops-grid2"><div class="ops-card"><h3>${ot('loanChart')}<span>SAR</span></h3>${svgLines(series,cut,nq)}</div>
   <div class="ops-card"><h3>${ot('facility')}</h3><table class="rfcs-tbl"><thead><tr><th></th><th>${ot('baseline')}</th><th>${ot('forecast')}</th></tr></thead><tbody>${row('SAIBOR',blF.saibor+'%',(ov.saibor??blF.saibor)+'%')}${row(lang==='ar'?'الهامش':'Margin',blF.margin+'%',(ov.margin??blF.margin)+'%')}${row(lang==='ar'?'الحد الأدنى للنقد':'Minimum cash',fN(blF.min_cash),fN(ov.min_cash??blF.min_cash))}${row(lang==='ar'?'إجمالي الأرباح':'Total interest',M_(sumA(R.qInterest)),M_(R2.totalInterest))}</tbody></table>
   <label class="ops-field" style="margin-top:12px">${ot('confirm')} Q${cut}<input type="number" class="ops-mini" style="width:160px" value="${reforecastSettings.actualLoanBalance??''}" placeholder="${M_(loanAt)}" onchange="reforecastSettings.actualLoanBalance=this.value===''?null:Number(this.value);opsRefresh()"></label>
