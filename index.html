@@ -591,6 +591,7 @@ canvas{max-width:100%;display:block}
 /* ── Header — Dark authority bar ── */
 .es-hdr{height:18mm;background:var(--es-secondary);display:flex;align-items:center;justify-content:space-between;padding:0 14mm}
 .es-hdr-left{display:flex;align-items:center;gap:3.5mm}
+.es-logo-img{height:11mm;width:auto;display:block;object-fit:contain}
 .es-logo{width:11mm;height:11mm;background:var(--es-gold-grad);border-radius:2.5mm;display:flex;align-items:center;justify-content:center;font-family:var(--es-font-display);font-size:12px;font-weight:800;color:var(--es-on-primary);flex-shrink:0;letter-spacing:-.3px}
 .es-hdr h1{font-family:var(--es-font-display);font-size:15px;font-weight:700;color:#fff;margin:0;line-height:1.15;letter-spacing:-.2px}
 .es-hdr .es-sub{font-family:var(--es-font-label);font-size:8.5px;color:rgba(255,255,255,.55);margin:0;text-transform:uppercase;letter-spacing:1.2px;font-weight:500}
@@ -651,6 +652,11 @@ canvas{max-width:100%;display:block}
 
 /* ── Sales Table — Clean, no borders ── */
 .es-sales-wrap{padding:0 14mm;margin-top:3.5mm}
+.sum-bar{display:flex;align-items:center;gap:6px;padding:6px 14mm;font-size:.8rem;color:var(--ink-3,#6b6b60)}
+.sum-bar a{cursor:pointer;padding:3px 10px;border-radius:999px;border:1px solid var(--line,#ddd)}
+.sum-bar a.on{background:var(--ink,#3a3a32);color:#fff;border-color:var(--ink,#3a3a32)}
+.sum-bar-note{margin-inline-start:auto;font-size:.75rem}
+@media print{.sum-bar{display:none}}
 .es-sales{width:100%;border-collapse:separate;border-spacing:0;font-family:var(--es-font-body);font-size:7.5px}
 .es-sales th{background:var(--es-secondary);color:#fff;font-family:var(--es-font-label);font-weight:600;padding:2.5mm 2mm;text-align:center;font-size:7px;text-transform:uppercase;letter-spacing:.4px}
 .es-sales th:first-child{border-radius:1.5mm 0 0 0;text-align:left}
@@ -3487,10 +3493,28 @@ function drawPie(id,vals,labs,cols){
 // =============================================
 // EXECUTIVE SUMMARY — RENDER & PRINT
 // =============================================
+// Summary time axis: quarterly up to 12 quarters, semi-annual up to 24, annual beyond (user can override)
+let sumPeriod='auto';
+function sumPeriodFor(nq){ if(sumPeriod!=='auto') return sumPeriod; return nq<=12?'q':nq<=24?'h':'y'; }
+function sumBuckets(nq,per,isAr){
+  const size=per==='y'?4:per==='h'?2:1, out=[];
+  for(let i=0;i<nq;i+=size){
+    const idx=[];for(let j=i;j<Math.min(i+size,nq);j++)idx.push(j);
+    const y=Math.floor(i/4)+1, hh=Math.floor((i%4)/2)+1;
+    const lbl=per==='y'?(isAr?'سنة '+y:'Y'+y):per==='h'?(isAr?'س'+y+' ن'+hh:'Y'+y+' H'+hh):(isAr?'ربع '+(i+1):'Q'+(i+1));
+    out.push({idx,lbl});
+  }
+  return out;
+}
+function sumAgg(arr,buckets){ return buckets.map(b=>b.idx.reduce((a,i)=>a+(arr[i]||0),0)); }
+function setSumPeriod(v){ sumPeriod=v; renderSummary(); }
 function renderSummary(){
   if(!R) return;
   const RS=viewR(); if(!RS) return;
   const AA=RS.A||D, nq=RS.nq;
+  const _per=sumPeriodFor(nq), _bk=sumBuckets(nq,_per,lang==='ar'), nP=_bk.length;
+  const pSales=sumAgg(RS.qGrossSales,_bk), pLbl=_bk.map(b=>b.lbl);
+  const perName={q:['Quarterly','ربعي'],h:['Semi-annual','نصف سنوي'],y:['Annual','سنوي']}[_per];
   function fmt(n){ if(n==null||Math.abs(n)<0.5) return '-'; const s=Math.abs(Math.round(n)).toLocaleString('en-US'); return n<0?'('+s+')':s; }
   function _fP(v){ return (v*100).toFixed(1)+'%'; }
   const _fcv=RS===R2&&RS._isReforecast; const base=_fcv?RS:calcWith({}), irr=base?base.irr:0, eqMult=base?base.eqMult:0;
@@ -3524,6 +3548,7 @@ function renderSummary(){
 
   const p=document.getElementById('p-summary');
   let h=viewStamp();
+  h+=`<div class="sum-bar no-print"><span>${L('Schedule','الجدول')}:</span>${[['auto',L('Auto','تلقائي')],['q',L('Quarterly','ربعي')],['h',L('Semi-annual','نصف سنوي')],['y',L('Annual','سنوي')]].map(([v,t])=>`<a class="${sumPeriod===v?'on':''}" onclick="setSumPeriod('${v}')">${t}</a>`).join('')}<span class="sum-bar-note">${nq} ${L('quarters','ربع')} → ${nP} ${L('columns','عمود')}</span></div>`;
 
   // ═══ PAGE 1: EXECUTIVE SUMMARY ═══
   h+=`<div class="es-page" dir="${isAr?'rtl':'ltr'}" style="font-family:${fontF}">`;
@@ -3531,7 +3556,7 @@ function renderSummary(){
   // Header
   h+=`<div class="es-hdr" style="direction:${isAr?'rtl':'ltr'}">
     <div class="es-hdr-left">
-      <div class="es-logo">RF</div>
+      <img class="es-logo-img" src="${LOGO_B64}" alt="Musharaka">
       <div style="text-align:${isAr?'right':'left'}">
         <h1 style="font-family:${fontD}">${L('Financial Study','الدراسة المالية')}</h1>
         <p class="es-sub">${L('Executive Summary','الملخص التنفيذي')}</p>
@@ -3683,10 +3708,10 @@ function renderSummary(){
   h+=`<div class="es-page" dir="${isAr?'rtl':'ltr'}" style="font-family:${fontF}">`;
   h+=`<div class="es-hdr" style="direction:${isAr?'rtl':'ltr'}">
     <div class="es-hdr-left">
-      <div class="es-logo">RF</div>
+      <img class="es-logo-img" src="${LOGO_B64}" alt="Musharaka">
       <div style="text-align:${isAr?'right':'left'}">
         <h1 style="font-family:${fontD}">${L('Cash Flow & Sales Schedule','التدفقات النقدية وجدول المبيعات')}</h1>
-        <p class="es-sub">${L('Quarterly Breakdown','التوزيع الربعي')}</p>
+        <p class="es-sub">${L(perName[0]+' Breakdown','التوزيع ال'+perName[1])}</p>
       </div>
     </div>
     <div class="es-hdr-right" style="text-align:${isAr?'left':'right'}">
@@ -3711,32 +3736,32 @@ function renderSummary(){
   h+=`</div>`;
 
   // Sales Schedule Table — RTL in Arabic
-  const qLbl=RS.labels.map(q=>isAr?q.replace('Q','ربع '):q);
-  h+=`<div class="es-sales-wrap"><div class="es-sec"><div class="es-sec-title">${L('Quarterly Sales Schedule (SAR)','جدول المبيعات الربعي')}</div></div>`;
+  const qLbl=pLbl;
+  h+=`<div class="es-sales-wrap"><div class="es-sec"><div class="es-sec-title">${L(perName[0]+' Sales Schedule (SAR)','جدول المبيعات ال'+perName[1])}</div></div>`;
   if(isAr){
     // Arabic: RTL table — label on right, quarters right-to-left
     h+=`<table class="es-sales" dir="rtl"><tr><th class="es-row-lbl"></th>`;
     qLbl.forEach(q=>{h+=`<th>${q}</th>`;});
     h+=`<th>${L('Total','المجموع')}</th></tr><tr><td class="es-row-lbl">${L('Revenue','الإيرادات')}</td>`;
-    RS.qGrossSales.forEach(v=>{h+=`<td dir="ltr">${v>0?fmt(v):'-'}</td>`;});
+    pSales.forEach(v=>{h+=`<td dir="ltr">${v>0?fmt(v):'-'}</td>`;});
     h+=`<td class="es-row-total" dir="ltr">${fmt(RS.tRev)}</td></tr><tr><td class="es-row-lbl">${L('Cumulative','التراكمي')}</td>`;
     let cum2=0;
-    RS.qGrossSales.forEach(v=>{cum2+=v;h+=`<td dir="ltr">${cum2>0?fmt(cum2):'-'}</td>`;});
+    pSales.forEach(v=>{cum2+=v;h+=`<td dir="ltr">${cum2>0?fmt(cum2):'-'}</td>`;});
     h+=`<td class="es-row-total" dir="ltr">${fmt(RS.tRev)}</td></tr></table></div>`;
   } else {
     h+=`<table class="es-sales" dir="ltr"><tr><th class="es-row-lbl"></th>`;
     qLbl.forEach(q=>{h+=`<th>${q}</th>`;});
     h+=`<th>${L('Total','المجموع')}</th></tr><tr><td class="es-row-lbl">${L('Revenue','الإيرادات')}</td>`;
-    RS.qGrossSales.forEach(v=>{h+=`<td>${v>0?fmt(v):'-'}</td>`;});
+    pSales.forEach(v=>{h+=`<td>${v>0?fmt(v):'-'}</td>`;});
     h+=`<td class="es-row-total">${fmt(RS.tRev)}</td></tr><tr><td class="es-row-lbl">${L('Cumulative','التراكمي')}</td>`;
     let cum2=0;
-    RS.qGrossSales.forEach(v=>{cum2+=v;h+=`<td>${cum2>0?fmt(cum2):'-'}</td>`;});
+    pSales.forEach(v=>{cum2+=v;h+=`<td>${cum2>0?fmt(cum2):'-'}</td>`;});
     h+=`<td class="es-row-total">${fmt(RS.tRev)}</td></tr></table></div>`;
   }
 
   // Charts
   h+=`<div class="es-charts">
-    <div class="es-chart-bar"><div class="es-sec"><div class="es-sec-title">${L('Revenue by Quarter','الإيرادات حسب الربع')}</div></div><canvas id="esBarChart"></canvas></div>
+    <div class="es-chart-bar"><div class="es-sec"><div class="es-sec-title">${L('Revenue by '+({q:'Quarter',h:'Half-year',y:'Year'})[_per],'الإيرادات حسب '+({q:'الربع',h:'نصف السنة',y:'السنة'})[_per])}</div></div><canvas id="esBarChart"></canvas></div>
     <div class="es-chart-donut"><div class="es-sec"><div class="es-sec-title">${L('Capital Structure','هيكل رأس المال')}</div></div><canvas id="esDonutChart"></canvas></div>
   </div>`;
 
@@ -3753,10 +3778,10 @@ function renderSummary(){
     const bW=bc.parentElement.offsetWidth||500, bH=185;
     bc.style.width=bW+'px'; bc.style.height=bH+'px';
     bc.width=bW*2; bc.height=bH*2; bCtx.scale(2,2);
-    const maxS=Math.max(...R.qGrossSales,1);
+    const maxS=Math.max(...pSales,1);
     const cM={top:8,right:8,bottom:20,left:42};
     const pW=bW-cM.left-cM.right, pH=bH-cM.top-cM.bottom;
-    const bGap=pW/nq;
+    const bGap=pW/nP;
     for(let g=0;g<=4;g++){
       const gy=cM.top+pH-g*(pH/4);
       bCtx.strokeStyle='rgba(228,226,221,.6)'; bCtx.lineWidth=0.5;
@@ -3765,16 +3790,16 @@ function renderSummary(){
       bCtx.fillText(Math.round(maxS*g/4/1e6)+'M',cM.left-4,gy+3);
     }
     // Draw ALL quarter labels first (even for zero-revenue quarters)
-    for(let i=0;i<nq;i++){
-      const bi=isAr?(nq-1-i):i;
+    for(let i=0;i<nP;i++){
+      const bi=isAr?(nP-1-i):i;
       const lx=cM.left+bi*bGap+bGap*0.12+bGap*0.76/2;
       bCtx.fillStyle='#9a9a8d'; bCtx.font=isAr?'500 7px Cairo,system-ui':'500 8px Inter,system-ui'; bCtx.textAlign='center';
       bCtx.fillText(qLbl[i],lx,cM.top+pH+12);
     }
     // Draw bars only for non-zero quarters
-    RS.qGrossSales.forEach((v,i)=>{
+    pSales.forEach((v,i)=>{
       if(v<=0) return;
-      const bi=isAr?(nq-1-i):i;
+      const bi=isAr?(nP-1-i):i;
       const bh=(v/maxS)*pH, bx=cM.left+bi*bGap+bGap*0.12, bw=bGap*0.76, by=cM.top+pH-bh;
       const grad=bCtx.createLinearGradient(bx,by,bx+bw,by+bh);
       grad.addColorStop(0,'#735b23'); grad.addColorStop(1,'#b5985a');
@@ -3785,8 +3810,8 @@ function renderSummary(){
       bCtx.fill();
       bCtx.shadowColor='rgba(115,91,35,.12)'; bCtx.shadowBlur=8; bCtx.shadowOffsetY=4;
       bCtx.fill(); bCtx.shadowColor='transparent'; bCtx.shadowBlur=0; bCtx.shadowOffsetY=0;
-      bCtx.fillStyle='#3a3a32'; bCtx.font='700 8px Inter,system-ui'; bCtx.textAlign='center';
-      bCtx.fillText((v/1e6).toFixed(1)+'M',bx+bw/2,by-3);
+      const inside=by-3<cM.top+8; bCtx.fillStyle=inside?'#fff':'#3a3a32'; bCtx.font='700 8px Inter,system-ui'; bCtx.textAlign='center';
+      bCtx.fillText((v/1e6).toFixed(1)+'M',bx+bw/2,inside?by+11:by-3);
     });
 
     // Donut Chart — bilingual labels
@@ -3955,6 +3980,8 @@ function buildActualsTab(){
       <select id="actFilterCat" onchange="buildActualsTab()"><option value="">${t?'جميع البنود':'All Categories'}</option>${catOpts}</select>
       <select id="actFilterQ" onchange="buildActualsTab()"><option value="">${t?'جميع الأرباع':'All Quarters'}</option>${qOpts}</select>
       <input type="text" id="actFilterPayee" placeholder="${t?'بحث بالمستفيد':'Search payee'}" oninput="buildActualsTab()">
+      <span style="flex:1"></span>
+      <button class="act-btn act-btn-del" id="actDelSel" onclick="_actDeleteSelected()" disabled>✕ ${t?'حذف المحدد':'Delete selected'} (<span id="actSelN">0</span>)</button>
     </div>`;
 
   // Filter actuals
@@ -3973,6 +4000,7 @@ function buildActualsTab(){
   }else{
     html+=`<div class="act-log"><table>
       <thead><tr>
+        <th><input type="checkbox" id="actSelAll" title="${t?'تحديد الكل (المعروض)':'Select all (shown)'}" onchange="_actSelAll(this.checked)"></th>
         <th>${t?'التاريخ':'Date'}</th>
         <th>${t?'الربع':'Quarter'}</th>
         <th>${t?'البند':'Category'}</th>
@@ -3984,6 +4012,7 @@ function buildActualsTab(){
       </tr></thead><tbody>`;
     for(const p of filtered){
       html+=`<tr>
+        <td><input type="checkbox" class="act-sel" value="${escH(p.id)}" onchange="_actSelCount()"></td>
         <td>${escH(p.date)||'—'}</td>
         <td>${labels[p.quarter]||'Q'+(p.quarter+1)}</td>
         <td>${escH(_actCatLabel(p.category))}${p.component?'<br><small style="color:var(--on-surface-vl)">↳ '+escH((lineComponents(p.category).find(c=>c.key===p.component)||{}).label||'')+'</small>':''}</td>
@@ -4084,9 +4113,19 @@ function _actCancelEdit(){
 
 function _actDelete(id){
   if(!confirm(lang==='ar'?'هل أنت متأكد من حذف هذه الدفعة؟':'Delete this payment?')) return;
-  actuals=actuals.filter(p=>p.id!==id);
+  _actRemoveIds([id]);
   buildActualsTab();
 }
+// removing a payment also unlinks anything that pointed at it (invoice paid status, bank-line links)
+function _actRemoveIds(ids){const set=new Set(ids);actuals=actuals.filter(p=>!set.has(p.id));
+  (reforecastSettings.invoices||[]).forEach(i=>{if(set.has(i.paymentId)){i.status='outstanding';delete i.paymentId;delete i.paidDate;delete i.paidAmount;}});
+  const b=reforecastSettings.bank;if(b&&b.links){for(const k in b.links)if(set.has(b.links[k]))delete b.links[k];}}
+function _actSelAll(on){document.querySelectorAll('.act-sel').forEach(c=>{c.checked=on;});_actSelCount();}
+function _actSelCount(){const n=document.querySelectorAll('.act-sel:checked').length;const b=document.getElementById('actDelSel'),s=document.getElementById('actSelN');if(s)s.textContent=n;if(b)b.disabled=n===0;}
+function _actDeleteSelected(){const ids=[...document.querySelectorAll('.act-sel:checked')].map(c=>c.value);if(!ids.length)return;
+  const tot=actuals.filter(p=>ids.includes(p.id)).reduce((s,p)=>s+(Number(p.amount)||0),0);
+  if(!confirm((lang==='ar'?'حذف ':'Delete ')+ids.length+(lang==='ar'?' دفعة بإجمالي ':' payments totalling ')+fN(tot)+(lang==='ar'?'؟ لا يمكن التراجع (إلا بعدم الحفظ).':'? This cannot be undone (except by not saving).')))return;
+  _actRemoveIds(ids);buildActualsTab();}
 
 // =============================================
 // IMPORT ENGINE — Excel Upload & Paste
