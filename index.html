@@ -2659,7 +2659,7 @@ function calculate(){
   let cumCon=0;
 
   for(let iter=0;iter<100;iter++){
-    cumCon=0;
+    cumCon=0; qDividends.fill(0);
     const iterDebt=drawdowns.reduce((a,b)=>a+b,0);
     qArrFee[0]=iterDebt*pct(A.arr_fee_pct);
     qBankMgmt.fill(0); qBankMgmt[0]=iterDebt*pct(A.bank_mgmt_pct)*V; // VAT is charged on the bank fee (matches Excel)
@@ -2705,6 +2705,8 @@ function calculate(){
     }
 
     for(let qi=0;qi<nq;qi++){
+      // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
+      qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
       qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
       qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
       const netBorrow=drawdowns[qi]-qRepay[qi];
@@ -2751,7 +2753,7 @@ function calculate(){
     if(delta<1) break;
   }
 
-  cumCon=0;
+  cumCon=0; qDividends.fill(0);
   for(let qi=0;qi<nq;qi++){
     qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1];
     const bal=qLoanOpen[qi]+drawdowns[qi];
@@ -2798,7 +2800,9 @@ function calculate(){
   for(let qi=0;qi<nq;qi++) qIKTotal[qi]=qIKBase[qi]+(isFund?qMgmtFee[qi]*gpIKPct:0);
 
   for(let qi=0;qi<nq;qi++){
-    qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
+    // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
+      qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
+      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
     qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
     const netBorrow=drawdowns[qi]-qRepay[qi];
 
@@ -7852,7 +7856,7 @@ function calcWith(overrides){
   let cumCon=0;
 
   for(let iter=0;iter<100;iter++){
-    cumCon=0;
+    cumCon=0; qDividends.fill(0);
     const iterDebt=drawdowns.reduce((a,b)=>a+b,0);
     qArrFee[0]=iterDebt*pct(A.arr_fee_pct);
     qBankMgmt.fill(0);qBankMgmt[0]=iterDebt*pct(A.bank_mgmt_pct)*V; // VAT is charged on the bank fee (matches Excel)
@@ -7892,6 +7896,8 @@ function calcWith(overrides){
       qVATNet[qi]=totalRef-qVATAdvisor[qi];
     }
     for(let qi=0;qi<nq;qi++){
+      // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
+      qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
       qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
       qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
       const netBorrow=drawdowns[qi]-qRepay[qi];
@@ -7932,7 +7938,7 @@ function calcWith(overrides){
     if(delta<1) break;
   }
 
-  cumCon=0;
+  cumCon=0; qDividends.fill(0);
   for(let qi=0;qi<nq;qi++){
     qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1];
     const bal=qLoanOpen[qi]+drawdowns[qi];
@@ -7975,7 +7981,9 @@ function calcWith(overrides){
   for(let qi=0;qi<nq;qi++) qIKTotal[qi]=qIKBase[qi]+(isFund?qMgmtFee[qi]*gpIKPct:0);
 
   for(let qi=0;qi<nq;qi++){
-    qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
+    // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
+      qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
+      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
     qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
     const netBorrow=drawdowns[qi]-qRepay[qi];
     qCashOpen[qi]=qi===0?0:qCashClose[qi-1];
