@@ -4559,6 +4559,15 @@ function buildReforecastUI(){
 }
 
 // Main reforecast solver
+// Weights for the open quarters when a sales curve slips: walk the baseline cumulative curve to the achieved amount,
+// then lay the rest of the curve from the cutoff quarter onward (tail past the fund end → last quarter).
+function _rfSlipWeights(origQ,achieved,cutoffQ,nq){
+  const open=nq-cutoffQ,w=Array(open).fill(0);
+  for(let j=0;j<open;j++)w[j]=origQ[cutoffQ+j]||0;            // the open-quarter plan stays where it is
+  let left=achieved;const rest=[];                             // the closed-quarter plan not yet achieved slips forward in its own shape
+  for(let k=0;k<cutoffQ;k++){const v=origQ[k]||0;if(left>=v-1e-9){left-=v;continue;}if(left>0){rest.push(v-left);left=0;}else rest.push(v);}
+  rest.forEach((v,j)=>{w[Math.min(j,open-1)]+=v;});
+  return w;}
 function runReforecast(){
   if(!R){return;}
   _rfNorm();
@@ -4619,6 +4628,12 @@ function runReforecast(){
       }else if(redistMode==='next_quarter'){
         // Dump all remaining into the first forecast quarter
         arr[cutoffQ]+=remaining;
+      }else if((c.key==='revenue'||c.key==='selling')&&origTotal>0){
+        // Slip, don't redistribute: sales not achieved by the cutoff are delayed, so the baseline curve restarts
+        // from the point the collections reached (the part planned for closed quarters lands in the first open quarters,
+        // in its original shape; anything that would fall past the fund end folds into the last quarter).
+        const w=_rfSlipWeights(origQ,actualSpent,cutoffQ,nq);const tw=w.reduce((a,b)=>a+b,0);
+        for(let i=cutoffQ;i<nq;i++) arr[i]=tw>0?remaining*w[i-cutoffQ]/tw:remaining/forecastQs;
       }else{
         // Proportional: renormalize based on original weights of forecast quarters
         let forecastOrigSum=0;
@@ -4805,6 +4820,7 @@ function runReforecast(){
   // Clear stale forecast-quarter dividends (final distribution recomputed below — FIX 3)
   for(let i=cutoffQ;i<nq;i++) R2.qDividends[i]=0;
 
+  const _facility=facilityLimit(),gap=Array(nq).fill(0);
   for(let iter=0;iter<100;iter++){
     // Debt schedule & interest for forecast quarters (actual quarters kept as-is)
     for(let i=cutoffQ;i<nq;i++){
@@ -4831,6 +4847,8 @@ function runReforecast(){
         const netNoBorrow=R2.qNetOp[i]+R2.qNetInv[i]+(R2.qEquity[i]||0)+(R2.qIKTotal[i]||0)-(i===nq-1?(R2.qRepay[i]||0):0);
         const raw=open+netNoBorrow;
         newDD[i]=(raw<_minCash&&i<nq-1)?_minCash-raw:0;
+        // the facility is the ceiling: cumulative draws cannot exceed it — what is left is a funding gap, not more debt
+        {const drawnBefore=newDD.slice(0,i).reduce((a,b)=>a+b,0);const room=Math.max(0,_facility-drawnBefore);if(newDD[i]>room){gap[i]=newDD[i]-room;newDD[i]=room;}else gap[i]=0;}
         tempCash[i]=raw+newDD[i];
       }
     }
@@ -4840,6 +4858,7 @@ function runReforecast(){
     if(delta<1) break;
   }
 
+  R2._fundingGap=gap; R2._facility=_facility;
   // Rebuild cash flow
   for(let i=0;i<nq;i++){
     // qNetFin = drawdowns - repay + equity + IK - dividends
@@ -5001,6 +5020,8 @@ function otherExpBreakdown(RX){
 }
 function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[],invoices:[],submissions:[]};}
 function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k]===undefined) reforecastSettings[k]=JSON.parse(JSON.stringify(d[k]));}
+// Facility ceiling for the forecast: user-set limit, else the loan schedule's facility, else the baseline total drawdowns
+function facilityLimit(){_rfNorm();const u=Number(reforecastSettings.facilityLimit);if(u>0)return u;const b=reforecastSettings.bank;if(b&&b.facility&&Number(b.facility.facility)>0)return Number(b.facility.facility);return R?sumA(R.drawdowns):Infinity;}
 function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings.cutoffQ;
   if(c!==null&&c!==undefined) return Math.max(0,Math.min(nq-1,Number(c)));
   const lastPaid=actuals.length?Math.max(...actuals.map(p=>Number(p.quarter)||0))+1:0;   // quarters that have payments count as closed
@@ -5232,6 +5253,7 @@ function opsAlerts(){
   else if(uns.length>1) out.push(['warn',uns.length+(lang==='ar'?' بنود بميزانية غير منفقة في الأرباع المقفلة (':' lines with unspent closed-quarter budget (')+M_(uns.reduce((a,x)=>a+x[1],0))+(lang==='ar'?') — المعالجة الافتراضية ترحيل للأمام: ':') — treatment defaults to push forward: ')+uns.slice(0,4).map(x=>x[0]).join(', ')+(uns.length>4?'…':''),'costs']);
   const un=actuals.filter(p=>(p.category==='base_con'||p.category==='revenue')&&!p.component&&lineComponents(p.category).length>1); if(un.length) out.push(['warn',un.length+' '+ot('unassigned')+' ('+M_(un.reduce((s,p)=>s+p.amount,0))+')','payments']);
   if(cut>0&&!R2._finStrict&&(sumA(R2.drawdowns.slice(0,cut))>0||sumA(R2.qEquity.slice(0,cut))>0)) out.push(['warn',ot('noFin'),'financing']);
+  {const g=R2._fundingGap||[];const tot=sumA(g);if(tot>0.5){const q=g.findIndex(v=>v>0.5);out.push(['bad',(lang==='ar'?'فجوة تمويل ':'Funding gap ')+M_(tot)+(lang==='ar'?' — التسهيل مستنفد اعتباراً من ':' — facility exhausted from ')+qLabel(q)+(lang==='ar'?'؛ يلزم بيع على الخارطة بهذا المبلغ أو تمويل إضافي':'; off-plan sales of that amount, or more funding, are needed'),'sales']);}}
   try{vatAlerts().forEach(a=>out.push(a));}catch(e){}
   try{docAlerts().forEach(a=>out.push(a));}catch(e){}
   return out;
@@ -5405,6 +5427,15 @@ function applySalesToForecast(){
     const remArea=area-sold; if(remArea>0){const per=pace>0?pace:remArea/Math.max(1,nq-start); let left=remArea; for(let q=start;q<nq&&left>0;q++){const a=Math.min(per,left);phase[q-cut]+=a*unp;left-=a;} if(left>0) phase[phase.length-1]+=left*unp;}}
   if(any&&phase.some(v=>v>0)) reforecastSettings.manualRedist['revenue']=phase.map(v=>Math.round(v));
 }
+// Sales timing: plan vs forecast per quarter, the facility ceiling, and the sales needed to stay inside it
+function salesTimingCard(cut,nq){const ar=lang==='ar',g=R2._fundingGap||Array(nq).fill(0),fac=R2._facility,manual=(reforecastSettings.manualRedist||{}).revenue;
+  const how=manual&&manual.some(v=>v)?(ar?'حسب روافع المبيعات المدخلة':'from the sales levers you entered'):(ar?'المبيعات غير المحققة مؤجَّلة: منحنى الخطة يُستأنف من ربع الإقفال بنفس شكله':'unachieved sales are delayed: the plan curve restarts at the cutoff in its original shape');
+  let cumP=0,cumF=0,cumG=0;const rows=[];for(let i=0;i<nq;i++){cumP+=R.qGrossSales[i]||0;cumF+=R2.qGrossSales[i]||0;cumG+=g[i]||0;rows.push({i,p:R.qGrossSales[i]||0,f:R2.qGrossSales[i]||0,cumP,cumF,gap:g[i]||0,cumG,draw:R2.drawdowns[i]||0});}
+  const totGap=sumA(g);
+  return `<div class="ops-card" style="margin-top:16px"><h3>${ar?'توقيت المبيعات والحاجة التمويلية':'Sales timing & funding need'}<span>${ar?'التسهيل ':'facility '}${isFinite(fac)?M_(fac):'—'} <input type="number" class="ops-mini" style="width:130px" value="${reforecastSettings.facilityLimit?Math.round(reforecastSettings.facilityLimit):''}" placeholder="${isFinite(fac)?Math.round(fac):''}" onchange="reforecastSettings.facilityLimit=this.value===''?null:Number(this.value);opsRefresh()"></span></h3>
+  <p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${ar?'التوقع: ':'Forecast: '}${how}. ${totGap>0.5?'<b class="cx-var bad"><span>'+(ar?'فجوة تمويل ':'Funding gap ')+M_(totGap)+'</span></b> — '+(ar?'السحب يتوقف عند سقف التسهيل؛ العمود الأخير = ما يلزم بيعه (أو تمويله) بحلول كل ربع.':'drawdowns stop at the facility ceiling; the last column is what must be sold (or funded) by each quarter.'):(ar?'لا فجوة تمويل: التوقع ضمن سقف التسهيل.':'No funding gap: the forecast stays within the facility.')}</p>
+  <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ar?'الخطة':'Plan sales'}</th><th>${ar?'التوقع':'Forecast sales'}</th><th>${ar?'تراكمي الخطة':'Cum. plan'}</th><th>${ar?'تراكمي التوقع':'Cum. forecast'}</th><th>${ar?'سحب التمويل':'Drawdown'}</th><th>${ar?'فجوة التمويل':'Funding gap'}</th><th>${ar?'مبيعات لازمة تراكمياً':'Sales needed (cum.)'}</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr class="${r.i<cut?'':'cx-sub'}"><td>${qLabel(r.i)}${r.i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(r.p)}</td><td class="rfcs-num">${fN(r.f)}</td><td class="rfcs-num">${fN(r.cumP)}</td><td class="rfcs-num cx-var ${r.cumF<r.cumP-0.5?'warn':''}"><span>${fN(r.cumF)}</span></td><td class="rfcs-num">${fN(r.draw)}</td><td class="rfcs-num cx-var ${r.gap>0.5?'bad':''}"><span>${r.gap>0.5?fN(r.gap):'—'}</span></td><td class="rfcs-num"><b>${fN(r.cumF+r.cumG)}</b></td></tr>`).join('')}</tbody></table></div></div>`;}
 function opsSales(){
   const cut=R2._cutoffQ,nq=R2.nq,comps=lineComponents('revenue'),S=reforecastSettings.sales||{};
   const totArea=comps.reduce((a,c)=>{const [,pi,ci]=c.key.split(':');return a+(Number(projects[+pi].salesComponents[+ci].area)||0);},0);
@@ -5417,6 +5448,7 @@ function opsSales(){
       <div class="ops-bar"><div class="trk"><i class="a" style="width:${area?sold/area*100:0}%"></i><i class="r" style="width:${area?(area-sold)/area*100:100}%"></i></div><div class="lbls"><span>${lang==='ar'?'مباع':'Sold'} ${fN(sold)}</span><span>${ot('unsold')} ${fN(area-sold)}</span></div></div>
       <div class="ops-stat"><small>${ot('fcRev')}</small><b>${M_(fcRev)}</b></div><span class="ops-pill ${d>=0?'good':'warn'}">${d>=0?'+':'−'}${M_(Math.abs(d))} ${ot('vsBase')}</span></div>
       <div class="detail"><div class="ops-fields">${[['soldArea',ot('soldArea'),''],['achPrice',ot('achPrice'),c.price],['unsoldPrice',ot('unsoldPrice'),c.price],['pace',ot('pace'),''],['startQ',ot('startQ'),cut+1]].map(([f,l,ph])=>`<label>${l}<input type="number" class="ops-mini" placeholder="${ph}" value="${s[f]??''}" onchange="setSales('${cp.key}','${f}',this.value)"></label>`).join('')}</div></div></div>`;}
+  h+=salesTimingCard(cut,nq);
   return h;
 }
 // ═══════════════════════════════════════════════
