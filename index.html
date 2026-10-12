@@ -2156,6 +2156,11 @@ function buildSchedule(){
   const nq=Math.floor(gv('fund_period_months')/3)||8;
   for(let pi=0;pi<projects.length;pi++){
     const proj=projects[pi];
+    if(proj.schDevFee.length!==nq && proj.schDevFee.length>0 && (proj.salesSchedule||[]).length===proj.schDevFee.length){
+      // the fund length changed: stretch / compress the user's own phasing (totals preserved) — never replace it with defaults
+      for(const k of [...schItemKeys,'salesSchedule']) proj[k]=rescaleSchedule(proj[k]||[],nq);
+      if(proj.occupancySchedule&&proj.occupancySchedule.length){const o=proj.occupancySchedule,n=o.length;proj.occupancySchedule=Array.from({length:nq},(_,i)=>o[Math.min(n-1,Math.floor(i*n/nq))]);}
+    }
     if(proj.schDevFee.length!==nq){
       if(nq===8){
         proj.schBaseCon=[0,5,10,15,20,20,20,10];
@@ -4973,12 +4978,13 @@ function viewStamp(){
 // ═══════════════════════════════════════════════
 // Full engine run (same as Calculate, with the complete result object) under temporary overrides; baseline R and the screen are restored after.
 function calcFull(ov){
-  const saveR=R, saveMode=reforecastMode, saveR2=R2, saved={}, curTab=(document.querySelector('.pnl.act')||{}).id;
+  const saveR=R, saveMode=reforecastMode, saveR2=R2, saved={}, curTab=(document.querySelector('.pnl.act')||{}).id, saveProjects=JSON.stringify(projects);
   for(const k in ov){const el=document.getElementById(k); if(el){saved[k]={el,v:el.value}; el.value=ov[k];} else {saved[k]={v:D[k]}; D[k]=ov[k];}}
   let out=null; _silentCalc=true;
   try{ calculate(); out=R; }catch(e){ console.error('calcFull:',e); }
   finally{
     for(const k in saved){ if(saved[k].el) saved[k].el.value=saved[k].v; else D[k]=saved[k].v; }
+    projects=JSON.parse(saveProjects);
     try{ calculate(); }catch(e){}
     _silentCalc=false;
     R=saveR; reforecastMode=saveMode; R2=saveR2;
@@ -5432,10 +5438,20 @@ function salesTimingCard(cut,nq){const ar=lang==='ar',g=R2._fundingGap||Array(nq
   const how=manual&&manual.some(v=>v)?(ar?'حسب روافع المبيعات المدخلة':'from the sales levers you entered'):(ar?'المبيعات غير المحققة مؤجَّلة: منحنى الخطة يُستأنف من ربع الإقفال بنفس شكله':'unachieved sales are delayed: the plan curve restarts at the cutoff in its original shape');
   let cumP=0,cumF=0,cumG=0;const rows=[];for(let i=0;i<nq;i++){cumP+=R.qGrossSales[i]||0;cumF+=R2.qGrossSales[i]||0;cumG+=g[i]||0;rows.push({i,p:R.qGrossSales[i]||0,f:R2.qGrossSales[i]||0,cumP,cumF,gap:g[i]||0,cumG,draw:R2.drawdowns[i]||0});}
   const totGap=sumA(g);
+  // editable forecast phasing: % of the remaining (unsold) revenue per open quarter — stored as manualRedist.revenue
+  const totP=sumA(R.qGrossSales)||1,sold=actualOf('revenue',0,cut),remaining=Math.max(0,sumA(R2.qGrossSales)-sold)||sumA(R2.qGrossSales.slice(cut)),open=nq-cut;
+  const fcW=R2.qGrossSales.slice(cut),fcT=sumA(fcW)||1;const editable=manual&&manual.some(v=>v);const wPct=editable?Array.from({length:open},(_,j)=>Number(manual[j])||0):fcW.map(v=>v/fcT*100);const wSum=sumA(wPct);
+  const pctRow=`<div class="cx-wrap" style="margin-bottom:10px"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${rows.map(r=>`<th>${qLabel(r.i).split(' ')[0]}</th>`).join('')}<th>${ar?'المجموع':'Total'}</th></tr></thead><tbody>
+    <tr><td>${ar?'الخطة %':'Baseline %'}</td>${rows.map(r=>`<td class="rfcs-num">${(r.p/totP*100).toFixed(1)}</td>`).join('')}<td class="rfcs-num">100.0</td></tr>
+    <tr><td>${ar?'التوقع % من المتبقي':'Forecast % of remaining'}<small class="ops-muted" style="display:block">${editable?(ar?'يدوي':'manual'):(ar?'مؤجَّل تلقائياً':'auto-slipped')}${editable?` · <a class="ops-link" onclick="delete reforecastSettings.manualRedist.revenue;opsRefresh()">${ar?'إعادة للتلقائي':'reset to auto'}</a>`:''}</small></td>${rows.map(r=>r.i<cut?`<td class="rfcs-num ops-muted">${ar?'مقفل':'closed'}</td>`:`<td><input type="number" class="ops-mini" style="width:64px" step="0.1" value="${wPct[r.i-cut].toFixed(1)}" onchange="salesSetPct(${r.i-cut},this.value,${open})"></td>`).join('')}<td class="rfcs-num ${editable&&Math.abs(wSum-100)>0.05?'cx-var warn':''}"><span>${wSum.toFixed(1)}${editable&&Math.abs(wSum-100)>0.05?'<small style="display:block">'+(ar?'تُوزَّع نسبياً':'scaled to 100')+'</small>':''}</span></td></tr>
+    <tr><td>${ar?'التوقع (ريال)':'Forecast (SAR)'}<small class="ops-muted" style="display:block">${ar?'المتبقي ':'remaining '}${M_(remaining)}</small></td>${rows.map(r=>`<td class="rfcs-num">${fN(r.f)}</td>`).join('')}<td class="rfcs-num"><b>${fN(sumA(R2.qGrossSales))}</b></td></tr></tbody></table></div>`;
   return `<div class="ops-card" style="margin-top:16px"><h3>${ar?'توقيت المبيعات والحاجة التمويلية':'Sales timing & funding need'}<span>${ar?'التسهيل ':'facility '}${isFinite(fac)?M_(fac):'—'} <input type="number" class="ops-mini" style="width:130px" value="${reforecastSettings.facilityLimit?Math.round(reforecastSettings.facilityLimit):''}" placeholder="${isFinite(fac)?Math.round(fac):''}" onchange="reforecastSettings.facilityLimit=this.value===''?null:Number(this.value);opsRefresh()"></span></h3>
   <p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${ar?'التوقع: ':'Forecast: '}${how}. ${totGap>0.5?'<b class="cx-var bad"><span>'+(ar?'فجوة تمويل ':'Funding gap ')+M_(totGap)+'</span></b> — '+(ar?'السحب يتوقف عند سقف التسهيل؛ العمود الأخير = ما يلزم بيعه (أو تمويله) بحلول كل ربع.':'drawdowns stop at the facility ceiling; the last column is what must be sold (or funded) by each quarter.'):(ar?'لا فجوة تمويل: التوقع ضمن سقف التسهيل.':'No funding gap: the forecast stays within the facility.')}</p>
+  ${pctRow}
   <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ar?'الخطة':'Plan sales'}</th><th>${ar?'التوقع':'Forecast sales'}</th><th>${ar?'تراكمي الخطة':'Cum. plan'}</th><th>${ar?'تراكمي التوقع':'Cum. forecast'}</th><th>${ar?'سحب التمويل':'Drawdown'}</th><th>${ar?'فجوة التمويل':'Funding gap'}</th><th>${ar?'مبيعات لازمة تراكمياً':'Sales needed (cum.)'}</th></tr></thead><tbody>
   ${rows.map(r=>`<tr class="${r.i<cut?'':'cx-sub'}"><td>${qLabel(r.i)}${r.i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(r.p)}</td><td class="rfcs-num">${fN(r.f)}</td><td class="rfcs-num">${fN(r.cumP)}</td><td class="rfcs-num cx-var ${r.cumF<r.cumP-0.5?'warn':''}"><span>${fN(r.cumF)}</span></td><td class="rfcs-num">${fN(r.draw)}</td><td class="rfcs-num cx-var ${r.gap>0.5?'bad':''}"><span>${r.gap>0.5?fN(r.gap):'—'}</span></td><td class="rfcs-num"><b>${fN(r.cumF+r.cumG)}</b></td></tr>`).join('')}</tbody></table></div></div>`;}
+function salesSetPct(j,v,open){_rfNorm();const m=reforecastSettings.manualRedist;const cur=(m.revenue&&m.revenue.length===open)?m.revenue.slice():R2.qGrossSales.slice(R2._cutoffQ).map(x=>Math.round(x));
+  const tot=sumA(cur)||1;const w=cur.map(x=>x/tot*100);w[j]=Number(v)||0;m.revenue=w.map(x=>+x.toFixed(4));opsRefresh();}
 function opsSales(){
   const cut=R2._cutoffQ,nq=R2.nq,comps=lineComponents('revenue'),S=reforecastSettings.sales||{};
   const totArea=comps.reduce((a,c)=>{const [,pi,ci]=c.key.split(':');return a+(Number(projects[+pi].salesComponents[+ci].area)||0);},0);
