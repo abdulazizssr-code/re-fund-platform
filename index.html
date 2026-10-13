@@ -652,6 +652,7 @@ canvas{max-width:100%;display:block}
 
 /* ── Sales Table — Clean, no borders ── */
 .es-sales-wrap{padding:0 14mm;margin-top:3.5mm}
+.sp-typed{width:62px;font-weight:700;color:#1b1c19;background:#fbf6e9;border-color:#b5985a!important}.sp-auto{width:62px;color:#8a8a80;background:transparent}.sp-x{margin-inline-start:3px;font-size:.9rem;color:#9a4a3a}
 .sum-bar{display:flex;align-items:center;gap:6px;padding:6px 14mm;font-size:.8rem;color:var(--ink-3,#6b6b60)}
 .sum-bar a{cursor:pointer;padding:3px 10px;border-radius:999px;border:1px solid var(--line,#ddd)}
 .sum-bar a.on{background:var(--ink,#3a3a32);color:#fff;border-color:var(--ink,#3a3a32)}
@@ -5208,7 +5209,7 @@ function fmtDate(d){return d.toLocaleDateString(lang==='ar'?'ar-SA-u-nu-latn':'e
 function opsCats(){const isFund=Number(R.A.is_fund);return ACT_CATS.filter(c=>!c.fundOnly||isFund).filter(c=>!c.actualOnly&&!c.fin);}
 function actualOf(key,q0,q1,comp){return actuals.filter(p=>p.category===key&&p.quarter>=q0&&p.quarter<q1&&(comp===undefined||p.component===comp)).reduce((s,p)=>s+p.amount,0);}
 function ensureForecast(){ if(!R) return false; _rfNorm(); if(!R2||!reforecastMode){reforecastMode=true; runReforecast();} return !!R2; }
-function opsRefresh(){ if(!R) return; reforecastMode=true; runReforecast(); renderOps(); }
+function opsRefresh(){ if(!R) return; reforecastMode=true; runReforecast(); const sy=window.scrollY; renderOps(); window.scrollTo(0,sy); requestAnimationFrame(()=>window.scrollTo(0,sy)); }
 function baselineMetrics(){ const b=reforecastSettings.baseline; return (b&&b.irr!==undefined)?b:_baselineMetrics(); }
 
 // ---- IRR bridge: baseline → (actuals, budgets, phasing with baseline assumptions) → (assumption changes) → current ----
@@ -5460,7 +5461,7 @@ function salesTimingCard(cut,nq){const ar=lang==='ar',g=R2._fundingGap||Array(nq
   const totNote=sp.unplaced>0.5?(ar?'غير موزّع ':'unplaced ')+(100-sp.pinSum).toFixed(1)+'% / '+M_(sp.unplaced):cap?(ar?'تم تحديد ':'capped at ')+cap.capped.toFixed(1)+'% ('+(ar?'طلبت ':'asked ')+cap.asked.toFixed(1)+'%)':'';
   const pctRow=`<div class="cx-wrap" style="margin-bottom:10px"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${rows.map(r=>`<th>${qLabel(r.i).split(' ')[0]}</th>`).join('')}<th>${ar?'المجموع':'Total'}</th></tr></thead><tbody>
     <tr><td>${ar?'الخطة %':'Baseline %'}</td>${rows.map(r=>`<td class="rfcs-num">${(r.p/totP*100).toFixed(1)}</td>`).join('')}<td class="rfcs-num">100.0</td></tr>
-    <tr><td>${ar?'التوقع % من المتبقي':'Forecast % of remaining'}<small class="ops-muted" style="display:block">${anyPin?(ar?'مثبّت = ما كتبته؛ الرمادي يُحسب تلقائياً':'pinned = what you typed; grey is computed'):(manual&&manual.some(v=>v)?(ar?'من روافع المبيعات':'from the sales levers'):(ar?'مؤجَّل تلقائياً':'auto-slipped'))}${anyPin?` · <a class="ops-link" onclick="salesResetPins()">${ar?'إلغاء كل التثبيت':'reset to auto'}</a>`:''}</small></td>${rows.map(r=>{if(r.i<cut)return `<td class="rfcs-num ops-muted">${ar?'مقفل':'closed'}</td>`;const j=r.i-cut,pinned=pins[r.i]!=null;return `<td style="white-space:nowrap"><input type="number" class="ops-mini" style="width:62px;${pinned?'font-weight:700;border-color:#00322d':'color:#8a8a80'}" step="0.1" value="${(sp.pct[j]||0).toFixed(1)}" onchange="salesSetPct(${r.i},this.value)">${pinned?`<a class="ops-link" title="${ar?'إلغاء التثبيت':'release'}" onclick="salesUnpin(${r.i})" style="margin-inline-start:2px">📌</a>`:''}</td>`;}).join('')}<td class="rfcs-num ${totCls?'cx-var '+totCls:''}"><span>${wSum.toFixed(1)}${totNote?'<small style="display:block">'+totNote+'</small>':''}</span></td></tr>
+    <tr><td>${ar?'التوقع % من المتبقي':'Forecast % of remaining'}<small class="ops-muted" style="display:block">${anyPin?(ar?'الغامق = ما كتبته (× لإلغائه)؛ الرمادي يُحسب تلقائياً':'bold = typed by you (× clears it); grey is computed'):(manual&&manual.some(v=>v)?(ar?'من روافع المبيعات':'from the sales levers'):(ar?'مؤجَّل تلقائياً':'auto-slipped'))}${anyPin?` · <a class="ops-link" onclick="salesResetPins()">${ar?'إلغاء كل التثبيت':'reset to auto'}</a>`:''}</small></td>${rows.map(r=>{if(r.i<cut)return `<td class="rfcs-num ops-muted">${ar?'مقفل':'closed'}</td>`;const j=r.i-cut,pinned=pins[r.i]!=null;return `<td style="white-space:nowrap"><input type="number" class="ops-mini sp-${pinned?'typed':'auto'}" step="0.1" value="${(sp.pct[j]||0).toFixed(1)}" onchange="salesSetPct(${r.i},this.value)">${pinned?`<a class="ops-link sp-x" title="${ar?'إلغاء ما كتبته':'clear what you typed'}" onclick="salesUnpin(${r.i})">×</a>`:''}</td>`;}).join('')}<td class="rfcs-num ${totCls?'cx-var '+totCls:''}"><span>${wSum.toFixed(1)}${totNote?'<small style="display:block">'+totNote+'</small>':''}</span></td></tr>
     <tr><td>${ar?'التوقع (ريال)':'Forecast (SAR)'}<small class="ops-muted" style="display:block">${ar?'المتبقي ':'remaining '}${M_(sp.remaining)}</small></td>${rows.map(r=>`<td class="rfcs-num">${fN(r.f)}</td>`).join('')}<td class="rfcs-num"><b>${fN(sumA(R2.qGrossSales))}</b>${sp.unplaced>0.5?'<small class="ops-muted" style="display:block">'+(ar?'من ':'of ')+fN(sold+sp.remaining)+'</small>':''}</td></tr></tbody></table></div>`;
   return `<div class="ops-card" style="margin-top:16px"><h3>${ar?'توقيت المبيعات والحاجة التمويلية':'Sales timing & funding need'}<span>${ar?'التسهيل ':'facility '}${isFinite(fac)?M_(fac):'—'} <input type="number" class="ops-mini" style="width:130px" value="${reforecastSettings.facilityLimit?Math.round(reforecastSettings.facilityLimit):''}" placeholder="${isFinite(fac)?Math.round(fac):''}" onchange="reforecastSettings.facilityLimit=this.value===''?null:Number(this.value);opsRefresh()"></span></h3>
   <p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${ar?'التوقع: ':'Forecast: '}${how}. ${totGap>0.5?'<b class="cx-var bad"><span>'+(ar?'فجوة تمويل ':'Funding gap ')+M_(totGap)+'</span></b> — '+(ar?'السحب يتوقف عند سقف التسهيل؛ العمود الأخير = ما يلزم بيعه (أو تمويله) بحلول كل ربع.':'drawdowns stop at the facility ceiling; the last column is what must be sold (or funded) by each quarter.'):(ar?'لا فجوة تمويل: التوقع ضمن سقف التسهيل.':'No funding gap: the forecast stays within the facility.')}</p>
@@ -6398,7 +6399,7 @@ function dlExcel(){
   const A=R.A||D, nq=R.nq||Math.floor(A.fund_period_months/3);
   const enc=new TextEncoder();
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function cl(i){return String.fromCharCode(66+i);}
+  function cl(i){let n=i+2,out='';while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26);}return out;} // B, C, … Z, AA, AB …
   const lc=cl(nq-1);
   const tc=cl(nq);
   const pct=v=>v/100;
@@ -6508,7 +6509,7 @@ function dlExcel(){
   };
 
   // ── Cell builders with IB formatting ──
-  function vc(v,s){return '<c s="'+s+'"><v>'+v+'</v></c>';}
+  function vc(v,s){v=Number(v);if(!isFinite(v))v=0;return '<c s="'+s+'"><v>'+v+'</v></c>';}
   function fc(f,s){return '<c s="'+(s||S.bkN)+'"><f>'+esc(f)+'</f></c>';}
   function tx(v,s){return '<c s="'+(s!=null?s:S.def)+'" t="inlineStr"><is><t>'+esc(String(v))+'</t></is></c>';}
   function ec(s){return '<c s="'+(s||0)+'"/>';}
@@ -6602,7 +6603,7 @@ function dlExcel(){
   rows.push('<row>'+lbl('Board Fee (annual)',0)+blueNum(A.board_annual)+blueTx(A.board_freq||'semiannual')+'</row>'); // 43
   rows.push('<row>'+lbl('Financial Advisor',1)+blueNum(A.fin_advisor||0)+blueTx('One-time Q1')+'</row>'); // 44
   rows.push('<row>'+lbl('Marketing Cost',0)+blueNum(A.marketing_cost)+'</row>');     // 45
-  rows.push('<row>'+lbl('Management Fee (%)',1)+bluePct(A.mgmt_fee_pct/100)+tx('% of Total Assets/qtr',S.lblA)+'</row>'); // 46
+  rows.push('<row>'+(A.mgmt_fee_mode==='fixed'?lbl('Management Fee (SAR, annual)',1)+blueNum(A.mgmt_fee_fixed||0)+tx('fixed amount per year',S.lblA):lbl('Management Fee (%)',1)+bluePct(A.mgmt_fee_pct/100)+tx(A.mgmt_fee_mode==='nav'?'% of NAV p.a. (charged quarterly)':'% of Total Assets p.a. (charged quarterly)',S.lblA))+'</row>'); // 46
   rows.push('<row>'+lbl('VAT Advisor (%)',0)+bluePct(A.vat_advisor_pct/100)+tx('% of VAT refunds',S.lbl)+'</row>');       // 47
   rows.push('<row>'+lbl('VAT Refund Delay (months)',1)+blueNum(A.vat_refund_months)+'</row>');// 48
   rows.push('<row>'+lbl('VAT Refund?',0)+blueNum(Number(A.vat_refund)||0)+tx('0=No, 1=Yes (all costs)',S.lbl)+'</row>'); // 49
@@ -6638,6 +6639,11 @@ function dlExcel(){
   rows.push('<row>'+secHdr('GP COMMITMENT')+'</row>');                               // 78
   rows.push('<row>'+lbl('GP Cash Commitment (SAR)',0)+blueNum(A.gp_commit_cash||0)+'</row>'); // 79
   rows.push('<row>'+lbl('GP In-Kind % of Mgmt Fees',1)+bluePct((A.gp_commit_inkind_pct||0)/100)+'</row>'); // 80
+  // forecast overrides (Operations → Forecast & Scenarios): what the Reforecast CF sheet was run with
+  {const ov=(reforecastSettings&&reforecastSettings.assumptionOverrides)||{};const keys=Object.keys(ov);
+    if(keys.length&&R2&&R2._isReforecast){rows.push('<row/>');rows.push('<row>'+secHdr('FORECAST OVERRIDES (Operations)')+tx('Baseline',S.secHdr)+tx('Forecast',S.secHdr)+'</row>');
+      keys.forEach((k,i)=>{const f=(typeof OPS_FIELDS!=='undefined'?OPS_FIELDS:[]).find(x=>x[0]===k);const label=f?f[1]:k;const bv=Number((R.A||D)[k])||0,fv=Number(ov[k])||0;rows.push('<row>'+lbl(label,i%2)+vc(bv,S.bkN)+blueNum(fv)+'</row>');});
+      rows.push('<row>'+lbl('Forecast fund period (months)',0)+vc(A.fund_period_months,S.bkN)+blueNum(Number(ov.fund_period_months)||A.fund_period_months)+'</row>');}}
   sheets.push({name:'Assumptions',rows,cols:colsAssump()});
 
   // ═══════════════════════════════════════════════
@@ -7529,10 +7535,10 @@ function dlExcel(){
   // ═══════════════════════════════════════════════
   if(R2&&R2._isReforecast){
     let rows=[];let rowN=1;
-    const r2=R2;
-    const cutQ=r2._cutoffQ||0;
+    const r2=R2,nq=r2.nq||r2.qCashClose.length;
+    const cutQ=r2._cutoffQ||0;const _fp=(r2.A&&r2.A.fund_period_months)||nq*3;
     rows.push('<row>'+title('REFORECAST CASH FLOW')+'</row>');rowN++;
-    rows.push('<row>'+tx('Actual Q1-Q'+cutQ+' | Forecast Q'+(cutQ+1)+'-Q'+nq+' | Mode: '+reforecastSettings.redistMode,S.sub)+'</row>');rowN++;
+    rows.push('<row>'+tx('Actual Q1-Q'+cutQ+' | Forecast Q'+(cutQ+1)+'-Q'+nq+' | Fund period '+_fp+' months'+(_fp!==A.fund_period_months?' (baseline '+A.fund_period_months+')':'')+' | Mode: '+reforecastSettings.redistMode,S.sub)+'</row>');rowN++;
 
     // Headers
     let hdr='<row>'+colHdr('Cash Flow Item');
@@ -7549,7 +7555,7 @@ function dlExcel(){
       rows.push('<row>'+c+'</row>');rowN++;
     }
     function rfBoldRow(label,data){
-      let c='<c s="'+S.bdN+'"><is><t>'+esc(label)+'</t></is></c>';
+      let c='<c s="'+S.bdN+'" t="inlineStr"><is><t>'+esc(label)+'</t></is></c>';
       let tot=0;
       for(let i=0;i<nq;i++){const v=data[i]||0;tot+=v;c+=vc(v,S.bdN);}
       c+=vc(tot,S.bdN);
