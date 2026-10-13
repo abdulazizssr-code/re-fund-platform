@@ -4573,8 +4573,9 @@ function _rfSlipWeights(origQ,achieved,cutoffQ,nq){
   for(let k=0;k<cutoffQ;k++){const v=origQ[k]||0;if(left>=v-1e-9){left-=v;continue;}if(left>0){rest.push(v-left);left=0;}else rest.push(v);}
   rest.forEach((v,j)=>{w[Math.min(j,open-1)]+=v;});
   return w;}
+let R2_salesPhase=null;
 function runReforecast(){
-  if(!R){return;}
+  if(!R){return;}R2_salesPhase=null;
   _rfNorm();
   // Current assumptions = baseline + overrides (forward parameters). Rc drives the open quarters; R stays the baseline.
   const _ov=reforecastSettings.assumptionOverrides||{};
@@ -4626,7 +4627,18 @@ function runReforecast(){
     const manual=(reforecastSettings.manualRedist||{})[c.key];
     const manualW=manual&&manual.some(v=>v!==null&&v!==undefined)?Array.from({length:forecastQs},(_,j)=>Number(manual[j])||0):null;
 
-    if(forecastQs>0&&remaining>0){
+    if(c.key==='revenue'&&forecastQs>0&&remaining>0){
+      // base shape for the open quarters: sales levers if set, else the slipped baseline curve
+      let base;if(manualW&&manualW.reduce((a,b)=>a+b,0)>0)base=manualW.slice();else if(origTotal>0)base=_rfSlipWeights(origQ,actualSpent,cutoffQ,nq);else base=Array(forecastQs).fill(1);
+      const bt=base.reduce((a,b)=>a+b,0)||1;const autoPct=base.map(v=>v/bt*100);
+      // pins: quarters whose share the user typed hold exactly that; free quarters share what is left in the auto shape
+      const pins=reforecastSettings.salesPins||{};const pct=Array(forecastQs).fill(0);let pinSum=0,freeAuto=0,nFree=0;
+      for(let j=0;j<forecastQs;j++){const i=cutoffQ+j;if(pins[i]!=null){pct[j]=Number(pins[i])||0;pinSum+=pct[j];}else{freeAuto+=autoPct[j];nFree++;}}
+      const freeShare=Math.max(0,100-pinSum);
+      for(let j=0;j<forecastQs;j++){if(pins[cutoffQ+j]!=null)continue;pct[j]=freeAuto>0?freeShare*autoPct[j]/freeAuto:(nFree?freeShare/nFree:0);}
+      for(let i=cutoffQ;i<nq;i++) arr[i]=remaining*pct[i-cutoffQ]/100;
+      R2_salesPhase={pct,autoPct,pinSum,nFree,unplaced:nFree?0:Math.max(0,remaining*(100-pinSum)/100),remaining};
+    }else if(forecastQs>0&&remaining>0){
       if(manualW&&manualW.reduce((a,b)=>a+b,0)>0){
         const tot=manualW.reduce((a,b)=>a+b,0);
         for(let i=cutoffQ;i<nq;i++) arr[i]=remaining*manualW[i-cutoffQ]/tot;
@@ -4660,6 +4672,8 @@ function runReforecast(){
     catArrays[c.key]=arr;
   }
 
+  // selling expenses follow the revenue phasing in the open quarters
+  if(catArrays.revenue&&catArrays.selling){const rv=catArrays.revenue,sl=catArrays.selling;const rT=rv.slice(cutoffQ).reduce((a,b)=>a+b,0),sT=sl.slice(cutoffQ).reduce((a,b)=>a+b,0);if(rT>0&&sT>0)for(let i=cutoffQ;i<nq;i++)sl[i]=sT*rv[i]/rT;}
   // Also handle actual-only categories (murabaha, other_inc, other_exp)
   const actualOnlyCats=ACT_CATS.filter(c=>c.actualOnly);
   for(const c of actualOnlyCats){
@@ -4672,7 +4686,7 @@ function runReforecast(){
 
   // Build R2 — clone the CURRENT-assumption run and override quarterly arrays with actual + reforecast values
   R2=JSON.parse(JSON.stringify(Rc));
-  R2._cutoffQ=cutoffQ;
+  R2._cutoffQ=cutoffQ;R2._salesPhase=R2_salesPhase;
   R2._budgetOverruns=budgetOverruns; // FIX 6: expose overruns so the UI can display warnings
 
   // Map category arrays back to R2 arrays
@@ -5024,7 +5038,7 @@ function otherExpBreakdown(RX){
     [ar?'اللجنة الشرعية':'Shariah committee',S(RX.qSharia)],[ar?'الاستشاري الهندسي':'Engineering consultant',S(RX.qEngineering)],[ar?'مكافآت مجلس الإدارة':'Board compensation',S(RX.qBoard)],[ar?'المستشار المالي':'Financial advisor',S(RX.qFinAdvisor)],
     [ar?'التسويق':'Marketing',S(RX.qMkt)],[ar?'رسوم الإدارة البنكية':'Bank management fee',S(RX.qBankMgmt)],[ar?'رسوم الترتيب':'Arrangement fee',S(RX.qArrFee)],[ar?'رسوم وافي':'WAFI fees',S(RX.qWafi)],[ar?'عمولات البيع':'Selling commissions',S(RX.qSellExp)]];
 }
-function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[],invoices:[],submissions:[]};}
+function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},salesPins:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[],invoices:[],submissions:[]};}
 function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k]===undefined) reforecastSettings[k]=JSON.parse(JSON.stringify(d[k]));}
 // Facility ceiling for the forecast: user-set limit, else the loan schedule's facility, else the baseline total drawdowns
 function facilityLimit(){_rfNorm();const u=Number(reforecastSettings.facilityLimit);if(u>0)return u;const b=reforecastSettings.bank;if(b&&b.facility&&Number(b.facility.facility)>0)return Number(b.facility.facility);return R?sumA(R.drawdowns):Infinity;}
@@ -5259,6 +5273,7 @@ function opsAlerts(){
   else if(uns.length>1) out.push(['warn',uns.length+(lang==='ar'?' بنود بميزانية غير منفقة في الأرباع المقفلة (':' lines with unspent closed-quarter budget (')+M_(uns.reduce((a,x)=>a+x[1],0))+(lang==='ar'?') — المعالجة الافتراضية ترحيل للأمام: ':') — treatment defaults to push forward: ')+uns.slice(0,4).map(x=>x[0]).join(', ')+(uns.length>4?'…':''),'costs']);
   const un=actuals.filter(p=>(p.category==='base_con'||p.category==='revenue')&&!p.component&&lineComponents(p.category).length>1); if(un.length) out.push(['warn',un.length+' '+ot('unassigned')+' ('+M_(un.reduce((s,p)=>s+p.amount,0))+')','payments']);
   if(cut>0&&!R2._finStrict&&(sumA(R2.drawdowns.slice(0,cut))>0||sumA(R2.qEquity.slice(0,cut))>0)) out.push(['warn',ot('noFin'),'financing']);
+  {const sp=R2._salesPhase;if(sp&&sp.unplaced>0.5)out.push(['warn',(100-sp.pinSum).toFixed(1)+'% '+(lang==='ar'?'من المبيعات غير موزّعة على الأرباع (':'of sales not phased into any quarter (')+M_(sp.unplaced)+(lang==='ar'?') — ارفع نسبة أو حرّر ربعاً':') — raise a pin or release a quarter'),'sales']);}
   {const g=R2._fundingGap||[];const tot=sumA(g);if(tot>0.5){const q=g.findIndex(v=>v>0.5);out.push(['bad',(lang==='ar'?'فجوة تمويل ':'Funding gap ')+M_(tot)+(lang==='ar'?' — التسهيل مستنفد اعتباراً من ':' — facility exhausted from ')+qLabel(q)+(lang==='ar'?'؛ يلزم بيع على الخارطة بهذا المبلغ أو تمويل إضافي':'; off-plan sales of that amount, or more funding, are needed'),'sales']);}}
   try{vatAlerts().forEach(a=>out.push(a));}catch(e){}
   try{docAlerts().forEach(a=>out.push(a));}catch(e){}
@@ -5438,20 +5453,26 @@ function salesTimingCard(cut,nq){const ar=lang==='ar',g=R2._fundingGap||Array(nq
   const how=manual&&manual.some(v=>v)?(ar?'حسب روافع المبيعات المدخلة':'from the sales levers you entered'):(ar?'المبيعات غير المحققة مؤجَّلة: منحنى الخطة يُستأنف من ربع الإقفال بنفس شكله':'unachieved sales are delayed: the plan curve restarts at the cutoff in its original shape');
   let cumP=0,cumF=0,cumG=0;const rows=[];for(let i=0;i<nq;i++){cumP+=R.qGrossSales[i]||0;cumF+=R2.qGrossSales[i]||0;cumG+=g[i]||0;rows.push({i,p:R.qGrossSales[i]||0,f:R2.qGrossSales[i]||0,cumP,cumF,gap:g[i]||0,cumG,draw:R2.drawdowns[i]||0});}
   const totGap=sumA(g);
-  // editable forecast phasing: % of the remaining (unsold) revenue per open quarter — stored as manualRedist.revenue
-  const totP=sumA(R.qGrossSales)||1,sold=actualOf('revenue',0,cut),remaining=Math.max(0,sumA(R2.qGrossSales)-sold)||sumA(R2.qGrossSales.slice(cut)),open=nq-cut;
-  const fcW=R2.qGrossSales.slice(cut),fcT=sumA(fcW)||1;const editable=manual&&manual.some(v=>v);const wPct=editable?Array.from({length:open},(_,j)=>Number(manual[j])||0):fcW.map(v=>v/fcT*100);const wSum=sumA(wPct);
+  // editable forecast phasing: pinned quarters hold the % you typed; free quarters share the rest in the auto shape
+  const sold=actualOf('revenue',0,cut);const totP=sumA(R.qGrossSales)||1,sp=R2._salesPhase||{pct:R2.qGrossSales.slice(cut).map(v=>v/(sumA(R2.qGrossSales.slice(cut))||1)*100),pinSum:0,nFree:nq-cut,unplaced:0,remaining:sumA(R2.qGrossSales.slice(cut))};
+  const pins=reforecastSettings.salesPins||{},anyPin=Object.keys(pins).some(k=>+k>=cut);const wSum=sumA(sp.pct);
+  const cap=_salesCapNote;const totCls=sp.unplaced>0.5?'warn':(cap?'bad':'');
+  const totNote=sp.unplaced>0.5?(ar?'غير موزّع ':'unplaced ')+(100-sp.pinSum).toFixed(1)+'% / '+M_(sp.unplaced):cap?(ar?'تم تحديد ':'capped at ')+cap.capped.toFixed(1)+'% ('+(ar?'طلبت ':'asked ')+cap.asked.toFixed(1)+'%)':'';
   const pctRow=`<div class="cx-wrap" style="margin-bottom:10px"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${rows.map(r=>`<th>${qLabel(r.i).split(' ')[0]}</th>`).join('')}<th>${ar?'المجموع':'Total'}</th></tr></thead><tbody>
     <tr><td>${ar?'الخطة %':'Baseline %'}</td>${rows.map(r=>`<td class="rfcs-num">${(r.p/totP*100).toFixed(1)}</td>`).join('')}<td class="rfcs-num">100.0</td></tr>
-    <tr><td>${ar?'التوقع % من المتبقي':'Forecast % of remaining'}<small class="ops-muted" style="display:block">${editable?(ar?'يدوي':'manual'):(ar?'مؤجَّل تلقائياً':'auto-slipped')}${editable?` · <a class="ops-link" onclick="delete reforecastSettings.manualRedist.revenue;opsRefresh()">${ar?'إعادة للتلقائي':'reset to auto'}</a>`:''}</small></td>${rows.map(r=>r.i<cut?`<td class="rfcs-num ops-muted">${ar?'مقفل':'closed'}</td>`:`<td><input type="number" class="ops-mini" style="width:64px" step="0.1" value="${wPct[r.i-cut].toFixed(1)}" onchange="salesSetPct(${r.i-cut},this.value,${open})"></td>`).join('')}<td class="rfcs-num ${editable&&Math.abs(wSum-100)>0.05?'cx-var warn':''}"><span>${wSum.toFixed(1)}${editable&&Math.abs(wSum-100)>0.05?'<small style="display:block">'+(ar?'تُوزَّع نسبياً':'scaled to 100')+'</small>':''}</span></td></tr>
-    <tr><td>${ar?'التوقع (ريال)':'Forecast (SAR)'}<small class="ops-muted" style="display:block">${ar?'المتبقي ':'remaining '}${M_(remaining)}</small></td>${rows.map(r=>`<td class="rfcs-num">${fN(r.f)}</td>`).join('')}<td class="rfcs-num"><b>${fN(sumA(R2.qGrossSales))}</b></td></tr></tbody></table></div>`;
+    <tr><td>${ar?'التوقع % من المتبقي':'Forecast % of remaining'}<small class="ops-muted" style="display:block">${anyPin?(ar?'مثبّت = ما كتبته؛ الرمادي يُحسب تلقائياً':'pinned = what you typed; grey is computed'):(manual&&manual.some(v=>v)?(ar?'من روافع المبيعات':'from the sales levers'):(ar?'مؤجَّل تلقائياً':'auto-slipped'))}${anyPin?` · <a class="ops-link" onclick="salesResetPins()">${ar?'إلغاء كل التثبيت':'reset to auto'}</a>`:''}</small></td>${rows.map(r=>{if(r.i<cut)return `<td class="rfcs-num ops-muted">${ar?'مقفل':'closed'}</td>`;const j=r.i-cut,pinned=pins[r.i]!=null;return `<td style="white-space:nowrap"><input type="number" class="ops-mini" style="width:62px;${pinned?'font-weight:700;border-color:#00322d':'color:#8a8a80'}" step="0.1" value="${(sp.pct[j]||0).toFixed(1)}" onchange="salesSetPct(${r.i},this.value)">${pinned?`<a class="ops-link" title="${ar?'إلغاء التثبيت':'release'}" onclick="salesUnpin(${r.i})" style="margin-inline-start:2px">📌</a>`:''}</td>`;}).join('')}<td class="rfcs-num ${totCls?'cx-var '+totCls:''}"><span>${wSum.toFixed(1)}${totNote?'<small style="display:block">'+totNote+'</small>':''}</span></td></tr>
+    <tr><td>${ar?'التوقع (ريال)':'Forecast (SAR)'}<small class="ops-muted" style="display:block">${ar?'المتبقي ':'remaining '}${M_(sp.remaining)}</small></td>${rows.map(r=>`<td class="rfcs-num">${fN(r.f)}</td>`).join('')}<td class="rfcs-num"><b>${fN(sumA(R2.qGrossSales))}</b>${sp.unplaced>0.5?'<small class="ops-muted" style="display:block">'+(ar?'من ':'of ')+fN(sold+sp.remaining)+'</small>':''}</td></tr></tbody></table></div>`;
   return `<div class="ops-card" style="margin-top:16px"><h3>${ar?'توقيت المبيعات والحاجة التمويلية':'Sales timing & funding need'}<span>${ar?'التسهيل ':'facility '}${isFinite(fac)?M_(fac):'—'} <input type="number" class="ops-mini" style="width:130px" value="${reforecastSettings.facilityLimit?Math.round(reforecastSettings.facilityLimit):''}" placeholder="${isFinite(fac)?Math.round(fac):''}" onchange="reforecastSettings.facilityLimit=this.value===''?null:Number(this.value);opsRefresh()"></span></h3>
   <p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${ar?'التوقع: ':'Forecast: '}${how}. ${totGap>0.5?'<b class="cx-var bad"><span>'+(ar?'فجوة تمويل ':'Funding gap ')+M_(totGap)+'</span></b> — '+(ar?'السحب يتوقف عند سقف التسهيل؛ العمود الأخير = ما يلزم بيعه (أو تمويله) بحلول كل ربع.':'drawdowns stop at the facility ceiling; the last column is what must be sold (or funded) by each quarter.'):(ar?'لا فجوة تمويل: التوقع ضمن سقف التسهيل.':'No funding gap: the forecast stays within the facility.')}</p>
   ${pctRow}
   <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ar?'الخطة':'Plan sales'}</th><th>${ar?'التوقع':'Forecast sales'}</th><th>${ar?'تراكمي الخطة':'Cum. plan'}</th><th>${ar?'تراكمي التوقع':'Cum. forecast'}</th><th>${ar?'سحب التمويل':'Drawdown'}</th><th>${ar?'فجوة التمويل':'Funding gap'}</th><th>${ar?'مبيعات لازمة تراكمياً':'Sales needed (cum.)'}</th></tr></thead><tbody>
   ${rows.map(r=>`<tr class="${r.i<cut?'':'cx-sub'}"><td>${qLabel(r.i)}${r.i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(r.p)}</td><td class="rfcs-num">${fN(r.f)}</td><td class="rfcs-num">${fN(r.cumP)}</td><td class="rfcs-num cx-var ${r.cumF<r.cumP-0.5?'warn':''}"><span>${fN(r.cumF)}</span></td><td class="rfcs-num">${fN(r.draw)}</td><td class="rfcs-num cx-var ${r.gap>0.5?'bad':''}"><span>${r.gap>0.5?fN(r.gap):'—'}</span></td><td class="rfcs-num"><b>${fN(r.cumF+r.cumG)}</b></td></tr>`).join('')}</tbody></table></div></div>`;}
-function salesSetPct(j,v,open){_rfNorm();const m=reforecastSettings.manualRedist;const cur=(m.revenue&&m.revenue.length===open)?m.revenue.slice():R2.qGrossSales.slice(R2._cutoffQ).map(x=>Math.round(x));
-  const tot=sumA(cur)||1;const w=cur.map(x=>x/tot*100);w[j]=Number(v)||0;m.revenue=w.map(x=>+x.toFixed(4));opsRefresh();}
+// pin a quarter's share of the remaining revenue; the latest entry is capped at what the other pins leave (never more than 100 in total)
+let _salesCapNote=null;
+function salesSetPct(i,v){_rfNorm();const P=reforecastSettings.salesPins=reforecastSettings.salesPins||{};const cut=R2?R2._cutoffQ:0;let others=0;for(const k in P){if(+k!==i&&+k>=cut)others+=Number(P[k])||0;}
+  let val=Math.max(0,Number(v)||0);const room=Math.max(0,100-others);_salesCapNote=null;if(val>room+1e-9){_salesCapNote={i,asked:val,capped:room};val=room;}P[i]=+val.toFixed(4);opsRefresh();}
+function salesUnpin(i){_rfNorm();const P=reforecastSettings.salesPins||{};delete P[i];_salesCapNote=null;opsRefresh();}
+function salesResetPins(){_rfNorm();reforecastSettings.salesPins={};_salesCapNote=null;opsRefresh();}
 function opsSales(){
   const cut=R2._cutoffQ,nq=R2.nq,comps=lineComponents('revenue'),S=reforecastSettings.sales||{};
   const totArea=comps.reduce((a,c)=>{const [,pi,ci]=c.key.split(':');return a+(Number(projects[+pi].salesComponents[+ci].area)||0);},0);
