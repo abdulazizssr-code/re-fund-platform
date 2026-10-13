@@ -6396,7 +6396,10 @@ function _saveReforecastCopy(){
 // =============================================
 function dlExcel(){
   if(!R) return;
-  const A=R.A||D, nq=R.nq||Math.floor(A.fund_period_months/3);
+  // Operations workspace → the forecast workbook (values: actuals + forecast, current assumptions); Feasibility → the baseline model (formulas)
+  const fcMode=workspace==='operations'&&!!(R2&&R2._isReforecast);
+  const RX=fcMode?R2:R;
+  const A=RX.A||D, nq=RX.nq||Math.floor(A.fund_period_months/3);
   const enc=new TextEncoder();
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function cl(i){let n=i+2,out='';while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26);}return out;} // B, C, … Z, AA, AB …
@@ -6551,7 +6554,8 @@ function dlExcel(){
 
   const delayQ=Math.floor(A.vat_refund_months/3);
   const sheets=[];
-
+  if(fcMode){ forecastSheets(); }
+  else {
   // ═══════════════════════════════════════════════
   // SHEET 1: ASSUMPTIONS
   // ═══════════════════════════════════════════════
@@ -7530,10 +7534,11 @@ function dlExcel(){
     sheets.push({name:'Budget vs Actual',rows,cols:'<cols><col min="1" max="2" width="18" customWidth="1"/><col min="3" max="'+(nq+2)+'" width="16" customWidth="1"/><col min="'+(nq+3)+'" max="'+(nq+3)+'" width="16" customWidth="1"/></cols>'});
   }
 
+  } // end baseline sheets
   // ═══════════════════════════════════════════════
   // SHEET: REFORECAST CASH FLOW (if R2 exists)
   // ═══════════════════════════════════════════════
-  if(R2&&R2._isReforecast){
+  if(R2&&R2._isReforecast&&!fcMode){
     let rows=[];let rowN=1;
     const r2=R2,nq=r2.nq||r2.qCashClose.length;
     const cutQ=r2._cutoffQ||0;const _fp=(r2.A&&r2.A.fund_period_months)||nq*3;
@@ -7625,6 +7630,48 @@ function dlExcel(){
   }
 
   // ═══════════════════════════════════════════════
+  // FORECAST WORKBOOK — every tab from the reforecast (values; closed quarters = actuals, open = forecast)
+  // ═══════════════════════════════════════════════
+  function forecastSheets(){
+    const r=R2,cut=r._cutoffQ||0,ov=(reforecastSettings&&reforecastSettings.assumptionOverrides)||{};const B=R; // B = baseline run for comparison
+    const sum=a=>(a||[]).reduce((x,y)=>x+(y||0),0),arr=a=>Array.from({length:nq},(_,i)=>(a&&a[i])||0);
+    const qh=()=>{let h=colHdr('Item');for(let i=0;i<nq;i++)h+=colHdr((i<cut?'✓ ':'')+'Q'+(i+1)+' '+fmtDateS(qEndDate(i)));h+=colHdr('Total');return '<row>'+h+'</row>';};
+    const vrow=(label,a,alt,bold)=>{const d=arr(a);let c=bold?tx(label,S.bdN):lbl(label,alt);d.forEach(v=>c+=vc(v,bold?S.bdN:(alt?S.bkNA:S.bkN)));c+=vc(sum(d),bold?S.bdN:(alt?S.bkNA:S.bkN));return '<row>'+c+'</row>';};
+    const sheet=(name,ttl,groups,w)=>{const rows=['<row>'+title(ttl)+'</row>','<row>'+tx((cut?'✓ = actual (Q1–Q'+cut+'), rest = forecast':'all quarters forecast')+' · fund period '+A.fund_period_months+' months · SAR',S.sub)+'</row>',qh()];
+      groups.forEach(g=>{if(g.sec){rows.push('<row>'+secHdr(g.sec)+'</row>');}let k=0;(g.rows||[]).forEach(x=>{rows.push(vrow(x[0],x[1],!x[2]&&(k++%2===1),x[2]));});if(g.gap)rows.push('<row/>');});
+      sheets.push({name,rows,cols:colsQ(w||30,15)});};
+    // Assumptions: current (forecast) values, baseline beside them, overrides highlighted
+    {const rows=['<row>'+title('ASSUMPTIONS — FORECAST RUN')+'</row>','<row>'+tx('Blue = changed in Operations → Forecast & Scenarios; the baseline column is the locked study',S.sub)+'</row>','<row>'+colHdr('Parameter')+colHdr('Forecast')+colHdr('Baseline')+colHdr('Note')+'</row>'];
+      const bA=B.A||D;const rowsA=[['Fund name',A.fund_name,'t'],['Fund period (months)',A.fund_period_months],['Start date',A.start_date,'t'],['Cutoff (closed quarters)',cut],['Equity (cash)',A.equity],['GP commitment (cash)',A.gp_commit_cash],['GP in-kind % of mgmt fees',A.gp_commit_inkind_pct,'p'],['SAIBOR %',A.saibor,'p'],['Bank margin %',A.margin,'p'],['Arrangement fee %',A.arr_fee_pct,'p'],['Bank mgmt fee %',A.bank_mgmt_pct,'p'],['Minimum cash',A.min_cash],['Management fee mode',A.mgmt_fee_mode,'t'],[A.mgmt_fee_mode==='fixed'?'Management fee (SAR, annual)':'Management fee % p.a.',A.mgmt_fee_mode==='fixed'?A.mgmt_fee_fixed:A.mgmt_fee_pct,A.mgmt_fee_mode==='fixed'?'':'p'],['Hurdle rate %',A.hurdle_rate,'p'],['Performance fee %',A.perf_fee_pct,'p'],['VAT rate %',A.vat_rate,'p'],['VAT refund (months)',A.vat_refund_months],['VAT advisor %',A.vat_advisor_pct,'p'],['Custody (annual)',A.custody_annual],['SPV setup',A.spv_setup],['Fund setup',A.fund_setup],['Auditor (annual)',A.auditor_annual],['Sharia (annual)',A.sharia_annual],['Engineering (annual)',A.engineering_annual],['Board (annual)',A.board_annual],['Financial advisor',A.fin_advisor],['Marketing cost',A.marketing_cost]];
+      const keyOf={'Fund period (months)':'fund_period_months','SAIBOR %':'saibor','Bank margin %':'margin','Minimum cash':'min_cash','Management fee % p.a.':'mgmt_fee_pct','Management fee (SAR, annual)':'mgmt_fee_fixed','Hurdle rate %':'hurdle_rate','Performance fee %':'perf_fee_pct','VAT refund (months)':'vat_refund_months','Custody (annual)':'custody_annual','Auditor (annual)':'auditor_annual','Engineering (annual)':'engineering_annual','Sharia (annual)':'sharia_annual','Board (annual)':'board_annual','Marketing cost':'marketing_cost'};
+      rowsA.forEach((x,i)=>{const [l,v,t]=x;const k=keyOf[l];const changed=k&&ov[k]!==undefined;const bv=k?bA[k]:v;let c=lbl(l,i%2);
+        if(t==='t'){c+=tx(v==null?'':v,changed?S.blT:S.def)+tx(bv==null?'':bv,S.def);}else if(t==='p'){c+=(changed?bluePct:(f=>vc(f,S.bkP)))((Number(v)||0)/100)+vc((Number(bv)||0)/100,S.bkP);}else{c+=(changed?blueNum:(f=>vc(f,S.bkN)))(Number(v)||0)+vc(Number(bv)||0,S.bkN);}
+        c+=tx(changed?'changed in forecast':'',S.lblA);rows.push('<row>'+c+'</row>');});
+      rows.push('<row/>');rows.push('<row>'+secHdr('RESULTS')+colHdr('Forecast')+colHdr('Baseline')+'</row>');
+      const bm=(typeof baselineMetrics==='function')?baselineMetrics():B;
+      [['IRR',r.irr,bm.irr,'p1'],['Equity multiple (x)',r.eqMult,bm.eqMult],['Total cost',r.totalCost,B.totalCost],['Total revenue',r.tRev,B.tRev],['Net profit',r.grossProfit,B.grossProfit],['Peak debt',Math.max(0,...(r.qLoanClose||[0])),Math.max(0,...(B.qLoanClose||[0]))],['Total distributions',sum(r.qDividends),sum(B.qDividends)],['Total interest',sum(r.qInterest),sum(B.qInterest)]].forEach((x,i)=>{const [l,a,b,t]=x;let c=lbl(l,i%2);if(t==='p1'){c+=vc(a||0,S.bkP)+vc(b||0,S.bkP);}else{c+=vc(a||0,S.bkN)+vc(b||0,S.bkN);}rows.push('<row>'+c+'</row>');});
+      sheets.push({name:'Assumptions',rows,cols:'<cols><col min="1" max="1" width="34" customWidth="1"/><col min="2" max="3" width="18" customWidth="1"/><col min="4" max="4" width="22" customWidth="1"/></cols>'});}
+    sheet('Revenue','REVENUE — FORECAST',[{rows:[['Gross sales',r.qGrossSales],['Less: WAFI fee',arr(r.qWafi).map(v=>-v)],['Less: commission',arr(r.qSellExp).map(v=>-v)],['Net sales revenue',arr(r.qGrossSales).map((v,i)=>v-(r.qWafi[i]||0)-(r.qSellExp[i]||0)),1]]},{sec:'BASELINE (for comparison)',rows:[['Gross sales — baseline',B.qGrossSales],['Variance vs baseline',arr(r.qGrossSales).map((v,i)=>v-(B.qGrossSales[i]||0))]]}]);
+    sheet('Construction Cost','CONSTRUCTION & LAND — FORECAST',[{sec:'LAND',rows:[['Land, brokerage & RETT (cash out)',arr(r.qLandCF).map(v=>-v)]]},{sec:'CONSTRUCTION (inc. VAT)',rows:[['Base construction',r.qBaseCon],['Developer fees',r.qDevFee],['Contingency',r.qContingency],['Insurance',r.qInsurance],['Design fee',r.qDesignFee],['Supervision fee',r.qSupervision],['Licensing fee',r.qLicensing],['Total construction',r.qCon,1]]},{sec:'BASELINE',rows:[['Total construction — baseline',B.qCon],['Variance vs baseline',arr(r.qCon).map((v,i)=>v-(B.qCon[i]||0))]]}]);
+    sheet('Fund Expenses','FUND EXPENSES — FORECAST (inc. VAT where applicable)',[{rows:[['Custody',r.qCustody],['SPV setup',r.qSPV],['Fund setup',r.qFundSetup],['Auditor',r.qAuditor],['Sharia committee',r.qSharia],['Engineering consultant',r.qEngineering],['Board compensation',r.qBoard],['Financial advisor',r.qFinAdvisor],['Management fees',r.qMgmtFee],['Marketing',r.qMkt],['Bank management fees',r.qBankMgmt],['Arrangement fee',r.qArrFee],['Performance fee',r.qPerfFee],['Total fund expenses',r.qTotalFundExp,1]]},{sec:'BASELINE',rows:[['Total fund expenses — baseline',B.qTotalFundExp]]}]);
+    sheet('Debt Schedule','DEBT SCHEDULE — FORECAST',[{rows:[['Opening balance',r.qLoanOpen],['Drawdowns',r.drawdowns],['Repayments',arr(r.qRepay).map(v=>-v)],['Closing balance',r.qLoanClose,1],['Profit / interest',r.qInterest],['Funding gap (beyond facility)',r._fundingGap||[]]]},{sec:'BASELINE',rows:[['Closing balance — baseline',B.qLoanClose],['Interest — baseline',B.qInterest]]}]);
+    sheet('VAT Schedule','VAT — FORECAST',[{rows:[['VAT on fund expenses (paid)',r.qExpVAT],['VAT refund — construction',r.qVATRefundCon],['VAT refund — expenses',r.qVATRefundExp],['VAT refund — brokerage',r.qBrokVATRefund],['RETT refund',r.qRETTRefund],['VAT advisor',arr(r.qVATAdvisor).map(v=>-v)],['Net refunds',r.qVATNet,1]]}]);
+    sheet('In-Kind','IN-KIND PARTICIPATION — FORECAST',[{rows:[['In-kind — land',r.qIKLand],['In-kind — brokerage',r.qIKBrok],['In-kind — development',r.qIKDev],['In-kind — construction',r.qIKCon],['In-kind — marketing',r.qIKMkt],['In-kind — selling',r.qIKSell],['Total in-kind',r.qIKTotal,1]]}]);
+    sheet('Cash Flow','CASH FLOW — FORECAST',[{sec:'OPERATING',rows:[['Gross sales revenue',r.qGrossSales],['WAFI fee',arr(r.qWafi).map(v=>-v)],['Commission fees',arr(r.qSellExp).map(v=>-v)],['Net VAT / RETT refunds',r.qVATNet],['Total fund expenses',arr(r.qTotalFundExp).map(v=>-v)],['Interest / debt profit',arr(r.qInterest).map(v=>-v)],['Net operating cash flow',r.qNetOp,1]]},{sec:'INVESTING',rows:[['Land acquisition',r.qLandCF],['Construction',arr(r.qCon).map(v=>-v)],['Net investing cash flow',r.qNetInv,1]]},{sec:'FINANCING',rows:[['Drawdowns',r.drawdowns],['Repayments',arr(r.qRepay).map(v=>-v)],['Investor equity',r.qEquity],['In-kind participation',r.qIKTotal],['Dividends paid',arr(r.qDividends).map(v=>-v)],['Net financing cash flow',r.qNetFin,1]]},{sec:'CASH',rows:[['Opening cash',r.qCashOpen],['Net cash flow',arr(r.qCashClose).map((v,i)=>v-(r.qCashOpen[i]||0))],['Closing cash',r.qCashClose,1]]},{sec:'BASELINE',rows:[['Closing cash — baseline',B.qCashClose],['Dividends — baseline',B.qDividends]]}],32);
+    {const nm=(typeof navModel==='function')?(()=>{try{return navModel();}catch(e){return null;}})():null;const g=[{rows:[['Total assets',r.qTotalAssets],['Loan balance',arr(r.qLoanClose).map(v=>-v)],['NAV (plan mechanics)',r.qNAV,1]]}];
+      if(nm&&nm.rows)g.push({sec:'NAV — OPERATIONS BASIS (cost + marks − loan − accruals)',rows:[['NAV',nm.rows.map(x=>x.nav)],['NAV per unit',nm.rows.map(x=>x.navU)]]});
+      g.push({sec:'BASELINE',rows:[['NAV — baseline',B.qNAV]]});sheet('NAV Schedule','NAV — FORECAST',g);}
+    // Summary: capital structure & returns
+    {const rows=['<row>'+title('SUMMARY — FORECAST vs BASELINE')+'</row>','<row>'+tx('As of Q'+cut+' · '+A.fund_period_months+' months',S.sub)+'</row>','<row>'+colHdr('Metric')+colHdr('Forecast')+colHdr('Baseline')+colHdr('Change')+'</row>'];
+      const bm=(typeof baselineMetrics==='function')?baselineMetrics():B;
+      [['IRR',r.irr,bm.irr,'p'],['Equity multiple',r.eqMult,bm.eqMult,'x'],['Total cost',r.totalCost,B.totalCost],['Total revenue',r.tRev,B.tRev],['Net profit',r.grossProfit,B.grossProfit],['Equity (cash)',r.capCash,B.capCash],['In-kind',r.capInKind,B.capInKind],['Off-plan sales (funding)',r.capOffPlan,B.capOffPlan],['Bank debt',r.capDebt,B.capDebt],['Total investment',r.capTotal,B.capTotal],['Peak debt',Math.max(0,...(r.qLoanClose||[0])),Math.max(0,...(B.qLoanClose||[0]))],['Total interest',sum(r.qInterest),sum(B.qInterest)],['Total distributions',sum(r.qDividends),sum(B.qDividends)],['Funding gap (total)',sum(r._fundingGap),0]].forEach((x,i)=>{const [l,a,b,t]=x;const st=t==='p'?S.bkP:S.bkN;let c=lbl(l,i%2)+vc(a||0,st)+vc(b||0,st)+vc((a||0)-(b||0),st);rows.push('<row>'+c+'</row>');});
+      sheets.push({name:'Summary',rows,cols:'<cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="4" width="18" customWidth="1"/></cols>'});}
+    // Budget vs actual by category (closed quarters)
+    if(cut>0){const rows=['<row>'+title('BUDGET vs ACTUAL — CLOSED QUARTERS (Q1–Q'+cut+')')+'</row>','<row>'+colHdr('Category')+colHdr('Budget to date')+colHdr('Actual to date')+colHdr('Variance')+colHdr('Forecast at completion')+colHdr('Baseline total')+'</row>'];
+      opsCats().forEach((c,i)=>{let bud=0,tot=0;for(let q=0;q<cut;q++)bud+=c.getQ(B,q)||0;for(let q=0;q<nq;q++)tot+=c.getQ(B,q)||0;const act=actualOf(c.key,0,cut);const fac=sum(Array.from({length:nq},(_,q)=>c.getQ(r,q)||0));rows.push('<row>'+lbl(c.en,i%2)+vc(bud,S.bkN)+vc(act,S.bkN)+vc(act-bud,S.bkN)+vc(fac,S.bkN)+vc(tot,S.bkN)+'</row>');});
+      sheets.push({name:'Budget vs Actual',rows,cols:'<cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="6" width="18" customWidth="1"/></cols>'});}
+  }
+  // ═══════════════════════════════════════════════
   // BUILD OOXML ZIP
   // ═══════════════════════════════════════════════
   const xmlS=sheets.map(s=>{
@@ -7700,7 +7747,7 @@ function dlExcel(){
   const blob=new Blob(parts,{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='RE_Fund_Model_'+nq+'Q.xlsx';
+  a.download=(fcMode?'RE_Fund_Forecast_Q'+(R2._cutoffQ||0)+'_':'RE_Fund_Model_')+nq+'Q.xlsx';
   a.click();
 }
 
