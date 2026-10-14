@@ -2622,7 +2622,7 @@ function calculate(){
       qEngineering[qi]=freqAmount(A.engineering_annual,A.engineering_freq,qi,nq)*V;
       qBoard[qi]=freqAmount(A.board_annual,A.board_freq,qi,nq)*(Number(A.board_vat)?V:1); // board compensation is VAT-exempt unless board_vat=1
     }
-    qSPV[0]=A.spv_setup*V; qFundSetup[0]=A.fund_setup*V; qFinAdvisor[0]=A.fin_advisor*V;
+    qSPV[0]=A.spv_setup*V; qFundSetup[0]=A.fund_setup*V; qFinAdvisor[0]=A.fin_advisor*V; if((typeof _SKETCH!=='undefined'&&_SKETCH))_skPhaseAll({custody:qCustody,spv:qSPV,fund_setup:qFundSetup,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard,fin_advisor:qFinAdvisor}); // SKETCH hook
   }
 
   // In-kind marketing
@@ -2653,7 +2653,7 @@ function calculate(){
   const qLoanOpen=Array(nq).fill(0),qLoanClose=Array(nq).fill(0);
   const qInterest=Array(nq).fill(0),qRepay=Array(nq).fill(0);
   const gpCash=A.gp_commit_cash||0;
-  const qEquity=Array(nq).fill(0); qEquity[0]=A.equity+gpCash;
+  const qEquity=Array(nq).fill(0); qEquity[0]=A.equity+gpCash; if((typeof _SKETCH!=='undefined'&&_SKETCH))_skPhase('equity',qEquity); // SKETCH hook
   const qLandCF=Array(nq).fill(0); qLandCF[0]=-tLand;
   if(typeof _SKETCH!=='undefined'&&_SKETCH) _skLand(qLandCF,baseLand,brokerageIncVAT,rettAmount,nq); // SKETCH hook: land / brokerage / RETT phasing
 
@@ -2671,7 +2671,7 @@ function calculate(){
     cumCon=0; qDividends.fill(0);
     const iterDebt=drawdowns.reduce((a,b)=>a+b,0);
     qArrFee[0]=iterDebt*pct(A.arr_fee_pct);
-    qBankMgmt.fill(0); qBankMgmt[0]=iterDebt*pct(A.bank_mgmt_pct)*V; // VAT is charged on the bank fee (matches Excel)
+    qBankMgmt.fill(0); qBankMgmt[0]=iterDebt*pct(A.bank_mgmt_pct)*V; if((typeof _SKETCH!=='undefined'&&_SKETCH))_skPhaseAll({arr_fee:qArrFee,bank_mgmt:qBankMgmt}); // VAT is charged on the bank fee (matches Excel)
     for(let qi=0;qi<nq;qi++){
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1];
       const bal=qLoanOpen[qi]+drawdowns[qi];
@@ -2772,7 +2772,7 @@ function calculate(){
   }
   const totalDebtDrawn=drawdowns.reduce((a,b)=>a+b,0);
   qArrFee[0]=totalDebtDrawn*pct(A.arr_fee_pct);
-  qBankMgmt[0]=totalDebtDrawn*pct(A.bank_mgmt_pct)*V;
+  qBankMgmt[0]=totalDebtDrawn*pct(A.bank_mgmt_pct)*V; if((typeof _SKETCH!=='undefined'&&_SKETCH)){qArrFee.fill(0);qArrFee[0]=totalDebtDrawn*pct(A.arr_fee_pct);qBankMgmt.fill(0);qBankMgmt[0]=totalDebtDrawn*pct(A.bank_mgmt_pct)*V;_skPhaseAll({arr_fee:qArrFee,bank_mgmt:qBankMgmt});} // SKETCH hook
 
   cumCon=0;
   for(let qi=0;qi<nq;qi++){
@@ -5053,7 +5053,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const SK_LINES=[['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
+const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
 // weights helpers: tranches → % per quarter; any weights → normalised to 100 over nq (tail folds into the last quarter)
@@ -5062,13 +5062,19 @@ function skNorm(w,nq){const out=Array(nq).fill(0);(w||[]).forEach((v,i)=>{out[Ma
 function skShift(w,n,nq){const out=Array(nq).fill(0);(w||[]).forEach((v,i)=>{out[Math.min(nq-1,Math.max(0,i+n))]+=Number(v)||0;});return out;}
 // compile a sketch for a run of nq quarters: land weights (fractions) + one-off items per quarter
 function skCompile(sk,nq){const c={land:{},items:Array(nq).fill(0),list:[]};
+  c.phase={};
   for(const a of sk.adjustments||[]){
     if(a.type==='phase'&&['land','brokerage','rett'].includes(a.line)){c.land[a.line]=skNorm(a.weights,nq).map(v=>v/100);}
     else if(a.type==='shift'&&['land','brokerage','rett'].includes(a.line)){c.land[a.line]=skShift([100],Number(a.n)||0,nq).map(v=>v/100);}
+    else if(a.type==='phase'&&!SK_SCHED[a.line]){c.phase[a.line]=skNorm(a.weights,nq).map(v=>v/100);}
+    else if(a.type==='shift'&&!SK_SCHED[a.line]){const w=[];w._shift=Number(a.n)||0;c.phase[a.line]=w;}
     else if(a.type==='item'){const q=Math.min(nq-1,Math.max(0,(Number(a.q)||1)-1));const amt=(Number(a.amount)||0)*(a.kind==='income'?1:-1);c.items[q]+=amt;c.list.push({q,amount:amt,label:a.label||''});}}
   return c;}
 function _skLand(qLandCF,baseLand,brok,rett,nq){const c=_SKETCH;if(!c||!Object.keys(c.land).length)return;const w=k=>c.land[k]||Array.from({length:nq},(_,i)=>i===0?1:0);const L=w('land'),B=w('brokerage'),T=w('rett');for(let i=0;i<nq;i++)qLandCF[i]=-(baseLand*(L[i]||0)+brok*(B[i]||0)+rett*(T[i]||0));}
 function _skItem(qi){const c=_SKETCH;return c&&c.items?(c.items[qi]||0):0;}
+// re-phase any quarterly array in place by the sketch's weights for that key (total preserved); 'shift' moves it by n quarters
+function _skPhase(key,arr){const c=_SKETCH;if(!c||!c.phase||!c.phase[key])return;const w=c.phase[key];const tot=arr.reduce((a,b)=>a+b,0);if(w._shift!=null){const src=arr.slice();arr.fill(0);src.forEach((v,i)=>{arr[Math.min(arr.length-1,Math.max(0,i+w._shift))]+=v;});return;}for(let i=0;i<arr.length;i++)arr[i]=tot*(w[i]||0);}
+function _skPhaseAll(map){for(const k in map)_skPhase(k,map[k]);}
 // apply the schedule-type adjustments to a cloned projects array (nothing touches the real projects)
 function skProjects(sk,nq){const P=JSON.parse(JSON.stringify(projects));
   for(const a of sk.adjustments||[]){const key=SK_SCHED[a.line];if(!key)continue;const pi=Math.min(P.length-1,Math.max(0,Number(a.project)||0));const pr=P[pi];const cur=rescaleSchedule(pr[key]||[],nq);
@@ -8031,7 +8037,7 @@ function calcWith(overrides){
       qEngineering[qi]=freqAmount(A.engineering_annual,A.engineering_freq,qi,nq)*V;
       qBoard[qi]=freqAmount(A.board_annual,A.board_freq,qi,nq)*(Number(A.board_vat)?V:1); // board compensation is VAT-exempt unless board_vat=1
     }
-    qSPV[0]=A.spv_setup*V;qFundSetup[0]=A.fund_setup*V;qFinAdvisor[0]=A.fin_advisor*V;
+    qSPV[0]=A.spv_setup*V;qFundSetup[0]=A.fund_setup*V;qFinAdvisor[0]=A.fin_advisor*V; if((typeof _SKETCH!=='undefined'&&_SKETCH))_skPhaseAll({custody:qCustody,spv:qSPV,fund_setup:qFundSetup,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard,fin_advisor:qFinAdvisor}); // SKETCH hook
   }
 
   const qIKMkt=qMkt.map(v=>v>0?pct(A.ik_mkt_pct)*v/V:0);
@@ -8057,7 +8063,7 @@ function calcWith(overrides){
   const qLoanOpen=Array(nq).fill(0),qLoanClose=Array(nq).fill(0);
   const qInterest=Array(nq).fill(0),qRepay=Array(nq).fill(0);
   const gpCash=A.gp_commit_cash||0;
-  const qEquity=Array(nq).fill(0);qEquity[0]=A.equity+gpCash;
+  const qEquity=Array(nq).fill(0);qEquity[0]=A.equity+gpCash;if((typeof _SKETCH!=='undefined'&&_SKETCH))_skPhase('equity',qEquity); // SKETCH hook
   const qLandCF=Array(nq).fill(0);qLandCF[0]=-tLand;
   if(typeof _SKETCH!=='undefined'&&_SKETCH) _skLand(qLandCF,baseLand,brokerageIncVAT,rettAmt,nq); // SKETCH hook
   const qTotalAssets=Array(nq).fill(0),qNAV=Array(nq).fill(0),qDSCR=Array(nq).fill(0);
@@ -8070,7 +8076,7 @@ function calcWith(overrides){
     cumCon=0; qDividends.fill(0);
     const iterDebt=drawdowns.reduce((a,b)=>a+b,0);
     qArrFee[0]=iterDebt*pct(A.arr_fee_pct);
-    qBankMgmt.fill(0);qBankMgmt[0]=iterDebt*pct(A.bank_mgmt_pct)*V; // VAT is charged on the bank fee (matches Excel)
+    qBankMgmt.fill(0);qBankMgmt[0]=iterDebt*pct(A.bank_mgmt_pct)*V;if((typeof _SKETCH!=='undefined'&&_SKETCH))_skPhaseAll({arr_fee:qArrFee,bank_mgmt:qBankMgmt}); // VAT is charged on the bank fee (matches Excel)
     for(let qi=0;qi<nq;qi++){
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1];
       const bal=qLoanOpen[qi]+drawdowns[qi];
@@ -8159,7 +8165,7 @@ function calcWith(overrides){
   }
   const totalDebtDrawn=drawdowns.reduce((a,b)=>a+b,0);
   qArrFee[0]=totalDebtDrawn*pct(A.arr_fee_pct);
-  qBankMgmt[0]=totalDebtDrawn*pct(A.bank_mgmt_pct)*V;
+  qBankMgmt[0]=totalDebtDrawn*pct(A.bank_mgmt_pct)*V; if((typeof _SKETCH!=='undefined'&&_SKETCH)){qArrFee.fill(0);qArrFee[0]=totalDebtDrawn*pct(A.arr_fee_pct);qBankMgmt.fill(0);qBankMgmt[0]=totalDebtDrawn*pct(A.bank_mgmt_pct)*V;_skPhaseAll({arr_fee:qArrFee,bank_mgmt:qBankMgmt});} // SKETCH hook
   cumCon=0;
   for(let qi=0;qi<nq;qi++){
     cumCon+=qCon[qi];
