@@ -801,6 +801,7 @@ canvas{max-width:100%;display:block}
   <div class="pnl" id="p-forecast"></div>
   <div class="pnl" id="p-ops"></div>
   <div class="pnl" id="p-audit"></div>
+  <div class="pnl" id="p-sketch"></div><!-- SKETCH panel -->
   <div id="reforecastPanel" style="display:none"></div>
 </main>
 <div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span>💳</span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
@@ -1741,12 +1742,12 @@ function compLabel(comp){
 // =============================================
 // i18n
 // =============================================
-const tabIcons=['⚙','📅','📊','💰','🏦','🔬','📋','✅','🎯','🏛','🧾'];
+const tabIcons=['⚙','📅','📊','💰','🏦','🔬','📋','✅','🎯','🏛','🧾','✏️'];
 const TX={
   en:{title:'Real Estate Fund Financial Study',sub:'Professional Fund Modeling Platform',calc:'Calculate',dl:'Excel',langB:'العربية',
     projLbl:'Project:',projSave:'💾 Save',projSaveShared:'💾 Save to My Projects',projSaveSharedPrompt:'Save this shared project to your account as:',projSavedShared:'Project "%name%" saved to your account!',projOverwrite:'A project named "%name%" already exists. Overwrite?',projNew:'+ New',projDel:'🗑 Delete',projShare:'🔗 Share',pdf:'PDF',
     shareTitle:'Share Projects',shareDesc:'Select one or more projects to share via a unique link. Recipients can view the financial model.',shareProjHead:'Select Projects',shareToggle:'Allow recipient to modify assumptions',shareGenLink:'Generate Link',shareCopyLink:'Copy Link',shareClose:'Close',shareNoProj:'No saved projects to share. Save a project first.',shareCopied:'Link copied!',shareShortening:'Shortening link...',shareViewBadge:'SHARED VIEW',shareViewMsg:'You are viewing shared projects',shareViewMsgRO:' (read-only assumptions)',shareExit:'Exit Shared View',
-    tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast','Control room','Audit'],
+    tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast','Control room','Audit','Sketch'],
     ws:{feasibility:'Feasibility',operations:'Operations'},
     roles:['Fund Manager','Developer','Financer'],
     roleKeys:['fund_manager','developer','financer'],
@@ -1832,7 +1833,7 @@ const TX={
   ar:{title:'الدراسة المالية للصندوق العقاري',sub:'منصة النمذجة المالية للصناديق',calc:'احسب',dl:'إكسل',langB:'English',
     projLbl:'المشروع:',projSave:'💾 حفظ',projSaveShared:'💾 حفظ في مشاريعي',projSaveSharedPrompt:'حفظ المشروع المشارك في حسابك باسم:',projSavedShared:'تم حفظ المشروع "%name%" في حسابك!',projOverwrite:'يوجد مشروع باسم "%name%" بالفعل. هل تريد استبداله؟',projNew:'+ جديد',projDel:'🗑 حذف',projShare:'🔗 مشاركة',pdf:'PDF',
     shareTitle:'مشاركة المشاريع',shareDesc:'اختر مشروعًا أو أكثر لمشاركته عبر رابط فريد. يمكن للمستلمين عرض النموذج المالي.',shareProjHead:'اختر المشاريع',shareToggle:'السماح للمستلم بتعديل الافتراضات',shareGenLink:'إنشاء رابط',shareCopyLink:'نسخ الرابط',shareClose:'إغلاق',shareNoProj:'لا توجد مشاريع محفوظة للمشاركة. احفظ مشروعًا أولًا.',shareCopied:'تم نسخ الرابط!',shareShortening:'جارٍ اختصار الرابط...',shareViewBadge:'عرض مشترك',shareViewMsg:'أنت تشاهد مشاريع مشتركة',shareViewMsgRO:' (الافتراضات للقراءة فقط)',shareExit:'خروج من العرض المشترك',
-    tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع','غرفة التحكم','التدقيق'],
+    tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع','غرفة التحكم','التدقيق','مسودة'],
     ws:{feasibility:'دراسة الجدوى',operations:'التشغيل والمتابعة'},
     roles:['مدير الصندوق','المطور','الممول'],
     roleKeys:['fund_manager','developer','financer'],
@@ -1920,12 +1921,12 @@ const TX={
 // =============================================
 // TAB NAVIGATION
 // =============================================
-const tabKeys=['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','actuals','forecast','ops','audit'];
+const tabKeys=['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','actuals','forecast','ops','audit','sketch']; // SKETCH: 'sketch' entry
 // Workspaces: Feasibility (new deal) vs Operations (a launched fund: actuals, reforecast, distributions). One engine, one project — different screens.
-const WORKSPACES={feasibility:['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary'],operations:['ops','audit','cashflow','debt','summary','forecast','actuals']};
+const WORKSPACES={feasibility:['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','sketch'],operations:['ops','audit','cashflow','debt','summary','forecast','actuals']}; // SKETCH: 'sketch' in feasibility
 const OPS_HIDDEN_TABS=['forecast','actuals']; // reachable from the control room, not shown in the tab bar
 let workspace='feasibility';
-const RESULT_TABS=['dashboard','cashflow','debt','sensitivity','summary'];
+const RESULT_TABS=['dashboard','cashflow','debt','sensitivity','summary','sketch'];
 function buildTabs(){
   const t=TX[lang],nav=document.getElementById('tabNav');
   const keys=WORKSPACES[workspace];
@@ -1956,6 +1957,7 @@ function showTab(k){
   if(k==='forecast') renderForecastTab();
   if(k==='ops') renderOps();
   if(k==='audit') renderAudit();
+  if(k==='sketch') renderSketch(); // SKETCH
   if(workspace==='operations'&&(k==='cashflow'||k==='debt'||k==='summary')&&R){ensureForecast();if(k==='cashflow')renderCashFlow();if(k==='debt')renderDebt();if(k==='summary')renderSummary();}
 }
 
@@ -2653,6 +2655,7 @@ function calculate(){
   const gpCash=A.gp_commit_cash||0;
   const qEquity=Array(nq).fill(0); qEquity[0]=A.equity+gpCash;
   const qLandCF=Array(nq).fill(0); qLandCF[0]=-tLand;
+  if(typeof _SKETCH!=='undefined'&&_SKETCH) _skLand(qLandCF,baseLand,brokerageIncVAT,rettAmount,nq); // SKETCH hook: land / brokerage / RETT phasing
 
   const qTotalAssets=Array(nq).fill(0), qNAV=Array(nq).fill(0);
   const qDSCR=Array(nq).fill(0);
@@ -2713,7 +2716,7 @@ function calculate(){
     for(let qi=0;qi<nq;qi++){
       // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
-      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
+      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+(typeof _SKETCH!=='undefined'&&_SKETCH?_skItem(qi):0); // SKETCH hook: one-off items
       qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
       const netBorrow=drawdowns[qi]-qRepay[qi];
       qNetFin[qi]=netBorrow+qEquity[qi]+qIKTotal[qi];
@@ -2808,7 +2811,7 @@ function calculate(){
   for(let qi=0;qi<nq;qi++){
     // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
-      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
+      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+(typeof _SKETCH!=='undefined'&&_SKETCH?_skItem(qi):0); // SKETCH hook: one-off items
     qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
     const netBorrow=drawdowns[qi]-qRepay[qi];
 
@@ -4580,7 +4583,7 @@ function runReforecast(){
   _rfNorm();
   // Current assumptions = baseline + overrides (forward parameters). Rc drives the open quarters; R stays the baseline.
   const _ov=reforecastSettings.assumptionOverrides||{};
-  const Rc=Object.keys(_ov).length?(calcFull(_ov)||R):R;
+  const Rc=(Object.keys(_ov).length||_SKETCH)?(calcFull(_ov)||R):R; // SKETCH: a running sketch forces a fresh engine run
   const nq=Rc.nq;
   const cutoffQ=getCutoffQ(Rc);   // 0 = nothing closed yet: the forecast simply equals the current-assumption plan
 
@@ -5039,8 +5042,93 @@ function otherExpBreakdown(RX){
     [ar?'اللجنة الشرعية':'Shariah committee',S(RX.qSharia)],[ar?'الاستشاري الهندسي':'Engineering consultant',S(RX.qEngineering)],[ar?'مكافآت مجلس الإدارة':'Board compensation',S(RX.qBoard)],[ar?'المستشار المالي':'Financial advisor',S(RX.qFinAdvisor)],
     [ar?'التسويق':'Marketing',S(RX.qMkt)],[ar?'رسوم الإدارة البنكية':'Bank management fee',S(RX.qBankMgmt)],[ar?'رسوم الترتيب':'Arrangement fee',S(RX.qArrFee)],[ar?'رسوم وافي':'WAFI fees',S(RX.qWafi)],[ar?'عمولات البيع':'Selling commissions',S(RX.qSellExp)]];
 }
-function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},salesPins:{},cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[],invoices:[],submissions:[]};}
+function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},salesPins:{},sketches:[],cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[],invoices:[],submissions:[]};}
 function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k]===undefined) reforecastSettings[k]=JSON.parse(JSON.stringify(d[k]));}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// SKETCH — what-ifs that the assumption form cannot express (removable: delete this block,
+// the 'sketch' tab registrations, the p-sketch panel, the three `_SKETCH` hooks in the
+// engines and the `||_SKETCH` in runReforecast; saved sketches in reforecastSettings.sketches
+// are then simply ignored). The engine does every calculation; a sketch only re-phases lines,
+// shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
+// ═══════════════════════════════════════════════════════════════════════════════════════
+var _SKETCH=null; // set only while a sketch runs
+const SK_LINES=[['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
+const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
+function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
+// weights helpers: tranches → % per quarter; any weights → normalised to 100 over nq (tail folds into the last quarter)
+function skTranches(n,every,from,nq){const w=Array(nq).fill(0);n=Math.max(1,n|0);every=Math.max(1,every|0);from=Math.max(0,(from|0));for(let k=0;k<n;k++){w[Math.min(nq-1,from+k*every)]+=100/n;}return w;}
+function skNorm(w,nq){const out=Array(nq).fill(0);(w||[]).forEach((v,i)=>{out[Math.min(nq-1,i)]+=Number(v)||0;});const t=out.reduce((a,b)=>a+b,0);return t>0?out.map(v=>v*100/t):out;}
+function skShift(w,n,nq){const out=Array(nq).fill(0);(w||[]).forEach((v,i)=>{out[Math.min(nq-1,Math.max(0,i+n))]+=Number(v)||0;});return out;}
+// compile a sketch for a run of nq quarters: land weights (fractions) + one-off items per quarter
+function skCompile(sk,nq){const c={land:{},items:Array(nq).fill(0),list:[]};
+  for(const a of sk.adjustments||[]){
+    if(a.type==='phase'&&['land','brokerage','rett'].includes(a.line)){c.land[a.line]=skNorm(a.weights,nq).map(v=>v/100);}
+    else if(a.type==='shift'&&['land','brokerage','rett'].includes(a.line)){c.land[a.line]=skShift([100],Number(a.n)||0,nq).map(v=>v/100);}
+    else if(a.type==='item'){const q=Math.min(nq-1,Math.max(0,(Number(a.q)||1)-1));const amt=(Number(a.amount)||0)*(a.kind==='income'?1:-1);c.items[q]+=amt;c.list.push({q,amount:amt,label:a.label||''});}}
+  return c;}
+function _skLand(qLandCF,baseLand,brok,rett,nq){const c=_SKETCH;if(!c||!Object.keys(c.land).length)return;const w=k=>c.land[k]||Array.from({length:nq},(_,i)=>i===0?1:0);const L=w('land'),B=w('brokerage'),T=w('rett');for(let i=0;i<nq;i++)qLandCF[i]=-(baseLand*(L[i]||0)+brok*(B[i]||0)+rett*(T[i]||0));}
+function _skItem(qi){const c=_SKETCH;return c&&c.items?(c.items[qi]||0):0;}
+// apply the schedule-type adjustments to a cloned projects array (nothing touches the real projects)
+function skProjects(sk,nq){const P=JSON.parse(JSON.stringify(projects));
+  for(const a of sk.adjustments||[]){const key=SK_SCHED[a.line];if(!key)continue;const pi=Math.min(P.length-1,Math.max(0,Number(a.project)||0));const pr=P[pi];const cur=rescaleSchedule(pr[key]||[],nq);
+    if(a.type==='phase')pr[key]=skNorm(a.weights,nq);else if(a.type==='shift')pr[key]=skShift(cur,Number(a.n)||0,nq);}
+  return P;}
+// run a sketch on the baseline assumptions (+ its own overrides) and return the engine result; the platform state is restored whatever happens
+function sketchRun(sk,extraOv){if(!R)return null;const saveP=JSON.stringify(projects);const ov=Object.assign({},extraOv||{},sk.overrides||{});const nq=Math.floor((Number(ov.fund_period_months)||Number(D.fund_period_months)||0)/3)||R.nq;
+  let out=null;try{projects=skProjects(sk,nq);_SKETCH=skCompile(sk,nq);out=calcFull(ov);if(out){out=JSON.parse(JSON.stringify(out));_rfTotals(out);_rfReturns(out);out._sketch={items:_SKETCH.list};}}catch(e){console.error('sketch:',e);}finally{_SKETCH=null;projects=JSON.parse(saveP);}
+  return out;}
+// run a sketch on top of the current forecast (Operations): actuals in closed quarters, sketch + overrides forward
+function sketchRunOps(sk){if(!R)return null;const saveP=JSON.stringify(projects),saveOv=JSON.parse(JSON.stringify(reforecastSettings.assumptionOverrides||{})),saveR2=R2;const ov=Object.assign({},saveOv,sk.overrides||{});const nq=Math.floor((Number(ov.fund_period_months)||Number(D.fund_period_months)||0)/3)||R.nq;
+  let out=null;try{reforecastSettings.assumptionOverrides=ov;projects=skProjects(sk,nq);_SKETCH=skCompile(sk,nq);runReforecast();out=R2;}catch(e){console.error('sketch ops:',e);}finally{_SKETCH=null;projects=JSON.parse(saveP);reforecastSettings.assumptionOverrides=saveOv;R2=saveR2;}
+  return out;}
+// ---- UI ----
+let skSel=null,skRes=null;
+function skNew(){const ar=lang==='ar';const sk={id:'sk'+Date.now().toString(36),name:(ar?'مسودة ':'Sketch ')+(sketches().length+1),text:'',adjustments:[],overrides:{},createdAt:new Date().toISOString().slice(0,10)};sketches().push(sk);skSel=sk.id;skRes=null;renderSketch();}
+function skDel(id){if(!confirm(lang==='ar'?'حذف هذه المسودة؟':'Delete this sketch?'))return;const L=sketches();const i=L.findIndex(x=>x.id===id);if(i>=0)L.splice(i,1);if(skSel===id){skSel=null;skRes=null;}renderSketch();}
+function skDup(id){const L=sketches();const src=L.find(x=>x.id===id);if(!src)return;const c=JSON.parse(JSON.stringify(src));c.id='sk'+Date.now().toString(36);c.name=src.name+' (2)';L.push(c);skSel=c.id;skRes=null;renderSketch();}
+function skCur(){return sketches().find(x=>x.id===skSel)||null;}
+function skSet(k,v){const sk=skCur();if(!sk)return;sk[k]=v;}
+function skAddAdj(type){const sk=skCur();if(!sk)return;const nq=R?R.nq:8;const a={type,line:'land',project:0};if(type==='phase')a.weights=skTranches(2,4,0,nq);if(type==='shift')a.n=1;if(type==='item'){a.label='';a.q=1;a.amount=0;a.kind='cost';}if(type==='override'){a.key='saibor';a.value=D.saibor;}sk.adjustments.push(a);skRes=null;renderSketch();}
+function skRmAdj(i){const sk=skCur();if(!sk)return;sk.adjustments.splice(i,1);skRes=null;renderSketch();}
+function skAdj(i,k,v){const sk=skCur();if(!sk)return;const a=sk.adjustments[i];if(!a)return;if(k==='weights'){a.weights=String(v).split(/[,\s]+/).filter(x=>x!=='').map(Number);}else if(k==='tranches'){const [n,e,f]=String(v).split(',').map(Number);a.weights=skTranches(n||1,e||1,(f||1)-1,R?R.nq:8);}else a[k]=v;
+  if(k==='key'||k==='value'){sk.overrides={};sk.adjustments.filter(x=>x.type==='override'&&x.key).forEach(x=>{sk.overrides[x.key]=Number(x.value);});}
+  skRes=null;if(k==='line'||k==='type'||k==='tranches')renderSketch();}
+function skRun(){const sk=skCur();if(!sk)return;skRes=sketchRun(sk);renderSketch();}
+function skPromote(){const sk=skCur();if(!sk)return;_rfNorm();reforecastSettings.scenarios=reforecastSettings.scenarios||[];reforecastSettings.scenarios.push({name:'✏ '+sk.name,ov:Object.assign({},sk.overrides||{}),sketch:sk.id});alert(lang==='ar'?'أُضيفت إلى سيناريوهات غرفة التحكم (تُقيَّم فوق التوقع الحالي).':'Added to the control-room scenarios (evaluated on top of the current forecast).');}
+function renderSketch(){const pnl=document.getElementById('p-sketch');if(!pnl)return;const ar=lang==='ar';
+  if(!R){pnl.innerHTML=`<div class="sec"><p>${ot('calcFirst')}</p></div>`;return;}
+  const L=sketches(),sk=skCur(),nq=R.nq;
+  const bm=JSON.parse(JSON.stringify(R));_rfTotals(bm);_rfReturns(bm); // baseline on the same return basis as the sketch
+  let h=`<div class="sec"><div class="vq-head"><div><h2 style="margin:0;font-family:'Noto Serif',serif;color:#00322d">${ar?'مسودة — أفكار لا تعبّر عنها صفحة الافتراضات':'Sketch — ideas the assumptions form cannot express'}</h2><p class="ops-muted" style="margin:4px 0 0;font-size:.82rem">${ar?'قسّم الأرض أو السعي على دفعات، أزح جدولاً، أضف بنداً لمرة واحدة، أو غيّر افتراضاً — ثم شغّل. المحرك يحسب كل شيء؛ المسودة لا تمس دراسة الجدوى ولا التوقع إلا إذا رفعتها إلى السيناريوهات.':'Split land or brokerage into tranches, shift a schedule, add a one-off item or override an assumption — then run. The engine does all the arithmetic; a sketch never touches the study or the forecast unless you promote it to the scenarios.'}</p></div><button class="ops-close" onclick="skNew()">+ ${ar?'مسودة جديدة':'New sketch'}</button></div></div>`;
+  // list
+  h+=`<div class="ops-card" style="margin:14px 0"><h3>${ar?'المسودات':'Sketches'}<span>${L.length}</span></h3>${L.length?`<table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الاسم':'Name'}</th><th>${ar?'التعديلات':'Adjustments'}</th><th>${ar?'أُنشئت':'Created'}</th><th></th></tr></thead><tbody>${L.map(x=>`<tr class="${x.id===skSel?'tot':''}"><td><a class="ops-link" onclick="skSel='${x.id}';skRes=null;renderSketch()"><b>${escH(x.name)}</b></a></td><td>${(x.adjustments||[]).length}${Object.keys(x.overrides||{}).length?' · '+Object.keys(x.overrides).length+(ar?' افتراض':' overrides'):''}</td><td>${escH(x.createdAt||'')}</td><td style="white-space:nowrap"><a class="ops-link" onclick="skDup('${x.id}')">${ar?'نسخ':'duplicate'}</a> · <a class="ops-link" onclick="skDel('${x.id}')">${ar?'حذف':'delete'}</a></td></tr>`).join('')}</tbody></table>`:`<p class="ops-muted">${ar?'لا مسودات بعد.':'No sketches yet.'}</p>`}</div>`;
+  if(sk){
+    const lineOpts=(sel)=>SK_LINES.map(([k,en,a])=>`<option value="${k}"${sel===k?' selected':''}>${ar?a:en}</option>`).join('');
+    const projOpts=(sel)=>projects.map((p,i)=>`<option value="${i}"${+sel===i?' selected':''}>${escH(p.name)}</option>`).join('');
+    const ovOpts=(sel)=>OPS_FIELDS.map(([k,en,a])=>`<option value="${k}"${sel===k?' selected':''}>${ar?a:en} (${D[k]})</option>`).join('');
+    const rowsA=(sk.adjustments||[]).map((a,i)=>{let body='';
+      if(a.type==='phase'){const w=skNorm(a.weights,nq);body=`<select class="ops-mini" onchange="skAdj(${i},'line',this.value)">${lineOpts(a.line)}</select>${SK_SCHED[a.line]&&projects.length>1?` <select class="ops-mini" onchange="skAdj(${i},'project',this.value)">${projOpts(a.project)}</select>`:''}<div style="margin-top:6px"><small class="ops-muted">${ar?'دفعات: العدد, كل N ربع, من الربع':'tranches: count, every N quarters, from quarter'}</small> <input class="ops-mini" style="width:110px" placeholder="2, 4, 1" onchange="skAdj(${i},'tranches',this.value)"> <small class="ops-muted">${ar?'أو الأوزان % لكل ربع':'or weights % per quarter'}</small> <input class="ops-mini" style="width:260px" value="${w.map(v=>+v.toFixed(1)).join(', ')}" onchange="skAdj(${i},'weights',this.value)"></div>`;}
+      else if(a.type==='shift'){body=`<select class="ops-mini" onchange="skAdj(${i},'line',this.value)">${lineOpts(a.line)}</select> ${ar?'أزح بمقدار':'shift by'} <input type="number" class="ops-mini" style="width:60px" value="${a.n||0}" onchange="skAdj(${i},'n',Number(this.value))"> ${ar?'ربع (سالب = أبكر)':'quarters (negative = earlier)'}`;}
+      else if(a.type==='item'){body=`<input class="ops-mini" style="width:200px" placeholder="${ar?'البيان':'label'}" value="${escH(a.label||'')}" onchange="skAdj(${i},'label',this.value)"> <select class="ops-mini" onchange="skAdj(${i},'kind',this.value)"><option value="cost"${a.kind==='cost'?' selected':''}>${ar?'مصروف':'cost'}</option><option value="income"${a.kind==='income'?' selected':''}>${ar?'دخل':'income'}</option></select> Q<input type="number" class="ops-mini" style="width:56px" min="1" max="${nq}" value="${a.q||1}" onchange="skAdj(${i},'q',Number(this.value))"> SAR <input type="number" class="ops-mini" style="width:140px" value="${a.amount||0}" onchange="skAdj(${i},'amount',Number(this.value))">`;}
+      else if(a.type==='override'){body=`<select class="ops-mini" onchange="skAdj(${i},'key',this.value)">${ovOpts(a.key)}</select> = <input type="number" class="ops-mini" style="width:120px" value="${a.value??''}" onchange="skAdj(${i},'value',this.value)">`;}
+      const tl={phase:ar?'توزيع على دفعات':'Phase / split',shift:ar?'إزاحة':'Shift',item:ar?'بند لمرة واحدة':'One-off item',override:ar?'افتراض':'Assumption'}[a.type];
+      return `<tr><td style="white-space:nowrap"><b>${tl}</b></td><td>${body}</td><td><a class="ops-link" onclick="skRmAdj(${i})">✕</a></td></tr>`;}).join('');
+    h+=`<div class="ops-card" style="margin-bottom:14px"><h3><input class="ops-mini" style="width:260px;font-weight:700" value="${escH(sk.name)}" onchange="skSet('name',this.value);renderSketch()"><span>${ar?'تُحفظ مع المشروع':'saved with the project'}</span></h3>
+      <textarea class="ops-mini" style="width:100%;min-height:54px;margin:6px 0" placeholder="${ar?'صف الفكرة بكلماتك (للتوثيق الآن؛ الترجمة الآلية إلى تعديلات تأتي مع خدمة الخادم)':'Describe the idea in your own words (kept as a note for now; automatic translation into adjustments comes with the server function)'}" onchange="skSet('text',this.value)">${escH(sk.text||'')}</textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px"><span class="ops-muted" style="align-self:center">${ar?'أضف تعديلاً:':'Add an adjustment:'}</span><button class="act-btn act-btn-add" onclick="skAddAdj('phase')">${ar?'توزيع / دفعات':'Phase / split'}</button><button class="act-btn act-btn-add" onclick="skAddAdj('shift')">${ar?'إزاحة جدول':'Shift a schedule'}</button><button class="act-btn act-btn-add" onclick="skAddAdj('item')">${ar?'بند لمرة واحدة':'One-off item'}</button><button class="act-btn act-btn-add" onclick="skAddAdj('override')">${ar?'افتراض':'Assumption override'}</button></div>
+      ${rowsA?`<table class="rfcs-tbl cx-tbl"><tbody>${rowsA}</tbody></table>`:`<p class="ops-muted">${ar?'لا تعديلات بعد.':'No adjustments yet.'}</p>`}
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center"><button class="ops-close" onclick="skRun()">▶ ${ar?'شغّل المسودة':'Run sketch'}</button><button class="ops-close" style="background:#e8eeec;color:#1b1c19" onclick="skPromote()">${ar?'ارفعها إلى سيناريوهات غرفة التحكم':'Promote to control-room scenarios'}</button><small class="ops-muted">${ar?'التشغيل لا يغيّر شيئاً في المنصة.':'Running changes nothing in the platform.'}</small></div></div>`;
+    if(skRes){const r=skRes,sum=a=>(a||[]).reduce((x,y)=>x+y,0),pk=x=>Math.max(0,...(x.qLoanClose||[0]));
+      const K=[[ar?'العائد الداخلي':'IRR',fP(bm.irr),fP(r.irr),(r.irr-bm.irr)*100,'pp'],[ar?'مضاعف رأس المال':'Equity multiple',bm.eqMult.toFixed(2)+'x',r.eqMult.toFixed(2)+'x',r.eqMult-bm.eqMult,'x'],[ar?'صافي الربح':'Net profit',M_(bm.grossProfit),M_(r.grossProfit),r.grossProfit-bm.grossProfit,'m'],[ar?'إجمالي التكلفة':'Total cost',M_(bm.totalCost),M_(r.totalCost),r.totalCost-bm.totalCost,'m'],[ar?'ذروة الدين':'Peak debt',M_(pk(bm)),M_(pk(r)),pk(r)-pk(bm),'m'],[ar?'إجمالي أرباح التمويل':'Total interest',M_(sum(bm.qInterest)),M_(sum(r.qInterest)),sum(r.qInterest)-sum(bm.qInterest),'m'],[ar?'التوزيعات':'Distributions',M_(sum(bm.qDividends)),M_(sum(r.qDividends)),sum(r.qDividends)-sum(bm.qDividends),'m']];
+      h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'النتيجة: المسودة مقابل خط الأساس':'Result: sketch vs baseline'}<span>${r.nq} ${ar?'ربع':'quarters'}</span></h3><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ar?'خط الأساس':'Baseline'}</th><th>${ar?'المسودة':'Sketch'}</th><th>${ar?'الفرق':'Change'}</th></tr></thead><tbody>${K.map(([l,b,v,d,u])=>`<tr><td>${l}</td><td class="rfcs-num">${b}</td><td class="rfcs-num"><b>${v}</b></td><td class="rfcs-num cx-var ${Math.abs(d)<1e-9?'':(d>0)===(u!=='m'||!/cost|debt|interest|التكلفة|الدين|التمويل/.test(l))?'good':'bad'}"><span>${u==='pp'?(d>=0?'+':'')+d.toFixed(2)+' pp':u==='x'?(d>=0?'+':'')+d.toFixed(2)+'x':(d>=0?'+':'−')+M_(Math.abs(d))}</span></td></tr>`).join('')}</tbody></table>
+        <div class="cx-wrap" style="margin-top:10px"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${Array.from({length:r.nq},(_,i)=>`<th>Q${i+1}</th>`).join('')}</tr></thead><tbody>${[[ar?'الأرض والسعي والضريبة':'Land, brokerage & RETT',r.qLandCF],[ar?'البناء':'Construction',(r.qCon||[]).map(v=>-v)],[ar?'المبيعات':'Sales',r.qGrossSales],[ar?'بنود المسودة':'Sketch items',(_SKETCH,(r._sketch&&r._sketch.items.length)?Array.from({length:r.nq},(_,i)=>r._sketch.items.filter(x=>x.q===i).reduce((a,x)=>a+x.amount,0)):Array(r.nq).fill(0))],[ar?'سحب التمويل':'Drawdowns',r.drawdowns],[ar?'رصيد التمويل':'Loan balance',r.qLoanClose],[ar?'النقد الختامي':'Closing cash',r.qCashClose],[ar?'التوزيعات':'Dividends',r.qDividends]].map(([l,a])=>`<tr><td>${l}</td>${Array.from({length:r.nq},(_,i)=>`<td class="rfcs-num">${fN((a||[])[i]||0)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+        <p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'للمقارنة: خط الأساس هو الدراسة الحالية (المقفلة إن وُجدت). بنود المسودة تدخل التدفق النقدي التشغيلي ولا تدخل إجمالي التكلفة.':'Baseline = the current study (the locked one if any). Sketch items enter the operating cash flow and are not part of total cost.'}</p></div>`;}
+  }
+  pnl.innerHTML=h;}
+// Operations: scenarios that carry a sketch are evaluated on top of the current forecast
+function skEvalScenario(sc){const sk=sketches().find(x=>x.id===sc.sketch);if(!sk)return evalScenario(sc.ov);const r=sketchRunOps(sk);return r?{irr:r.irr,eq:r.eqMult,peak:r.peakDebt,div:r.totalDiv,cost:r.totalCost}:null;}
+// ═══ END SKETCH ═══
 // Facility ceiling for the forecast: user-set limit, else the loan schedule's facility, else the baseline total drawdowns
 function facilityLimit(){_rfNorm();const u=Number(reforecastSettings.facilityLimit);if(u>0)return u;const b=reforecastSettings.bank;if(b&&b.facility&&Number(b.facility.facility)>0)return Number(b.facility.facility);return R?sumA(R.drawdowns):Infinity;}
 function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings.cutoffQ;
@@ -6357,7 +6445,7 @@ function opsScenarios(){
   const ov=reforecastSettings.assumptionOverrides,blF=(reforecastSettings.baseline&&reforecastSettings.baseline.fund)||D,rs=reforecastSettings.reasons||{},b=baselineMetrics();
   const lbl=k=>{const f=OPS_FIELDS.find(x=>x[0]===k);return f?(lang==='ar'?f[2]:f[1]):k;};
   const chg=Object.keys(ov).map(k=>`<div class="ops-row"><b>${lbl(k)}</b><s>${blF[k]}</s><span class="arrow">→</span><b>${ov[k]}</b><span class="why">${escH(rs[k]||'')}</span><a class="ops-link" onclick="removeChange('${k}')">${ot('remove')}</a></div>`).join('');
-  const sc=(reforecastSettings.scenarios||[]).map((s,i)=>{const r=evalScenario(s.ov);return r?`<tr><td>${escH(s.name)} <a class="ops-link" onclick="reforecastSettings.scenarios.splice(${i},1);renderOps()">×</a></td><td>${fP(r.irr)}</td><td>${r.eq.toFixed(2)}x</td><td>${M_(r.peak)}</td><td>${M_(r.div)}</td></tr>`:'';}).join('');
+  const sc=(reforecastSettings.scenarios||[]).map((s,i)=>{const r=s.sketch?skEvalScenario(s):evalScenario(s.ov);return r?`<tr><td>${escH(s.name)} <a class="ops-link" onclick="reforecastSettings.scenarios.splice(${i},1);renderOps()">×</a></td><td>${fP(r.irr)}</td><td>${r.eq.toFixed(2)}x</td><td>${M_(r.peak)}</td><td>${M_(r.div)}</td></tr>`:'';}).join('');
   return `<div class="ops-grid2"><div class="ops-card"><h3>${ot('changes')}<span>${Object.keys(ov).length}</span></h3><div class="ops-chg">${chg||`<p class="ops-muted">${ot('noChanges')}</p>`}
     <div class="ops-add"><select id="chgParam" class="ops-mini" style="width:auto"><option value="">${ot('param')}</option>${OPS_FIELDS.map(([k,en,ar])=>`<option value="${k}">${lang==='ar'?ar:en} (${blF[k]})</option>`).join('')}</select><input id="chgVal" type="number" class="ops-mini" placeholder="${ot('newVal')}"><input id="chgWhy" class="ops-mini" placeholder="${ot('why')}"><button class="act-btn act-btn-add" onclick="addChange()">${ot('apply')}</button></div></div></div>
   <div class="ops-card"><h3>${ot('scen')}</h3><table class="rfcs-tbl"><thead><tr><th>${ot('scenName')}</th><th>${ot('irr')}</th><th>${ot('mult')}</th><th>${ot('peakD')}</th><th>${ot('dist')}</th></tr></thead><tbody>
@@ -7971,6 +8059,7 @@ function calcWith(overrides){
   const gpCash=A.gp_commit_cash||0;
   const qEquity=Array(nq).fill(0);qEquity[0]=A.equity+gpCash;
   const qLandCF=Array(nq).fill(0);qLandCF[0]=-tLand;
+  if(typeof _SKETCH!=='undefined'&&_SKETCH) _skLand(qLandCF,baseLand,brokerageIncVAT,rettAmt,nq); // SKETCH hook
   const qTotalAssets=Array(nq).fill(0),qNAV=Array(nq).fill(0),qDSCR=Array(nq).fill(0);
   const qCashOpen=Array(nq).fill(0),qCashClose=Array(nq).fill(0);
   const qDividends=Array(nq).fill(0),qTotalFundExp=Array(nq).fill(0);
@@ -8020,7 +8109,7 @@ function calcWith(overrides){
     for(let qi=0;qi<nq;qi++){
       // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
-      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
+      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+(typeof _SKETCH!=='undefined'&&_SKETCH?_skItem(qi):0); // SKETCH hook: one-off items
       qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
       const netBorrow=drawdowns[qi]-qRepay[qi];
       qNetFin[qi]=netBorrow+qEquity[qi]+qIKTotal[qi];
@@ -8105,7 +8194,7 @@ function calcWith(overrides){
   for(let qi=0;qi<nq;qi++){
     // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
-      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi];
+      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+(typeof _SKETCH!=='undefined'&&_SKETCH?_skItem(qi):0); // SKETCH hook: one-off items
     qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
     const netBorrow=drawdowns[qi]-qRepay[qi];
     qCashOpen[qi]=qi===0?0:qCashClose[qi-1];
