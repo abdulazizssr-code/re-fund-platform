@@ -2748,12 +2748,14 @@ function calculate(){
 
     const newDD=Array(nq).fill(0);
     const tempCash=Array(nq).fill(0);
+    if((typeof _SKETCH!=='undefined'&&_SKETCH))_skSizeStart(qEquity); // SKETCH lab: funding rule resets extra equity each sizing pass
     for(let qi=0;qi<nq;qi++){
       const open=qi===0?0:tempCash[qi-1];
       const netNoBorrow=qNetOp[qi]+qNetInv[qi]+qEquity[qi]+qIKTotal[qi]-(qi===nq-1?qRepay[qi]:0);
       const raw=open+netNoBorrow;
       if(raw<A.min_cash && qi<nq-1) newDD[qi]=A.min_cash-raw;
-      tempCash[qi]=raw+newDD[qi];
+      if((typeof _SKETCH!=='undefined'&&_SKETCH)&&newDD[qi]>0){const o=_skFund(qi,{shortfall:newDD[qi],cash:open,minCash:A.min_cash,loanOpen:qi?qLoanClose[qi-1]:0,cumDrawn:newDD.slice(0,qi).reduce((a,b)=>a+b,0),sales:qGrossSales,cumSales:qGrossSales.slice(0,qi+1).reduce((a,b)=>a+b,0),equity:qEquity,nq});newDD[qi]=o.debt;qEquity[qi]+=o.equity;}
+      tempCash[qi]=raw+newDD[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skEqExtraAt(qi):0);
     }
 
     let delta=0;
@@ -2819,7 +2821,7 @@ function calculate(){
 
     if(qi===nq-1){
       const cashBeforePerf=qCashOpen[qi]+qNetOp[qi]+qNetInv[qi]+netBorrow+qEquity[qi]+qIKTotal[qi];
-      const totalEquity=A.equity+gpCash+qIKTotal.reduce((a,b)=>a+b,0);
+      const totalEquity=A.equity+gpCash+qIKTotal.reduce((a,b)=>a+b,0)+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skEqExtra():0); // SKETCH lab
       // Total return includes interim dividends already distributed + final quarter cash
       const interimDiv=qDividends.slice(0,nq-1).reduce((a,b)=>a+b,0);
       const totalReturn=cashBeforePerf+interimDiv;
@@ -4840,6 +4842,9 @@ function runReforecast(){
   if(cutoffQ>0&&reforecastSettings.actualLoanBalance!==null){
     R2.qLoanClose[cutoffQ-1]=reforecastSettings.actualLoanBalance;
   }
+  // ── In-kind follows the costs it is a share of: open quarters = ik% × forecast line; closed quarters are compared with
+  //    ik% × actual cost paid, and any shortfall (or excess) of in-kind booked so far is caught up in the first open quarter ──
+  _rfRebuildIK(R2,cutoffQ,rfLand,rfBrok);
   // Clear stale forecast-quarter dividends (final distribution recomputed below — FIX 3)
   for(let i=cutoffQ;i<nq;i++) R2.qDividends[i]=0;
 
@@ -4860,6 +4865,7 @@ function runReforecast(){
     // FIX 5: size forecast drawdowns so cash close never falls below min_cash
     const newDD=R2.drawdowns.slice();
     const tempCash=Array(nq).fill(0);
+    if((typeof _SKETCH!=='undefined'&&_SKETCH))_skSizeStart(R2.qEquity); // SKETCH lab
     for(let i=0;i<nq;i++){
       const open=i===0?0:tempCash[i-1];
       if(i<cutoffQ){
@@ -4872,7 +4878,8 @@ function runReforecast(){
         newDD[i]=(raw<_minCash&&i<nq-1)?_minCash-raw:0;
         // the facility is the ceiling: cumulative draws cannot exceed it — what is left is a funding gap, not more debt
         {const drawnBefore=newDD.slice(0,i).reduce((a,b)=>a+b,0);const room=Math.max(0,_facility-drawnBefore);if(newDD[i]>room){gap[i]=newDD[i]-room;newDD[i]=room;}else gap[i]=0;}
-        tempCash[i]=raw+newDD[i];
+        if((typeof _SKETCH!=='undefined'&&_SKETCH)&&(newDD[i]>0||gap[i]>0)){const o=_skFund(i,{shortfall:newDD[i]+gap[i],cash:open,minCash:_minCash,loanOpen:i?R2.qLoanClose[i-1]:0,cumDrawn:newDD.slice(0,i).reduce((a,b)=>a+b,0),sales:R2.qGrossSales,cumSales:R2.qGrossSales.slice(0,i+1).reduce((a,b)=>a+b,0),equity:R2.qEquity,nq,facility:_facility});const room2=Math.max(0,_facility-newDD.slice(0,i).reduce((a,b)=>a+b,0));newDD[i]=Math.min(o.debt,room2);gap[i]=Math.max(0,o.debt-room2);R2.qEquity[i]+=o.equity;} // SKETCH lab
+        tempCash[i]=raw+newDD[i]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skEqExtraAt(i):0);
       }
     }
     let delta=0;
@@ -4897,7 +4904,7 @@ function runReforecast(){
   if(isFund){
     const _oldPF=R2.qPerfFee[nq-1]||0;
     const _gpCash=Number(R2.A.gp_commit_cash)||0;
-    const _totalEquity=(Number(R2.A.equity)||0)+_gpCash+(R2.qIKTotal||[]).reduce((a,b)=>a+b,0);
+    const _totalEquity=(Number(R2.A.equity)||0)+_gpCash+(R2.qIKTotal||[]).reduce((a,b)=>a+b,0)+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skEqExtra():0); // SKETCH lab
     const _interimDiv=R2.qDividends.slice(0,nq-1).reduce((a,b)=>a+b,0);
     // Cash before perf fee: add back the stale perf fee already embedded in qTotalFundExp/qNetOp
     const _cashBeforePerf=R2.qCashClose[nq-1]+(R2.qDividends[nq-1]||0)+_oldPF;
@@ -4945,6 +4952,19 @@ function runReforecast(){
   if(document.getElementById('p-forecast')) renderForecastTab();
 }
 
+function _rfRebuildIK(RX,cut,rfLand,rfBrok){
+  const A=RX.A,nq=RX.nq,V=1+pct(A.vat_rate),gp=pct(A.gp_commit_inkind_pct||0),isFund=Number(A.is_fund);
+  const comp=i=>({land:pct(A.ik_land_pct)*((rfLand&&rfLand[i])||0),brok:pct(A.ik_brok_pct)*((rfBrok&&rfBrok[i])||0)/V,dev:pct(A.ik_dev_pct)*((RX.qDevFee||[])[i]||0)/V,con:pct(A.ik_con_pct)*((RX.qBaseCon||[])[i]||0)/V,mkt:pct(A.ik_mkt_pct)*((RX.qMkt||[])[i]||0)/V,sell:pct(A.ik_sell_pct)*((RX.qSellExp||[])[i]||0)/V,gp:isFund?((RX.qMgmtFee||[])[i]||0)*gp:0});
+  const tot=c=>c.land+c.brok+c.dev+c.con+c.mkt+c.sell+c.gp;
+  RX.qIKLand=RX.qIKLand||Array(nq).fill(0);RX.qIKBrok=RX.qIKBrok||Array(nq).fill(0);RX.qIKDev=RX.qIKDev||Array(nq).fill(0);RX.qIKCon=RX.qIKCon||Array(nq).fill(0);RX.qIKMkt=RX.qIKMkt||Array(nq).fill(0);RX.qIKSell=RX.qIKSell||Array(nq).fill(0);
+  let expected=0,booked=0;
+  if(!RX._finStrict){ // no financing recorded yet: assume in-kind was taken as its percentage of what was actually paid
+    for(let i=0;i<cut;i++){const c=comp(i);RX.qIKLand[i]=c.land;RX.qIKBrok[i]=c.brok;RX.qIKDev[i]=c.dev;RX.qIKCon[i]=c.con;RX.qIKMkt[i]=c.mkt;RX.qIKSell[i]=c.sell;RX.qIKTotal[i]=tot(c);}}
+  for(let i=0;i<cut;i++){expected+=tot(comp(i));booked+=RX.qIKTotal[i]||0;}
+  for(let i=cut;i<nq;i++){const c=comp(i);RX.qIKLand[i]=c.land;RX.qIKBrok[i]=c.brok;RX.qIKDev[i]=c.dev;RX.qIKCon[i]=c.con;RX.qIKMkt[i]=c.mkt;RX.qIKSell[i]=c.sell;RX.qIKTotal[i]=tot(c);}
+  let catchUp=cut>0?expected-booked:0;RX._ikCatchUp=catchUp;RX._ikExpectedClosed=expected;RX._ikBookedClosed=booked;
+  for(let i=cut;i<nq&&Math.abs(catchUp)>0.005;i++){const add=catchUp>0?catchUp:Math.max(catchUp,-(RX.qIKTotal[i]||0));RX.qIKTotal[i]+=add;catchUp-=add;} // shortfall lands in the first open quarter; an excess reduces future in-kind, never below zero
+}
 // Summary totals for a forecast run — mirrors the definitions in calculate() so Summary/Debt/Cash Flow
 // show the same total cost, capital structure and LTC whether they render the baseline or the forecast.
 function _rfTotals(RX){
@@ -5061,8 +5081,10 @@ function skTranches(n,every,from,nq){const w=Array(nq).fill(0);n=Math.max(1,n|0)
 function skNorm(w,nq){const out=Array(nq).fill(0);(w||[]).forEach((v,i)=>{out[Math.min(nq-1,i)]+=Number(v)||0;});const t=out.reduce((a,b)=>a+b,0);return t>0?out.map(v=>v*100/t):out;}
 function skShift(w,n,nq){const out=Array(nq).fill(0);(w||[]).forEach((v,i)=>{out[Math.min(nq-1,Math.max(0,i+n))]+=Number(v)||0;});return out;}
 // compile a sketch for a run of nq quarters: land weights (fractions) + one-off items per quarter
-function skCompile(sk,nq){const c={land:{},items:Array(nq).fill(0),list:[]};
-  c.phase={};c.defers=(sk.adjustments||[]).filter(a=>a.type==='defer').map(a=>({line:a.line||'mgmt_fee',fromQ:a.fromQ!==''&&a.fromQ!=null?Number(a.fromQ):null,salesMin:a.salesMin!==''&&a.salesMin!=null?Number(a.salesMin):null,loanMax:a.loanMax!==''&&a.loanMax!=null?Number(a.loanMax):null,drawnMax:a.drawnMax!==''&&a.drawnMax!=null?Number(a.drawnMax):null,catchup:a.catchup||'lump',n:Number(a.n)||1}));
+function skCompile(sk,nq){const c={land:{},phase:{},items:Array(nq).fill(0),list:[]};
+  c.rules=null;c.scriptErr='';if(sk.script&&sk.script.trim()){try{c.rules=skCompileScript(sk.script);}catch(e){c.scriptErr=e.message||String(e);}}
+  if(c.rules&&c.rules.phase){for(const [k] of SK_LINES){if(SK_SCHED[k])continue;const w=skGuard(c,'phase',c.rules.phase,[k,nq]);if(Array.isArray(w)&&w.some(v=>v)){const n=skNorm(w,nq).map(v=>v/100);if(['land','brokerage','rett'].includes(k))c.land[k]=n;else c.phase[k]=n;}}}
+  c.phase=c.phase||{};c.defers=(sk.adjustments||[]).filter(a=>a.type==='defer').map(a=>({line:a.line||'mgmt_fee',fromQ:a.fromQ!==''&&a.fromQ!=null?Number(a.fromQ):null,salesMin:a.salesMin!==''&&a.salesMin!=null?Number(a.salesMin):null,loanMax:a.loanMax!==''&&a.loanMax!=null?Number(a.loanMax):null,drawnMax:a.drawnMax!==''&&a.drawnMax!=null?Number(a.drawnMax):null,catchup:a.catchup||'lump',n:Number(a.n)||1}));
   for(const a of sk.adjustments||[]){
     if(a.type==='phase'&&['land','brokerage','rett'].includes(a.line)){c.land[a.line]=skNorm(a.weights,nq).map(v=>v/100);}
     else if(a.type==='shift'&&['land','brokerage','rett'].includes(a.line)){c.land[a.line]=skShift([100],Number(a.n)||0,nq).map(v=>v/100);}
@@ -5071,11 +5093,62 @@ function skCompile(sk,nq){const c={land:{},items:Array(nq).fill(0),list:[]};
     else if(a.type==='item'){const q=Math.min(nq-1,Math.max(0,(Number(a.q)||1)-1));const amt=(Number(a.amount)||0)*(a.kind==='income'?1:-1);c.items[q]+=amt;c.list.push({q,amount:amt,label:a.label||''});}}
   return c;}
 function _skLand(qLandCF,baseLand,brok,rett,nq){const c=_SKETCH;if(!c||!Object.keys(c.land).length)return;const w=k=>c.land[k]||Array.from({length:nq},(_,i)=>i===0?1:0);const L=w('land'),B=w('brokerage'),T=w('rett');for(let i=0;i<nq;i++)qLandCF[i]=-(baseLand*(L[i]||0)+brok*(B[i]||0)+rett*(T[i]||0));}
+
+// ---- LAB: scripted rules in a sandbox (the AI writes these; you review them; the engine calls them at fixed hook points) ----
+// rules.funding(q,s) → {debt,equity}  s: shortfall, cash, minCash, loanOpen, cumDrawn, cumSales, sales[], equity[], nq, facility
+// rules.cash(q,s)    → {hold,release} s: fees{mgmt_fee,custody,auditor,sharia,engineering,board} (net of VAT, accrued this quarter), held, cumSales, loan, cumDrawn, nq
+// rules.items(q,s)   → number (cash in +, out −)        s: cumSales, loan, cumDrawn, nq
+// rules.phase(line,nq) → weights[] (% per quarter) for land, brokerage, rett, equity, fund expense keys, or schedule lines
+const SK_LAB_DOC=`rules.funding = (q, s) => ({ debt, equity })   // how to fund a cash shortfall s.shortfall in quarter q (0-based). Default: all debt.
+rules.cash    = (q, s) => ({ hold, release })  // s.fees = fees accrued this quarter (net of VAT); hold = part to defer; release = part of s.held to pay now
+rules.items   = (q, s) => amount                // extra cash in quarter q: + income, − cost
+rules.phase   = (line, nq) => [w0, w1, …]       // % per quarter for 'land' | 'brokerage' | 'rett' | 'equity' | 'fund_setup' | 'spv' | 'arr_fee' | 'bank_mgmt' | 'custody' | 'auditor' | 'sharia' | 'engineering' | 'board' | 'fin_advisor' | 'base_con' | 'dev_fee' | 'contingency' | 'design' | 'supervision' | 'licensing' | 'insurance' | 'marketing' | 'revenue'
+state s: cumSales, cumDrawn, loanOpen / loan (SAR), cash (opening), minCash, nq, facility; all numbers, read-only. Scripts have no access to the page or the network.`;
+const SK_EXAMPLES=[
+  {name:'Defer management fee until sales reach 20 M',text:'Defer the management fee (net of VAT) until cumulative sales reach 20,000,000, then pay the accrued balance as a lump sum.',script:
+`rules.cash = (q, s) => {
+  const fee = s.fees.mgmt_fee || 0;
+  if (s.cumSales >= 20e6) return { hold: 0, release: s.held };   // trigger met: pay this quarter's fee and the whole balance
+  return { hold: fee, release: 0 };                               // not yet: hold this quarter's fee
+};`},
+  {name:'Above 750 M of debt, fund shortfalls 3:1 debt:equity',text:'Once the loan balance exceeds 750,000,000, every further cash shortfall is funded 75% by debt and 25% by an additional equity call.',script:
+`rules.funding = (q, s) => {
+  if (s.loanOpen + s.cumDrawn >= 750e6 || s.loanOpen >= 750e6) {
+    return { debt: s.shortfall * 0.75, equity: s.shortfall * 0.25 };
+  }
+  return { debt: s.shortfall, equity: 0 };
+};`},
+  {name:'Facility full → equity',text:'When the facility is exhausted, fund the remaining shortfall with equity instead of leaving a funding gap.',script:
+`rules.funding = (q, s) => {
+  const room = Math.max(0, (s.facility || Infinity) - s.cumDrawn);
+  const debt = Math.min(s.shortfall, room);
+  return { debt, equity: s.shortfall - debt };
+};`}];
+// compile a script into a rules object inside a sandbox: strict mode, globals shadowed, numbers only
+function skCompileScript(code){if(!code||!code.trim())return null;
+  const banned=code.match(/\b(eval|Function|constructor|__proto__|prototype|globalThis|window|document|fetch|XMLHttpRequest|import|require|localStorage|sessionStorage|indexedDB|navigator|location|supabase|setTimeout|setInterval|with)\b/);if(banned)throw new Error('not allowed in a rule: '+banned[1]);
+  const shadow=['window','document','globalThis','self','top','parent','frames','fetch','XMLHttpRequest','WebSocket','localStorage','sessionStorage','indexedDB','navigator','location','history','supabase','sb','R','R2','D','projects','actuals','reforecastSettings','setTimeout','setInterval','importScripts','alert','confirm','prompt','console'];
+  const fn=new Function(...shadow,'"use strict";const rules={};\n'+code+'\nreturn rules;');return fn(...shadow.map(()=>undefined));}
+const _skNum=(v,d)=>{v=Number(v);return isFinite(v)?v:(d||0);};
+function skGuard(c,name,f,args){if(!f)return null;c._calls=(c._calls||0)+1;if(c._calls>200000)throw new Error('script ran too long');try{return f.apply(null,args);}catch(e){c._err=c._err||(name+': '+(e.message||e));return null;}}
+function _skSizeStart(qEquity){const c=_SKETCH;if(!c)return;if(!c._eqBase||c._eqBase.length!==qEquity.length)c._eqBase=qEquity.slice();else for(let i=0;i<qEquity.length;i++)qEquity[i]=c._eqBase[i];c._eqExtra=Array(qEquity.length).fill(0);}
+function _skFund(q,S){const c=_SKETCH;const out={debt:S.shortfall,equity:0};if(!c||!c.rules||!c.rules.funding)return out;const r=skGuard(c,'funding',c.rules.funding,[q,Object.freeze(Object.assign({},S,{sales:S.sales.slice(),equity:S.equity.slice(),loan:S.loanOpen}))]);
+  if(r){out.debt=Math.max(0,_skNum(r.debt,S.shortfall));out.equity=Math.max(0,_skNum(r.equity,0));}
+  if(!c._eqExtra)c._eqExtra=Array(S.nq).fill(0);c._eqExtra[q]=out.equity;return out;}
+function _skEqExtraAt(q){const c=_SKETCH;return c&&c._eqExtra?(c._eqExtra[q]||0):0;}
+function _skEqExtra(){const c=_SKETCH;return c&&c._eqExtra?c._eqExtra.reduce((a,b)=>a+b,0):0;}
 function _skItem(qi){const c=_SKETCH;return c&&c.items?(c.items[qi]||0):0;}
 // one-off items + deferred fees for quarter qi. Deferral: the fee is still accrued (cost, NAV, hurdle unchanged); VAT is paid at accrual;
 // the net fee is held as a payable until a trigger is met (from quarter / cumulative sales ≥ / loan balance ≤ / cumulative drawn ≤, whichever first),
 // then paid as a lump or spread over N quarters; whatever is still unpaid is settled in the final quarter. No uplift on the balance (Sharia).
-function _skCash(qi,S){const c=_SKETCH;if(!c)return 0;let adj=_skItem(qi);const defs=c.defers||[];if(!defs.length)return adj;
+function _skCash(qi,S){const c=_SKETCH;if(!c)return 0;let adj=_skItem(qi);
+  if(c.rules&&(c.rules.cash||c.rules.items)){const cumSales=S.sales.slice(0,qi+1).reduce((a,b)=>a+(b||0),0),cumDraw=S.draws.slice(0,qi+1).reduce((a,b)=>a+(b||0),0),loan=S.loan[qi]||0;
+    if(qi===0)c._lab={held:0,hold:Array(S.nq).fill(0),rel:Array(S.nq).fill(0),bal:Array(S.nq).fill(0),items:Array(S.nq).fill(0)};const L=c._lab;
+    if(c.rules.items){const v=_skNum(skGuard(c,'items',c.rules.items,[qi,Object.freeze({cumSales,loan,cumDrawn:cumDraw,nq:S.nq})]),0);L.items[qi]=v;adj+=v;}
+    if(c.rules.cash){const fees={};for(const k in S.fees){const V=S.vat[k]||1;fees[k]=(S.fees[k][qi]||0)/V;}const r=skGuard(c,'cash',c.rules.cash,[qi,Object.freeze({fees:Object.freeze(fees),held:L.held,cumSales,loan,cumDrawn:cumDraw,nq:S.nq})])||{};
+      const feeTot=Object.values(fees).reduce((a,b)=>a+b,0);let hold=Math.min(Math.max(0,_skNum(r.hold,0)),feeTot),rel=Math.min(Math.max(0,_skNum(r.release,0)),L.held);if(qi===S.nq-1){hold=0;rel=L.held;}
+      L.held=L.held+hold-rel;L.hold[qi]=hold;L.rel[qi]=rel;L.bal[qi]=L.held;adj+=hold-rel;}}
+  const defs=c.defers||[];if(!defs.length)return adj;
   if(qi===0){c._def=defs.map(()=>({bal:0,on:false,onQ:null,acc:Array(S.nq).fill(0),paid:Array(S.nq).fill(0),balQ:Array(S.nq).fill(0)}));}
   const cumSales=S.sales.slice(0,qi+1).reduce((a,b)=>a+(b||0),0),cumDraw=S.draws.slice(0,qi+1).reduce((a,b)=>a+(b||0),0),loan=S.loan[qi]||0;
   defs.forEach((d,k)=>{const st=c._def[k];const arr=S.fees[d.line];if(!arr)return;const V=S.vat[d.line]||1;const fee=arr[qi]||0,net=fee/V;
@@ -5090,12 +5163,13 @@ function _skPhase(key,arr){const c=_SKETCH;if(!c||!c.phase||!c.phase[key])return
 function _skPhaseAll(map){for(const k in map)_skPhase(k,map[k]);}
 // apply the schedule-type adjustments to a cloned projects array (nothing touches the real projects)
 function skProjects(sk,nq){const P=JSON.parse(JSON.stringify(projects));
+  if(sk.script&&sk.script.trim()){try{const rules=skCompileScript(sk.script);if(rules&&rules.phase){for(const k in SK_SCHED){const w=rules.phase(k,nq);if(Array.isArray(w)&&w.some(v=>v))P.forEach(pr=>{pr[SK_SCHED[k]]=skNorm(w,nq);});}}}catch(e){}}
   for(const a of sk.adjustments||[]){const key=SK_SCHED[a.line];if(!key)continue;const pi=Math.min(P.length-1,Math.max(0,Number(a.project)||0));const pr=P[pi];const cur=rescaleSchedule(pr[key]||[],nq);
     if(a.type==='phase')pr[key]=skNorm(a.weights,nq);else if(a.type==='shift')pr[key]=skShift(cur,Number(a.n)||0,nq);}
   return P;}
 // run a sketch on the baseline assumptions (+ its own overrides) and return the engine result; the platform state is restored whatever happens
 function sketchRun(sk,extraOv){if(!R)return null;const saveP=JSON.stringify(projects);const ov=Object.assign({},extraOv||{},sk.overrides||{});const nq=Math.floor((Number(ov.fund_period_months)||Number(D.fund_period_months)||0)/3)||R.nq;
-  let out=null;try{projects=skProjects(sk,nq);_SKETCH=skCompile(sk,nq);const _c=_SKETCH;out=calcFull(ov);if(out){out=JSON.parse(JSON.stringify(out));_rfTotals(out);_rfReturns(out);out._sketch={items:_c.list,defers:(_c._def||[]).map((d,k)=>({line:_c.defers[k].line,onQ:d.onQ,acc:d.acc,paid:d.paid,bal:d.balQ}))};}}catch(e){console.error('sketch:',e);}finally{_SKETCH=null;projects=JSON.parse(saveP);}
+  let out=null;try{projects=skProjects(sk,nq);_SKETCH=skCompile(sk,nq);const _c=_SKETCH;out=calcFull(ov);if(out){out=JSON.parse(JSON.stringify(out));_rfTotals(out);_rfReturns(out);out._sketch={items:_c.list,defers:(_c._def||[]).map((d,k)=>({line:_c.defers[k].line,onQ:d.onQ,acc:d.acc,paid:d.paid,bal:d.balQ})),lab:_c._lab||null,eqExtra:_c._eqExtra||null,err:_c.scriptErr||_c._err||''};}}catch(e){console.error('sketch:',e);}finally{_SKETCH=null;projects=JSON.parse(saveP);}
   return out;}
 // run a sketch on top of the current forecast (Operations): actuals in closed quarters, sketch + overrides forward
 function sketchRunOps(sk){if(!R)return null;const saveP=JSON.stringify(projects),saveOv=JSON.parse(JSON.stringify(reforecastSettings.assumptionOverrides||{})),saveR2=R2;const ov=Object.assign({},saveOv,sk.overrides||{});const nq=Math.floor((Number(ov.fund_period_months)||Number(D.fund_period_months)||0)/3)||R.nq;
@@ -5113,7 +5187,22 @@ function skRmAdj(i){const sk=skCur();if(!sk)return;sk.adjustments.splice(i,1);sk
 function skAdj(i,k,v){const sk=skCur();if(!sk)return;const a=sk.adjustments[i];if(!a)return;if(k==='weights'){a.weights=String(v).split(/[,\s]+/).filter(x=>x!=='').map(Number);}else if(k==='tranches'){const [n,e,f]=String(v).split(',').map(Number);a.weights=skTranches(n||1,e||1,(f||1)-1,R?R.nq:8);}else a[k]=v;
   if(k==='key'||k==='value'){sk.overrides={};sk.adjustments.filter(x=>x.type==='override'&&x.key).forEach(x=>{sk.overrides[x.key]=Number(x.value);});}
   skRes=null;if(k==='line'||k==='type'||k==='tranches')renderSketch();}
-function skRun(){const sk=skCur();if(!sk)return;skRes=sketchRun(sk);renderSketch();}
+function skRun(){const sk=skCur();if(!sk)return;const ta=document.getElementById('skScript');if(ta)sk.script=ta.value;skRes=sketchRun(sk);renderSketch();}
+function skUseExample(i){const sk=skCur();if(!sk)return;const e=SK_EXAMPLES[i];sk.script=(sk.script&&sk.script.trim()?sk.script.trim()+'\n\n':'')+e.script;if(!sk.text)sk.text=e.text;skRes=null;renderSketch();}
+// AI: the idea → rules, through the Supabase Edge Function 'sketch-ai' (holds the API key; never called from here with a key)
+function skAiUrl(){try{const u=localStorage.getItem('sketchAiUrl');if(u)return u;}catch(e){}return (typeof SUPABASE_URL!=='undefined'&&SUPABASE_URL)?SUPABASE_URL.replace(/\/$/,'')+'/functions/v1/sketch-ai':'';}
+async function skAi(){const sk=skCur();if(!sk)return;const ar=lang==='ar';const ta=document.querySelector('#p-sketch textarea.ops-mini');if(ta&&!ta.id)sk.text=ta.value;const idea=(sk.text||'').trim();if(!idea){alert(ar?'اكتب الفكرة أولاً في مربع الوصف.':'Describe the idea in the text box first.');return;}
+  const url=skAiUrl();if(!url){alert(ar?'لم يُضبط عنوان خدمة الذكاء الاصطناعي.':'The AI service URL is not configured.');return;}
+  let token='';try{const {data}=await sb.auth.getSession();token=data&&data.session?data.session.access_token:'';}catch(e){}
+  if(!token){alert(ar?'سجّل الدخول أولاً — خدمة الذكاء الاصطناعي تعمل للمستخدمين المسجّلين فقط.':'Sign in first — the AI service only answers signed-in users.');return;}
+  docBusy(true,ar?'جارٍ ترجمة الفكرة إلى قواعد…':'Turning the idea into rules…');
+  try{const A=R?R.A:D;const ctx={nq:R?R.nq:0,fund_period_months:A.fund_period_months,equity:A.equity,facility:R?sumA(R.drawdowns):0,totalCost:R?R.totalCost:0,gdv:R?R.tRev:0,mgmt_fee_mode:A.mgmt_fee_mode,lines:SK_LINES.map(x=>x[0]),api:SK_LAB_DOC,existingScript:sk.script||''};
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':(typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:'')},body:JSON.stringify({idea,context:ctx,lang})});
+    const j=await res.json().catch(()=>({}));if(!res.ok||j.error)throw new Error(j.error||('HTTP '+res.status));
+    if(j.script){try{skCompileScript(j.script);}catch(e){throw new Error((ar?'القاعدة المقترحة لا تُصرَّف: ':'The proposed rule does not compile: ')+e.message);}}
+    sk.script=j.script||'';sk.aiNote=j.description||'';sk.aiCannot=j.cannot||[];skRes=null;}
+  catch(e){alert((ar?'تعذّر الاتصال بخدمة الذكاء الاصطناعي: ':'AI service failed: ')+(e.message||e));}
+  finally{docBusy(false);renderSketch();}}
 function skPromote(){const sk=skCur();if(!sk)return;_rfNorm();reforecastSettings.scenarios=reforecastSettings.scenarios||[];reforecastSettings.scenarios.push({name:'✏ '+sk.name,ov:Object.assign({},sk.overrides||{}),sketch:sk.id});alert(lang==='ar'?'أُضيفت إلى سيناريوهات غرفة التحكم (تُقيَّم فوق التوقع الحالي).':'Added to the control-room scenarios (evaluated on top of the current forecast).');}
 function renderSketch(){const pnl=document.getElementById('p-sketch');if(!pnl)return;const ar=lang==='ar';
   if(!R){pnl.innerHTML=`<div class="sec"><p>${ot('calcFirst')}</p></div>`;return;}
@@ -5139,13 +5228,19 @@ function renderSketch(){const pnl=document.getElementById('p-sketch');if(!pnl)re
       return `<tr><td style="white-space:nowrap"><b>${tl}</b></td><td>${body}</td><td><a class="ops-link" onclick="skRmAdj(${i})">✕</a></td></tr>`;}).join('');
     h+=`<div class="ops-card" style="margin-bottom:14px"><h3><input class="ops-mini" style="width:260px;font-weight:700" value="${escH(sk.name)}" onchange="skSet('name',this.value);renderSketch()"><span>${ar?'تُحفظ مع المشروع':'saved with the project'}</span></h3>
       <textarea class="ops-mini" style="width:100%;min-height:54px;margin:6px 0" placeholder="${ar?'صف الفكرة بكلماتك (للتوثيق الآن؛ الترجمة الآلية إلى تعديلات تأتي مع خدمة الخادم)':'Describe the idea in your own words (kept as a note for now; automatic translation into adjustments comes with the server function)'}" onchange="skSet('text',this.value)">${escH(sk.text||'')}</textarea>
+      <details class="cx-details" style="margin:6px 0 10px"${sk.script?' open':''}><summary>${ar?'المختبر — قواعد مكتوبة (الذكاء الاصطناعي يكتبها، وأنت تراجعها)':'Lab — scripted rules (the AI writes them, you review them)'}${sk.script?' <span class="ops-pill good">'+(ar?'نشط':'active')+'</span>':''}</summary>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><button class="act-btn act-btn-add" onclick="skAi()">✨ ${ar?'ترجم الفكرة أعلاه إلى قواعد':'Turn the idea above into rules'}</button>${SK_EXAMPLES.map((e,i)=>`<button class="act-btn" onclick="skUseExample(${i})">${escH(e.name)}</button>`).join('')}${sk.script?`<button class="act-btn" onclick="skSet('script','');skRes=null;renderSketch()">${ar?'مسح':'clear'}</button>`:''}</div>
+        <textarea id="skScript" class="ops-mini" style="width:100%;min-height:150px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;direction:ltr" spellcheck="false" placeholder="rules.funding = (q, s) => ({ debt: s.shortfall, equity: 0 });" onchange="skSet('script',this.value);skRes=null">${escH(sk.script||'')}</textarea>
+        ${sk.aiNote?`<div class="ops-card" style="margin:8px 0;background:#fbf6e9"><b>${ar?'ما فهمه الذكاء الاصطناعي:':'What the AI understood:'}</b> ${escH(sk.aiNote)}${sk.aiCannot&&sk.aiCannot.length?`<br><b class="cx-var bad"><span>${ar?'لا يمكن التعبير عنه:':'Cannot be expressed:'}</span></b> ${escH(sk.aiCannot.join('; '))}`:''}</div>`:''}
+        <pre class="ops-muted" style="white-space:pre-wrap;font-size:.72rem;margin:6px 0 0;direction:ltr">${escH(SK_LAB_DOC)}</pre></details>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px"><span class="ops-muted" style="align-self:center">${ar?'أضف تعديلاً:':'Add an adjustment:'}</span><button class="act-btn act-btn-add" onclick="skAddAdj('phase')">${ar?'توزيع / دفعات':'Phase / split'}</button><button class="act-btn act-btn-add" onclick="skAddAdj('shift')">${ar?'إزاحة جدول':'Shift a schedule'}</button><button class="act-btn act-btn-add" onclick="skAddAdj('item')">${ar?'بند لمرة واحدة':'One-off item'}</button><button class="act-btn act-btn-add" onclick="skAddAdj('override')">${ar?'افتراض':'Assumption override'}</button><button class="act-btn act-btn-add" onclick="skAddAdj('defer')">${ar?'تأجيل رسوم':'Defer a fee'}</button></div>
       ${rowsA?`<table class="rfcs-tbl cx-tbl"><tbody>${rowsA}</tbody></table>`:`<p class="ops-muted">${ar?'لا تعديلات بعد.':'No adjustments yet.'}</p>`}
       <div style="display:flex;gap:10px;margin-top:12px;align-items:center"><button class="ops-close" onclick="skRun()">▶ ${ar?'شغّل المسودة':'Run sketch'}</button><button class="ops-close" style="background:#e8eeec;color:#1b1c19" onclick="skPromote()">${ar?'ارفعها إلى سيناريوهات غرفة التحكم':'Promote to control-room scenarios'}</button><small class="ops-muted">${ar?'التشغيل لا يغيّر شيئاً في المنصة.':'Running changes nothing in the platform.'}</small></div></div>`;
     if(skRes){const r=skRes,sum=a=>(a||[]).reduce((x,y)=>x+y,0),pk=x=>Math.max(0,...(x.qLoanClose||[0]));
-      const K=[[ar?'العائد الداخلي':'IRR',fP(bm.irr),fP(r.irr),(r.irr-bm.irr)*100,'pp'],[ar?'مضاعف رأس المال':'Equity multiple',bm.eqMult.toFixed(2)+'x',r.eqMult.toFixed(2)+'x',r.eqMult-bm.eqMult,'x'],[ar?'صافي الربح':'Net profit',M_(bm.grossProfit),M_(r.grossProfit),r.grossProfit-bm.grossProfit,'m'],[ar?'إجمالي التكلفة':'Total cost',M_(bm.totalCost),M_(r.totalCost),r.totalCost-bm.totalCost,'m'],[ar?'ذروة الدين':'Peak debt',M_(pk(bm)),M_(pk(r)),pk(r)-pk(bm),'m'],[ar?'إجمالي أرباح التمويل':'Total interest',M_(sum(bm.qInterest)),M_(sum(r.qInterest)),sum(r.qInterest)-sum(bm.qInterest),'m'],[ar?'التوزيعات':'Distributions',M_(sum(bm.qDividends)),M_(sum(r.qDividends)),sum(r.qDividends)-sum(bm.qDividends),'m']];
+      if(r._sketch&&r._sketch.err)h+=`<div class="ops-card" style="margin-bottom:14px;border-color:#9a4a3a"><b class="cx-var bad"><span>${ar?'خطأ في القاعدة:':'Rule error:'}</span></b> ${escH(r._sketch.err)} — ${ar?'استُخدم السلوك الافتراضي للمحرك حيث فشلت القاعدة.':'the engine default was used where the rule failed.'}</div>`;
+      const K=[[ar?'العائد الداخلي':'IRR',fP(bm.irr),fP(r.irr),(r.irr-bm.irr)*100,'pp'],[ar?'مضاعف رأس المال':'Equity multiple',bm.eqMult.toFixed(2)+'x',r.eqMult.toFixed(2)+'x',r.eqMult-bm.eqMult,'x'],[ar?'صافي الربح':'Net profit',M_(bm.grossProfit),M_(r.grossProfit),r.grossProfit-bm.grossProfit,'m'],[ar?'إجمالي التكلفة':'Total cost',M_(bm.totalCost),M_(r.totalCost),r.totalCost-bm.totalCost,'m'],[ar?'ذروة الدين':'Peak debt',M_(pk(bm)),M_(pk(r)),pk(r)-pk(bm),'m'],[ar?'إجمالي أرباح التمويل':'Total interest',M_(sum(bm.qInterest)),M_(sum(r.qInterest)),sum(r.qInterest)-sum(bm.qInterest),'m'],[ar?'التوزيعات':'Distributions',M_(sum(bm.qDividends)),M_(sum(r.qDividends)),sum(r.qDividends)-sum(bm.qDividends),'m'],[ar?'رأس المال المدفوع (نقد)':'Equity called (cash)',M_(sum(bm.qEquity)),M_(sum(r.qEquity)),sum(r.qEquity)-sum(bm.qEquity),'m']];
       h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'النتيجة: المسودة مقابل خط الأساس':'Result: sketch vs baseline'}<span>${r.nq} ${ar?'ربع':'quarters'}</span></h3><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ar?'خط الأساس':'Baseline'}</th><th>${ar?'المسودة':'Sketch'}</th><th>${ar?'الفرق':'Change'}</th></tr></thead><tbody>${K.map(([l,b,v,d,u])=>`<tr><td>${l}</td><td class="rfcs-num">${b}</td><td class="rfcs-num"><b>${v}</b></td><td class="rfcs-num cx-var ${Math.abs(d)<1e-9?'':(d>0)===(u!=='m'||!/cost|debt|interest|التكلفة|الدين|التمويل/.test(l))?'good':'bad'}"><span>${u==='pp'?(d>=0?'+':'')+d.toFixed(2)+' pp':u==='x'?(d>=0?'+':'')+d.toFixed(2)+'x':(d>=0?'+':'−')+M_(Math.abs(d))}</span></td></tr>`).join('')}</tbody></table>
-        <div class="cx-wrap" style="margin-top:10px"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${Array.from({length:r.nq},(_,i)=>`<th>Q${i+1}</th>`).join('')}</tr></thead><tbody>${[[ar?'الأرض والسعي والضريبة':'Land, brokerage & RETT',r.qLandCF],[ar?'البناء':'Construction',(r.qCon||[]).map(v=>-v)],[ar?'المبيعات':'Sales',r.qGrossSales],[ar?'بنود المسودة':'Sketch items',(_SKETCH,(r._sketch&&r._sketch.items.length)?Array.from({length:r.nq},(_,i)=>r._sketch.items.filter(x=>x.q===i).reduce((a,x)=>a+x.amount,0)):Array(r.nq).fill(0))],...((r._sketch&&r._sketch.defers)||[]).flatMap(d=>{const nm=(SK_LINES.find(x=>x[0]===d.line)||[])[ar?2:1]||(d.line==='mgmt_fee'?(ar?'رسوم الإدارة':'Management fee'):d.line);return [[(ar?'مؤجَّل: ':'Deferred: ')+nm,d.acc],[(ar?'مدفوع من المؤجَّل: ':'Paid from deferral: ')+nm,d.paid.map(v=>-v)],[(ar?'رصيد مستحق: ':'Payable balance: ')+nm+(d.onQ!=null?' · '+(ar?'تحقق الشرط في ':'triggered in ')+'Q'+(d.onQ+1):' · '+(ar?'لم يتحقق الشرط':'never triggered')),d.bal]];}),[ar?'سحب التمويل':'Drawdowns',r.drawdowns],[ar?'رصيد التمويل':'Loan balance',r.qLoanClose],[ar?'النقد الختامي':'Closing cash',r.qCashClose],[ar?'التوزيعات':'Dividends',r.qDividends]].map(([l,a])=>`<tr><td>${l}</td>${Array.from({length:r.nq},(_,i)=>`<td class="rfcs-num">${fN((a||[])[i]||0)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+        <div class="cx-wrap" style="margin-top:10px"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${Array.from({length:r.nq},(_,i)=>`<th>Q${i+1}</th>`).join('')}</tr></thead><tbody>${[[ar?'الأرض والسعي والضريبة':'Land, brokerage & RETT',r.qLandCF],[ar?'البناء':'Construction',(r.qCon||[]).map(v=>-v)],[ar?'المبيعات':'Sales',r.qGrossSales],[ar?'بنود المسودة':'Sketch items',(_SKETCH,(r._sketch&&r._sketch.items.length)?Array.from({length:r.nq},(_,i)=>r._sketch.items.filter(x=>x.q===i).reduce((a,x)=>a+x.amount,0)):Array(r.nq).fill(0))],...((r._sketch&&r._sketch.eqExtra&&r._sketch.eqExtra.some(v=>v))?[[ar?'رأس مال إضافي مطلوب (قاعدة التمويل)':'Additional equity called (funding rule)',r._sketch.eqExtra]]:[]),...((r._sketch&&r._sketch.lab)?[[ar?'رسوم محجوزة (قاعدة النقد)':'Fees held (cash rule)',r._sketch.lab.hold],[ar?'مدفوع من المحجوز':'Released from held',r._sketch.lab.rel.map(v=>-v)],[ar?'رصيد المحجوز':'Held balance',r._sketch.lab.bal],...(r._sketch.lab.items.some(v=>v)?[[ar?'بنود القاعدة':'Rule items',r._sketch.lab.items]]:[])]:[]),...((r._sketch&&r._sketch.defers)||[]).flatMap(d=>{const nm=(SK_LINES.find(x=>x[0]===d.line)||[])[ar?2:1]||(d.line==='mgmt_fee'?(ar?'رسوم الإدارة':'Management fee'):d.line);return [[(ar?'مؤجَّل: ':'Deferred: ')+nm,d.acc],[(ar?'مدفوع من المؤجَّل: ':'Paid from deferral: ')+nm,d.paid.map(v=>-v)],[(ar?'رصيد مستحق: ':'Payable balance: ')+nm+(d.onQ!=null?' · '+(ar?'تحقق الشرط في ':'triggered in ')+'Q'+(d.onQ+1):' · '+(ar?'لم يتحقق الشرط':'never triggered')),d.bal]];}),[ar?'سحب التمويل':'Drawdowns',r.drawdowns],[ar?'رصيد التمويل':'Loan balance',r.qLoanClose],[ar?'النقد الختامي':'Closing cash',r.qCashClose],[ar?'التوزيعات':'Dividends',r.qDividends]].map(([l,a])=>`<tr><td>${l}</td>${Array.from({length:r.nq},(_,i)=>`<td class="rfcs-num">${fN((a||[])[i]||0)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
         <p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'للمقارنة: خط الأساس هو الدراسة الحالية (المقفلة إن وُجدت). بنود المسودة تدخل التدفق النقدي التشغيلي ولا تدخل إجمالي التكلفة.':'Baseline = the current study (the locked one if any). Sketch items enter the operating cash flow and are not part of total cost.'}</p></div>`;}
   }
   pnl.innerHTML=h;}
@@ -5386,6 +5481,7 @@ function opsAlerts(){
   const un=actuals.filter(p=>(p.category==='base_con'||p.category==='revenue')&&!p.component&&lineComponents(p.category).length>1); if(un.length) out.push(['warn',un.length+' '+ot('unassigned')+' ('+M_(un.reduce((s,p)=>s+p.amount,0))+')','payments']);
   if(cut>0&&!R2._finStrict&&(sumA(R2.drawdowns.slice(0,cut))>0||sumA(R2.qEquity.slice(0,cut))>0)) out.push(['warn',ot('noFin'),'financing']);
   {const sp=R2._salesPhase;if(sp&&sp.unplaced>0.5)out.push(['warn',(100-sp.pinSum).toFixed(1)+'% '+(lang==='ar'?'من المبيعات غير موزّعة على الأرباع (':'of sales not phased into any quarter (')+M_(sp.unplaced)+(lang==='ar'?') — ارفع نسبة أو حرّر ربعاً':') — raise a pin or release a quarter'),'sales']);}
+  {const cu=R2._ikCatchUp||0;if(Math.abs(cu)>0.5)out.push([cu>0?'warn':'warn',(lang==='ar'?'تسوية الحصص العينية: ':'In-kind catch-up: ')+(cu>0?'+':'−')+M_(Math.abs(cu))+(lang==='ar'?' في ':' in ')+qLabel(R2._cutoffQ)+(lang==='ar'?' — المستحق (النسبة × التكاليف الفعلية) ':' — entitled (ik% × actual costs) ')+M_(R2._ikExpectedClosed||0)+(lang==='ar'?' مقابل المسجّل ':' vs booked ')+M_(R2._ikBookedClosed||0),'financing']);}
   {const g=R2._fundingGap||[];const tot=sumA(g);if(tot>0.5){const q=g.findIndex(v=>v>0.5);out.push(['bad',(lang==='ar'?'فجوة تمويل ':'Funding gap ')+M_(tot)+(lang==='ar'?' — التسهيل مستنفد اعتباراً من ':' — facility exhausted from ')+qLabel(q)+(lang==='ar'?'؛ يلزم بيع على الخارطة بهذا المبلغ أو تمويل إضافي':'; off-plan sales of that amount, or more funding, are needed'),'sales']);}}
   try{vatAlerts().forEach(a=>out.push(a));}catch(e){}
   try{docAlerts().forEach(a=>out.push(a));}catch(e){}
@@ -8159,12 +8255,14 @@ function calcWith(overrides){
       }
     }
     const newDD=Array(nq).fill(0),tempCash=Array(nq).fill(0);
+    if((typeof _SKETCH!=='undefined'&&_SKETCH))_skSizeStart(qEquity); // SKETCH lab
     for(let qi=0;qi<nq;qi++){
       const open=qi===0?0:tempCash[qi-1];
       const netNoBorrow=qNetOp[qi]+qNetInv[qi]+qEquity[qi]+qIKTotal[qi]-(qi===nq-1?qRepay[qi]:0);
       const raw=open+netNoBorrow;
       if(raw<A.min_cash&&qi<nq-1) newDD[qi]=A.min_cash-raw;
-      tempCash[qi]=raw+newDD[qi];
+      if((typeof _SKETCH!=='undefined'&&_SKETCH)&&newDD[qi]>0){const o=_skFund(qi,{shortfall:newDD[qi],cash:open,minCash:A.min_cash,loanOpen:qi?qLoanClose[qi-1]:0,cumDrawn:newDD.slice(0,qi).reduce((a,b)=>a+b,0),sales:qGrossSales,cumSales:qGrossSales.slice(0,qi+1).reduce((a,b)=>a+b,0),equity:qEquity,nq});newDD[qi]=o.debt;qEquity[qi]+=o.equity;}
+      tempCash[qi]=raw+newDD[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skEqExtraAt(qi):0);
     }
     let delta=0;
     for(let qi=0;qi<nq;qi++) delta+=Math.abs(newDD[qi]-drawdowns[qi]);
@@ -8223,7 +8321,7 @@ function calcWith(overrides){
     qCashOpen[qi]=qi===0?0:qCashClose[qi-1];
     if(qi===nq-1){
       const cashBeforePerf=qCashOpen[qi]+qNetOp[qi]+qNetInv[qi]+netBorrow+qEquity[qi]+qIKTotal[qi];
-      const totalEquity=A.equity+gpCash+qIKTotal.reduce((a,b)=>a+b,0);
+      const totalEquity=A.equity+gpCash+qIKTotal.reduce((a,b)=>a+b,0)+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skEqExtra():0); // SKETCH lab
       const interimDiv=qDividends.slice(0,nq-1).reduce((a,b)=>a+b,0);
       const totalReturn=cashBeforePerf+interimDiv;
       const years=A.fund_period_months/12;
