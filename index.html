@@ -4955,15 +4955,20 @@ function runReforecast(){
 function _rfRebuildIK(RX,cut,rfLand,rfBrok){
   const A=RX.A,nq=RX.nq,V=1+pct(A.vat_rate),gp=pct(A.gp_commit_inkind_pct||0),isFund=Number(A.is_fund);
   const comp=i=>({land:pct(A.ik_land_pct)*((rfLand&&rfLand[i])||0),brok:pct(A.ik_brok_pct)*((rfBrok&&rfBrok[i])||0)/V,dev:pct(A.ik_dev_pct)*((RX.qDevFee||[])[i]||0)/V,con:pct(A.ik_con_pct)*((RX.qBaseCon||[])[i]||0)/V,mkt:pct(A.ik_mkt_pct)*((RX.qMkt||[])[i]||0)/V,sell:pct(A.ik_sell_pct)*((RX.qSellExp||[])[i]||0)/V,gp:isFund?((RX.qMgmtFee||[])[i]||0)*gp:0});
-  const tot=c=>c.land+c.brok+c.dev+c.con+c.mkt+c.sell+c.gp;
+  const KINDS=['land','brok','dev','con','mkt','sell','gp'];const tot=c=>KINDS.reduce((a,k)=>a+c[k],0);
   RX.qIKLand=RX.qIKLand||Array(nq).fill(0);RX.qIKBrok=RX.qIKBrok||Array(nq).fill(0);RX.qIKDev=RX.qIKDev||Array(nq).fill(0);RX.qIKCon=RX.qIKCon||Array(nq).fill(0);RX.qIKMkt=RX.qIKMkt||Array(nq).fill(0);RX.qIKSell=RX.qIKSell||Array(nq).fill(0);
-  let expected=0,booked=0;
-  if(!RX._finStrict){ // no financing recorded yet: assume in-kind was taken as its percentage of what was actually paid
-    for(let i=0;i<cut;i++){const c=comp(i);RX.qIKLand[i]=c.land;RX.qIKBrok[i]=c.brok;RX.qIKDev[i]=c.dev;RX.qIKCon[i]=c.con;RX.qIKMkt[i]=c.mkt;RX.qIKSell[i]=c.sell;RX.qIKTotal[i]=tot(c);}}
-  for(let i=0;i<cut;i++){expected+=tot(comp(i));booked+=RX.qIKTotal[i]||0;}
-  for(let i=cut;i<nq;i++){const c=comp(i);RX.qIKLand[i]=c.land;RX.qIKBrok[i]=c.brok;RX.qIKDev[i]=c.dev;RX.qIKCon[i]=c.con;RX.qIKMkt[i]=c.mkt;RX.qIKSell[i]=c.sell;RX.qIKTotal[i]=tot(c);}
-  let catchUp=cut>0?expected-booked:0;RX._ikCatchUp=catchUp;RX._ikExpectedClosed=expected;RX._ikBookedClosed=booked;
-  for(let i=cut;i<nq&&Math.abs(catchUp)>0.005;i++){const add=catchUp>0?catchUp:Math.max(catchUp,-(RX.qIKTotal[i]||0));RX.qIKTotal[i]+=add;catchUp-=add;} // shortfall lands in the first open quarter; an excess reduces future in-kind, never below zero
+  const setQ=(i,c)=>{RX.qIKLand[i]=c.land;RX.qIKBrok[i]=c.brok;RX.qIKDev[i]=c.dev;RX.qIKCon[i]=c.con;RX.qIKMkt[i]=c.mkt;RX.qIKSell[i]=c.sell;RX.qIKTotal[i]=tot(c);};
+  // closed quarters: entitled per kind (ik% × actual cost) vs booked per kind (equity_ik rows tagged ik:<kind>; untagged rows = unallocated)
+  const ent={},booked={};KINDS.forEach(k=>{ent[k]=0;booked[k]=0;});let unalloc=0,bookedTot=0;
+  for(let i=0;i<cut;i++){const c=comp(i);KINDS.forEach(k=>ent[k]+=c[k]);}
+  if(RX._finStrict){actuals.filter(p=>p.include!==false&&p.category==='equity_ik'&&p.quarter<cut).forEach(p=>{const a=Number(p.amount)||0;bookedTot+=a;const k=String(p.component||'').replace(/^ik:/,'');if(booked[k]!==undefined)booked[k]+=a;else unalloc+=a;});}
+  else{for(let i=0;i<cut;i++)setQ(i,comp(i));KINDS.forEach(k=>booked[k]=ent[k]);bookedTot=KINDS.reduce((a,k)=>a+booked[k],0);} // nothing recorded yet: assume in-kind was taken as its percentage of what was actually paid
+  for(let i=cut;i<nq;i++)setQ(i,comp(i));
+  const expected=KINDS.reduce((a,k)=>a+ent[k],0);
+  RX._ikByKind=KINDS.map(k=>({kind:k,entitled:ent[k],booked:booked[k],diff:ent[k]-booked[k],open:Array.from({length:nq-cut},(_,j)=>comp(cut+j)[k]).reduce((a,b)=>a+b,0)}));
+  RX._ikUnallocated=unalloc;RX._ikExpectedClosed=expected;RX._ikBookedClosed=bookedTot;
+  let catchUp=cut>0?expected-bookedTot:0;RX._ikCatchUp=catchUp; // unallocated rows count towards the total so the cash picture stays right; the per-kind table shows what still needs tagging
+  for(let i=cut;i<nq&&Math.abs(catchUp)>0.005;i++){const add=catchUp>0?catchUp:Math.max(catchUp,-(RX.qIKTotal[i]||0));RX.qIKTotal[i]+=add;catchUp-=add;}
 }
 // Summary totals for a forecast run — mirrors the definitions in calculate() so Summary/Debt/Cash Flow
 // show the same total cost, capital structure and LTC whether they render the baseline or the forecast.
@@ -5016,13 +5021,15 @@ function viewStamp(){
 // ═══════════════════════════════════════════════
 // Full engine run (same as Calculate, with the complete result object) under temporary overrides; baseline R and the screen are restored after.
 function calcFull(ov){
-  const saveR=R, saveMode=reforecastMode, saveR2=R2, saved={}, curTab=(document.querySelector('.pnl.act')||{}).id, saveProjects=JSON.stringify(projects);
+  const saveR=R, saveMode=reforecastMode, saveR2=R2, saved={}, curTab=(document.querySelector('.pnl.act')||{}).id;
+  const mayRescale=(ov&&ov.fund_period_months!==undefined&&Math.floor(Number(ov.fund_period_months)/3)!==Math.floor(Number(D.fund_period_months)/3))||(typeof _SKETCH!=='undefined'&&_SKETCH);
+  const saveProjects=mayRescale?JSON.stringify(projects):null;
   for(const k in ov){const el=document.getElementById(k); if(el){saved[k]={el,v:el.value}; el.value=ov[k];} else {saved[k]={v:D[k]}; D[k]=ov[k];}}
   let out=null; _silentCalc=true;
   try{ calculate(); out=R; }catch(e){ console.error('calcFull:',e); }
   finally{
     for(const k in saved){ if(saved[k].el) saved[k].el.value=saved[k].v; else D[k]=saved[k].v; }
-    projects=JSON.parse(saveProjects);
+    if(saveProjects)projects=JSON.parse(saveProjects);
     try{ calculate(); }catch(e){}
     _silentCalc=false;
     R=saveR; reforecastMode=saveMode; R2=saveR2;
@@ -5032,8 +5039,11 @@ function calcFull(ov){
 }
 // Components across all projects: construction components (base_con) and sales components (revenue).
 // key = "<category>:<project index>:<component index>"; label shown in the UI. Baseline share = component value / line total.
+// In-kind kinds: which cost the in-kind contribution is a share of (recorded on equity_ik rows as component 'ik:<kind>')
+const IK_KINDS=[['land','Land (landowner)','الأرض (مالك الأرض)','ik_land_pct'],['brok','Brokerage','السعي','ik_brok_pct'],['dev','Developer fee (developer)','رسوم التطوير (المطوّر)','ik_dev_pct'],['con','Construction (contractor)','البناء (المقاول)','ik_con_pct'],['mkt','Marketing','التسويق','ik_mkt_pct'],['sell','Selling / commission','عمولات البيع','ik_sell_pct'],['gp','Management fee (fund manager)','رسوم الإدارة (مدير الصندوق)','gp_commit_inkind_pct']];
 function lineComponents(catKey){
   const out=[];
+  if(catKey==='equity_ik'){const A=(R&&R.A)||D;IK_KINDS.forEach(([k,en,ar,pk])=>{if(Number(A[pk])>0||pk==='ik_land_pct')out.push({key:'ik:'+k,label:(lang==='ar'?ar:en)+' · '+(Number(A[pk])||0)+'%',value:1});});return out;}
   projects.forEach((P,pi)=>{
     if(catKey==='base_con') (P.conComponents||[]).forEach((c,ci)=>out.push({key:'base_con:'+pi+':'+ci,label:(lang==='ar'?c.name:(c.nameEn||c.name))+(projects.length>1?' — '+P.name:''),value:(Number(c.gfa)||0)*(Number(c.cost)||0)}));
     if(catKey==='revenue') (P.salesComponents||[]).forEach((c,ci)=>out.push({key:'revenue:'+pi+':'+ci,label:(lang==='ar'?c.name:(c.nameEn||c.name))+(projects.length>1?' — '+P.name:''),value:(Number(c.area)||0)*(Number(c.price)||0)}));
@@ -5046,7 +5056,7 @@ function componentOptions(catKey,selected){
 }
 function _actCompToggle(){
   const cat=document.getElementById('act_category')?.value, sel=document.getElementById('act_component'), wrap=document.getElementById('act_component_wrap');
-  if(!sel||!wrap) return; const has=cat==='base_con'||cat==='revenue';
+  if(!sel||!wrap) return; const has=cat==='base_con'||cat==='revenue'||cat==='equity_ik';
   sel.innerHTML=has?componentOptions(cat,sel.dataset.sel||''):''; wrap.style.display=(has&&sel.options.length)?'':'none';
 }
 // Hover breakdown for rolled-up lines (label ⓘ). rows: [[label, amount]]. Works in tables and KPI tiles; PDF gets a footnote instead.
@@ -6310,8 +6320,10 @@ async function parseRegister(file){
   for(const name of wb.SheetNames){const js=XLSX.utils.sheet_to_json(wb.Sheets[name],{header:1,raw:true,cellDates:true});
     const hdrRow=js.findIndex(r=>r&&r.filter(c=>c!=null&&c!=='').length>=3);const H=hdrRow>=0?js[hdrRow].map(c=>String(c||'').trim().toLowerCase()):[];const hc=re=>H.findIndex(h=>re.test(h));
     // template sheets (platform template v2): Financing · Sales · Contracts — identified by their headers
-    if(hc(/^type$/)>=0&&hc(/^date/)>=0&&hc(/^amount/)>=0&&/financ/i.test(name)){const cT=hc(/^type$/),cD=hc(/^date/),cA=hc(/^amount/),cR=hc(/ref/),cN=hc(/note|desc|details/);const map={equity:'equity_in','equity injection':'equity_in','in-kind':'equity_ik','drawdown':'debt_draw','repayment':'debt_repay','profit':'interest','interest':'interest','distribution':'distribution','dividend':'distribution'};
-      for(const r of js.slice(hdrRow+1)){if(!r)continue;const d=_d(r[cD]),a=_dnum(r[cA]),t=String(r[cT]||'').trim().toLowerCase();if(!d||!a)continue;const cat=map[t]||(t.includes('draw')?'debt_draw':t.includes('repay')?'debt_repay':t.includes('equity')?'equity_in':t.includes('distrib')?'distribution':t.includes('profit')||t.includes('interest')?'interest':'');if(!cat)continue;out.financing.push({date:d,category:cat,amount:a,txn:String(r[cR]||''),notes:String(cN>=0?r[cN]||'':'')});}continue;}
+    if(hc(/^type$/)>=0&&hc(/^date/)>=0&&hc(/^amount/)>=0&&/financ/i.test(name)){const cT=hc(/^type$/),cD=hc(/^date/),cA=hc(/^amount/),cR=hc(/ref/),cN=hc(/note|desc|details/),cK=hc(/in-?kind (type|source)|^source$|^component$/);const map={equity:'equity_in','equity injection':'equity_in','in-kind':'equity_ik','drawdown':'debt_draw','repayment':'debt_repay','profit':'interest','interest':'interest','distribution':'distribution','dividend':'distribution'};
+      for(const r of js.slice(hdrRow+1)){if(!r)continue;const d=_d(r[cD]),a=_dnum(r[cA]),t=String(r[cT]||'').trim().toLowerCase();if(!d||!a)continue;const cat=map[t]||(t.includes('draw')?'debt_draw':t.includes('repay')?'debt_repay':t.includes('equity')?'equity_in':t.includes('distrib')?'distribution':t.includes('profit')||t.includes('interest')?'interest':'');if(!cat)continue;const row={date:d,category:cat,amount:a,txn:String(r[cR]||''),notes:String(cN>=0?r[cN]||'':'')};
+        if(cat==='equity_ik'){const kt=String((cK>=0?r[cK]:'')||t.replace(/in-?kind/,'')).toLowerCase();const kind=/land|أرض/.test(kt)?'land':/brok|سعي/.test(kt)?'brok':/dev|مطو|تطوير/.test(kt)?'dev':/con|بناء|مقاول/.test(kt)?'con':/mkt|market|تسويق/.test(kt)?'mkt':/sell|commission|عمول/.test(kt)?'sell':/gp|manag|إدارة|ادارة/.test(kt)?'gp':'';if(kind)row.component='ik:'+kind;}
+        out.financing.push(row);}continue;}
     if(hc(/^date/)>=0&&hc(/^amount/)>=0&&hc(/unit|contract|buyer/)>=0&&/sale/i.test(name)){const cD=hc(/^date/),cA=hc(/^amount/),cU=hc(/unit|contract/),cB=hc(/buyer|customer/),cR=hc(/ref/),cC=hc(/component/),cAr=hc(/area/);
       for(const r of js.slice(hdrRow+1)){if(!r)continue;const d=_d(r[cD]),a=_dnum(r[cA]);if(!d||!a)continue;out.sales.push({date:d,amount:a,unit:String(r[cU]||''),buyer:String(cB>=0?r[cB]||'':''),txn:String(cR>=0?r[cR]||'':''),component:String(cC>=0?r[cC]||'':''),area:cAr>=0?_dnum(r[cAr]):0});}continue;}
     if(hc(/vendor|supplier/)>=0&&hc(/contract value|^value/)>=0&&/contract/i.test(name)){const cV=hc(/vendor|supplier/),cC=hc(/category/),cA=hc(/contract value|^value/),cR=hc(/retention/);
@@ -6358,7 +6370,7 @@ async function auditImportRegister(){_pick('.xlsx,.xlsm,.xls',async file=>{docBu
   docModal(ar?'استيراد سجل مصروفات فريق العمليات':'Import the operations expense register',body,async g=>{
     newE.forEach((e,i)=>{const c=g('c'+i);if(c)e.category=c.value;actuals.push({id:_actGenId(),date:e.date,quarter:dateToQuarterIdx(e.date,D.start_date),category:e.category,amount:e.amount,net:e.net,vat:e.category==='rett'||e.category==='land'||e.category==='interest'?undefined:e.vat,payee:e.payee,notes:e.description,txn:e.txn||'',src:'register',include:true});});
     newT.forEach(t=>actuals.push({id:_actGenId(),date:t.date,quarter:dateToQuarterIdx(t.date,D.start_date),category:t.category,amount:t.amount,payee:t.payee,notes:t.notes,src:'treasury',tkey:t.tkey,include:true}));
-    const kF=p=>'f|'+p.date+'|'+p.category+'|'+Number(p.amount).toFixed(2);const haveF=new Set(actuals.filter(p=>p.src==='financing').map(kF));x.financing.filter(f=>!haveF.has(kF(f))).forEach(f=>actuals.push({id:_actGenId(),date:f.date,quarter:dateToQuarterIdx(f.date,D.start_date),category:f.category,amount:f.amount,payee:f.category==='interest'?'Bank':'',notes:f.notes,txn:f.txn,src:'financing',include:true}));
+    const kF=p=>'f|'+p.date+'|'+p.category+'|'+Number(p.amount).toFixed(2);const haveF=new Set(actuals.filter(p=>p.src==='financing').map(kF));x.financing.filter(f=>!haveF.has(kF(f))).forEach(f=>actuals.push({id:_actGenId(),date:f.date,quarter:dateToQuarterIdx(f.date,D.start_date),category:f.category,amount:f.amount,payee:f.category==='interest'?'Bank':'',notes:f.notes,txn:f.txn,component:f.component||'',src:'financing',include:true}));
     const kS=p=>'s|'+p.date+'|'+Number(p.amount).toFixed(2)+'|'+(p.unit||'');const haveS=new Set(actuals.filter(p=>p.src==='sales').map(kS));x.sales.filter(f=>!haveS.has(kS(f))).forEach(f=>{const comps=lineComponents('revenue');const cp=f.component?comps.find(c=>_vnorm(c.label).includes(_vnorm(f.component))):null;actuals.push({id:_actGenId(),date:f.date,quarter:dateToQuarterIdx(f.date,D.start_date),category:'revenue',amount:f.amount,payee:f.buyer||f.unit,notes:(f.unit?f.unit+' · ':'')+(f.buyer||''),txn:f.txn,component:cp?cp.key:'',unit:f.unit,area:f.area||undefined,src:'sales',include:true});});
     for(const c of x.contracts){if(!contracts().some(k=>_vnorm(k.vendor)===_vnorm(c.vendor)&&(k.cat||'')===(c.cat||'')))contracts().push({id:'c'+_actGenId(),vendor:c.vendor,aliases:[],cat:c.cat,component:'',value:c.value,retention:c.retention,note:''});}
     if(x.facility)bank().facility=x.facility;
@@ -6532,6 +6544,14 @@ function renderAudit(){
   h+=`<details class="cx-details"><summary>${ar?'الحركات المفسّرة':'Explained lines'} (${expl.length})</summary><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'الحساب':'Account'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'المبلغ':'Amount'}</th><th>${ar?'كيف':'How'}</th><th>${ar?'يقابل':'Matches'}</th><th>${ar?'فرق':'Diff'}</th><th></th></tr></thead><tbody>${expl.map(({a,l,e})=>`<tr><td>${l.date}</td><td>${escH(a.name.slice(0,18))}</td><td>${escH(l.desc.slice(0,60))}</td><td class="rfcs-num">${fN(l.credit||l.debit)}</td><td>${howL[e.how]||e.how}${e.type?' · '+escH(e.type):''}</td><td>${e.m?escH(e.m.date+' · '+e.m.label.slice(0,40)+' · '+_actCatLabel(e.m.cat)):e.ms?escH(e.ms.map(m=>m.label.slice(0,25)+' '+fN(m.amount)).join(' + ')):''}</td><td class="rfcs-num">${e.diff?fN(e.diff):''}</td><td>${e.how==='manual'||e.how==='class'?`<a class="ops-link" onclick="auditSetClass('${l.id}','');auditLink('${l.id}','')">${ar?'إلغاء':'undo'}</a>`:''}</td></tr>`).join('')}</tbody></table></div></details>`;
   pnl.innerHTML=h;
 }
+// In-kind by kind: entitled (ik% × actual cost) vs booked in the closed quarters, catch-up, and the forecast for the open quarters
+function ikTable(){const ar=lang==='ar',rows=(R2._ikByKind||[]).filter(r=>Math.abs(r.entitled)>0.5||Math.abs(r.booked)>0.5||Math.abs(r.open)>0.5);if(!rows.length)return '';const cut=R2._cutoffQ;const L=k=>{const x=IK_KINDS.find(y=>y[0]===k);return x?(ar?x[2]:x[1]):k;};const un=R2._ikUnallocated||0;
+  return `<div class="ops-card" style="margin-bottom:16px"><h3>${ar?'المساهمة العينية حسب المصدر':'In-kind by source'}<span>${cut?(ar?'الأرباع المقفلة Q1–Q':'closed quarters Q1–Q')+cut:''}</span></h3>
+  <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'المصدر':'Source'}</th><th>${ar?'المستحق (النسبة × الفعلي)':'Entitled (ik% × actual)'}</th><th>${ar?'المسجّل':'Booked'}</th><th>${ar?'الفرق → الربع المفتوح الأول':'Difference → first open quarter'}</th><th>${ar?'التوقع (الأرباع المفتوحة)':'Forecast (open quarters)'}</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr><td>${L(r.kind)}</td><td class="rfcs-num">${fN(r.entitled)}</td><td class="rfcs-num">${fN(r.booked)}</td><td class="rfcs-num cx-var ${Math.abs(r.diff)<1?'':r.diff>0?'warn':'bad'}"><span>${Math.abs(r.diff)<1?'—':(r.diff>0?'+':'−')+fN(Math.abs(r.diff))}</span></td><td class="rfcs-num">${fN(r.open)}</td></tr>`).join('')}
+  ${un>0.5?`<tr class="cx-sub"><td>${ar?'غير موزّع على مصدر':'Not allocated to a source'}</td><td class="rfcs-num">—</td><td class="rfcs-num">${fN(un)}</td><td colspan="2"><small class="ops-muted">${ar?'حدّد المصدر لكل سطر مساهمة عينية في سجل الدفعات (حقل المكوّن) ليظهر الفرق لكل مصدر.':'Set the source on each in-kind row in the payments log (Component field) so the difference shows per source.'}</small></td></tr>`:''}
+  <tr class="tot"><td><b>${ar?'الإجمالي':'Total'}</b></td><td class="rfcs-num"><b>${fN(R2._ikExpectedClosed||0)}</b></td><td class="rfcs-num"><b>${fN(R2._ikBookedClosed||0)}</b></td><td class="rfcs-num"><b>${(R2._ikCatchUp||0)>0.5?'+':(R2._ikCatchUp||0)<-0.5?'−':''}${fN(Math.abs(R2._ikCatchUp||0))}</b></td><td class="rfcs-num"><b>${fN(rows.reduce((a,r)=>a+r.open,0))}</b></td></tr></tbody></table></div>
+  <p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'المستحق = نسبة المساهمة العينية × التكلفة الفعلية المدفوعة (بدون ضريبة) لكل مصدر؛ المسجّل = سطور "مساهمة عينية" في السجل حسب المصدر. الفرق الإجمالي يُطبَّق في أول ربع مفتوح؛ الأرباع المفتوحة تتبع التكاليف المتوقعة.':'Entitled = in-kind % × actual cost paid (ex-VAT) per source; booked = "In-Kind Contribution" rows in the log by source. The total difference is applied in the first open quarter; open quarters follow the forecast costs.'}</p></div>`;}
 function opsFinancing(){
   const cut=R2._cutoffQ,nq=R2.nq,b=R,loanAt=cut>0?R2.qLoanClose[cut-1]:0,planAt=cut>0?(R.qLoanClose[cut-1]||0):0,drawn=sumA(R2.drawdowns.slice(0,cut)),intTo=sumA(R2.qInterest.slice(0,cut)),intPlan=sumA(R.qInterest.slice(0,cut));
   const ltc=R2.totalCost?sumA(R2.drawdowns)/R2.totalCost:0,peak=R2.peakDebt,peakQ=R2.qLoanClose.indexOf(peak)+1;
@@ -6550,6 +6570,7 @@ function opsFinancing(){
     <div class="ops-card" style="margin-bottom:16px"><h3>${ot('fDrawTbl')}<span>${strict?ot('finStrict'):ot('finLenient')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ot('fPlanDraw')}</th><th>${ot('fActDraw')}</th><th>${ot('fPlanRepay')}</th><th>${ot('fActRepay')}</th><th>${ot('fPlanBal')}</th><th>${ot('fBal')}</th><th>${ot('fPlanInt')}</th><th>${ot('fActInt')}</th></tr></thead><tbody>
     ${Array.from({length:nq},(_,i)=>`<tr class="${i<cut?'':'cx-sub'}"><td>${qLabel(i)}${i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(pd(i))}</td><td class="rfcs-num ${i<cut&&ad(i)>pd(i)+0.5?'cx-var bad':''}"><span>${fN(ad(i))}</span></td><td class="rfcs-num">${fN(pr(i))}</td><td class="rfcs-num">${fN(arp(i))}</td><td class="rfcs-num">${fN(R.qLoanClose[i]||0)}</td><td class="rfcs-num"><b>${fN(R2.qLoanClose[i]||0)}</b></td><td class="rfcs-num">${fN(R.qInterest[i]||0)}</td><td class="rfcs-num">${fN(R2.qInterest[i]||0)}</td></tr>`).join('')}
     <tr class="tot"><td><b>${ot('gTotal')}</b></td><td class="rfcs-num"><b>${fN(sumA(R.drawdowns))}</b></td><td class="rfcs-num"><b>${fN(sumA(Array.from({length:nq},(_,i)=>ad(i))))}</b></td><td class="rfcs-num"><b>${fN(sumA(R.qRepay))}</b></td><td class="rfcs-num"><b>${fN(sumA(Array.from({length:nq},(_,i)=>arp(i))))}</b></td><td></td><td></td><td class="rfcs-num"><b>${fN(sumA(R.qInterest))}</b></td><td class="rfcs-num"><b>${fN(R2.totalInterest)}</b></td></tr></tbody></table></div></div>`;})()}
+  ${ikTable()}
   ${murabahaTable()}
   <div class="ops-grid2"><div class="ops-card"><h3>${ot('loanChart')}<span>SAR</span></h3>${svgLines(series,cut,nq)}</div>
   <div class="ops-card"><h3>${ot('facility')}</h3><table class="rfcs-tbl"><thead><tr><th></th><th>${ot('baseline')}</th><th>${ot('forecast')}</th></tr></thead><tbody>${row('SAIBOR',blF.saibor+'%',(ov.saibor??blF.saibor)+'%')}${row(lang==='ar'?'الهامش':'Margin',blF.margin+'%',(ov.margin??blF.margin)+'%')}${row(lang==='ar'?'الحد الأدنى للنقد':'Minimum cash',fN(blF.min_cash),fN(ov.min_cash??blF.min_cash))}${row(lang==='ar'?'إجمالي الأرباح':'Total interest',M_(sumA(R.qInterest)),M_(R2.totalInterest))}</tbody></table>
@@ -6564,7 +6585,9 @@ function opsScenarios(){
   const ov=reforecastSettings.assumptionOverrides,blF=(reforecastSettings.baseline&&reforecastSettings.baseline.fund)||D,rs=reforecastSettings.reasons||{},b=baselineMetrics();
   const lbl=k=>{const f=OPS_FIELDS.find(x=>x[0]===k);return f?(lang==='ar'?f[2]:f[1]):k;};
   const chg=Object.keys(ov).map(k=>`<div class="ops-row"><b>${lbl(k)}</b><s>${blF[k]}</s><span class="arrow">→</span><b>${ov[k]}</b><span class="why">${escH(rs[k]||'')}</span><a class="ops-link" onclick="removeChange('${k}')">${ot('remove')}</a></div>`).join('');
-  const sc=(reforecastSettings.scenarios||[]).map((s,i)=>{const r=s.sketch?skEvalScenario(s):evalScenario(s.ov);return r?`<tr><td>${escH(s.name)} <a class="ops-link" onclick="reforecastSettings.scenarios.splice(${i},1);renderOps()">×</a></td><td>${fP(r.irr)}</td><td>${r.eq.toFixed(2)}x</td><td>${M_(r.peak)}</td><td>${M_(r.div)}</td></tr>`:'';}).join('');
+  const _stamp=(()=>{const rs=reforecastSettings;try{return JSON.stringify([rs.assumptionOverrides,rs.cutoffQ,rs.budgetOverrides,rs.lineMode,rs.manualRedist,rs.salesPins,rs.sales,rs.facilityLimit,rs.actualLoanBalance,rs.redistMode,rs.sketches,D.fund_period_months,R.nq,R.totalCost,R.tRev,actuals.length,actuals.reduce((a,p)=>a+(Number(p.amount)||0),0)]);}catch(e){return String(Math.random());}})();
+  if(!window._scenCache||window._scenCache.stamp!==_stamp)window._scenCache={stamp:_stamp,res:{}};
+  const sc=(reforecastSettings.scenarios||[]).map((s,i)=>{const key=JSON.stringify([s.ov,s.sketch||'']);const r=key in window._scenCache.res?window._scenCache.res[key]:(window._scenCache.res[key]=(s.sketch?skEvalScenario(s):evalScenario(s.ov)));return r?`<tr><td>${escH(s.name)} <a class="ops-link" onclick="reforecastSettings.scenarios.splice(${i},1);renderOps()">×</a></td><td>${fP(r.irr)}</td><td>${r.eq.toFixed(2)}x</td><td>${M_(r.peak)}</td><td>${M_(r.div)}</td></tr>`:'';}).join('');
   return `<div class="ops-grid2"><div class="ops-card"><h3>${ot('changes')}<span>${Object.keys(ov).length}</span></h3><div class="ops-chg">${chg||`<p class="ops-muted">${ot('noChanges')}</p>`}
     <div class="ops-add"><select id="chgParam" class="ops-mini" style="width:auto"><option value="">${ot('param')}</option>${OPS_FIELDS.map(([k,en,ar])=>`<option value="${k}">${lang==='ar'?ar:en} (${blF[k]})</option>`).join('')}</select><input id="chgVal" type="number" class="ops-mini" placeholder="${ot('newVal')}"><input id="chgWhy" class="ops-mini" placeholder="${ot('why')}"><button class="act-btn act-btn-add" onclick="addChange()">${ot('apply')}</button></div></div></div>
   <div class="ops-card"><h3>${ot('scen')}</h3><table class="rfcs-tbl"><thead><tr><th>${ot('scenName')}</th><th>${ot('irr')}</th><th>${ot('mult')}</th><th>${ot('peakD')}</th><th>${ot('dist')}</th></tr></thead><tbody>
@@ -6653,7 +6676,7 @@ function dlExcel(){
     +'<border><left/><right/><top/><bottom style="medium"><color auto="1"/></bottom></border>'  // 3 medium bottom only
     +'</borders>'
     +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-    +'<cellXfs count="24">'
+    +'<cellXfs count="25">'
     // 0: default
     +'<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
     // 1: title (white bold on dark navy)
@@ -6702,6 +6725,8 @@ function dlExcel(){
     +'<xf numFmtId="165" fontId="3" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right"/></xf>'
     // 23: green number alt gray bg percent
     +'<xf numFmtId="165" fontId="3" fillId="5" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right"/></xf>'
+    // 24: bold total LABEL (bold, medium bottom border, left) — text in total rows must not inherit the right-aligned number style
+    +'<xf numFmtId="0" fontId="1" fillId="0" borderId="3" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>'
     +'</cellXfs></styleSheet>';
 
   // Style index constants
@@ -6715,7 +6740,8 @@ function dlExcel(){
     bdN:15,                  // bold total number
     bkP:16, grP:17,          // black percent, green percent
     sub:18, blD:19, note:20, // subtitle, blue date, note
-    bdP:21, grPA:23          // bold total percent, green percent alt
+    bdP:21, grPA:23,         // bold total percent, green percent alt
+    bdL:24                   // bold total label (left)
   };
 
   // ── Cell builders with IB formatting ──
@@ -7767,7 +7793,7 @@ function dlExcel(){
       rows.push('<row>'+c+'</row>');rowN++;
     }
     function rfBoldRow(label,data){
-      let c='<c s="'+S.bdN+'" t="inlineStr"><is><t>'+esc(label)+'</t></is></c>';
+      let c='<c s="'+S.bdL+'" t="inlineStr"><is><t>'+esc(label)+'</t></is></c>';
       let tot=0;
       for(let i=0;i<nq;i++){const v=data[i]||0;tot+=v;c+=vc(v,S.bdN);}
       c+=vc(tot,S.bdN);
@@ -7843,7 +7869,7 @@ function dlExcel(){
     const r=R2,cut=r._cutoffQ||0,ov=(reforecastSettings&&reforecastSettings.assumptionOverrides)||{};const B=R; // B = baseline run for comparison
     const sum=a=>(a||[]).reduce((x,y)=>x+(y||0),0),arr=a=>Array.from({length:nq},(_,i)=>(a&&a[i])||0);
     const qh=()=>{let h=colHdr('Item');for(let i=0;i<nq;i++)h+=colHdr((i<cut?'✓ ':'')+'Q'+(i+1)+' '+fmtDateS(qEndDate(i)));h+=colHdr('Total');return '<row>'+h+'</row>';};
-    const vrow=(label,a,alt,bold)=>{const d=arr(a);let c=bold?tx(label,S.bdN):lbl(label,alt);d.forEach(v=>c+=vc(v,bold?S.bdN:(alt?S.bkNA:S.bkN)));c+=vc(sum(d),bold?S.bdN:(alt?S.bkNA:S.bkN));return '<row>'+c+'</row>';};
+    const vrow=(label,a,alt,bold)=>{const d=arr(a);let c=bold?tx(label,S.bdL):lbl(label,alt);d.forEach(v=>c+=vc(v,bold?S.bdN:(alt?S.bkNA:S.bkN)));c+=vc(sum(d),bold?S.bdN:(alt?S.bkNA:S.bkN));return '<row>'+c+'</row>';};
     const sheet=(name,ttl,groups,w)=>{const rows=['<row>'+title(ttl)+'</row>','<row>'+tx((cut?'✓ = actual (Q1–Q'+cut+'), rest = forecast':'all quarters forecast')+' · fund period '+A.fund_period_months+' months · SAR',S.sub)+'</row>',qh()];
       groups.forEach(g=>{if(g.sec){rows.push('<row>'+secHdr(g.sec)+'</row>');}let k=0;(g.rows||[]).forEach(x=>{rows.push(vrow(x[0],x[1],!x[2]&&(k++%2===1),x[2]));});if(g.gap)rows.push('<row/>');});
       sheets.push({name,rows,cols:colsQ(w||30,15)});};
