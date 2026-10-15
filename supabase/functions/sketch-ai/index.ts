@@ -1,6 +1,6 @@
 // Supabase Edge Function: sketch-ai — turns a fund manager's idea into sandboxed Sketch rules.
 // The Anthropic key lives here (secret ANTHROPIC_API_KEY), never in the browser. Only signed-in users can call it.
-// Deploy:  supabase functions deploy sketch-ai   ·   Secrets:  ANTHROPIC_API_KEY=sk-ant-...  SKETCH_AI_ALLOWED=a@x.com,b@y.com (optional allow-list)
+// Deploy:  supabase functions deploy sketch-ai   ·   Secrets:  ANTHROPIC_API_KEY=sk-ant-...  SKETCH_AI_ALLOWED=a@x.com,b@y.com (optional allow-list)  ANTHROPIC_WORKSPACE_ID=wrkspc_... (only for an org-level key)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
 ${ctx.existingScript ? "Existing rules (extend or replace as the idea requires):\n" + String(ctx.existingScript).slice(0, 4000) + "\n" : ""}Idea (${body.lang === "ar" ? "Arabic" : "English"}): ${idea}`;
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json", ...(Deno.env.get("ANTHROPIC_WORKSPACE_ID") ? { "anthropic-workspace-id": Deno.env.get("ANTHROPIC_WORKSPACE_ID")! } : {}) },
       body: JSON.stringify({ model: MODEL, max_tokens: 1500, system: SYSTEM, messages: [{ role: "user", content: userMsg }] }),
     });
     const j = await r.json();
