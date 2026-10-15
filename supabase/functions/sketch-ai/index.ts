@@ -1,6 +1,6 @@
 // Supabase Edge Function: sketch-ai — turns a fund manager's idea into sandboxed Sketch rules.
 // The Anthropic key lives here (secret ANTHROPIC_API_KEY), never in the browser. Only signed-in users can call it.
-// Deploy:  supabase functions deploy sketch-ai   ·   Secret:  supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+// Deploy:  supabase functions deploy sketch-ai   ·   Secrets:  ANTHROPIC_API_KEY=sk-ant-...  SKETCH_AI_ALLOWED=a@x.com,b@y.com (optional allow-list)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
@@ -24,6 +24,10 @@ Deno.serve(async (req) => {
     const supa = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: auth } } });
     const { data: { user }, error } = await supa.auth.getUser();
     if (error || !user) return new Response(JSON.stringify({ error: "not signed in" }), { status: 401, headers: { ...CORS, "Content-Type": "application/json" } });
+    // Allow-list: secret SKETCH_AI_ALLOWED = comma-separated emails. When set, only those users may call the function.
+    const allowed = (Deno.env.get("SKETCH_AI_ALLOWED") || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (allowed.length && !allowed.includes(String(user.email || "").toLowerCase()))
+      return new Response(JSON.stringify({ error: "not allowed" }), { status: 403, headers: { ...CORS, "Content-Type": "application/json" } });
     const key = Deno.env.get("ANTHROPIC_API_KEY");
     if (!key) return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY is not set" }), { status: 500, headers: { ...CORS, "Content-Type": "application/json" } });
     const body = await req.json();
