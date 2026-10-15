@@ -805,7 +805,7 @@ canvas{max-width:100%;display:block}
   <div id="reforecastPanel" style="display:none"></div>
 </main>
 <div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span>💳</span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
-<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only</div>
+<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-16</span></div>
 </div><!-- end appMain -->
 
 <script>
@@ -1380,7 +1380,7 @@ function closeShareModal(){
 function stripDefaults(obj,def){const r={};for(const k in obj){if(obj[k]!==def[k]) r[k]=obj[k];}return r;}
 function stripZero(obj){const r={};for(const k in obj){const v=obj[k];if(v===0||v===''||v===null||v===undefined) continue;if(Array.isArray(v)&&v.length===0) continue;r[k]=v;}return r;}
 // Short key maps for D (fund-level) to reduce link size
-const _DK={fund_name:'fn',is_fund:'if',project_location:'pl',project_type:'pt',fund_period_months:'fpm',start_date:'sd',num_projects:'np',custody_annual:'ca',custody_freq:'cf',spv_setup:'ss',fund_setup:'fs',auditor_annual:'aa',auditor_freq:'af',sharia_annual:'sa',sharia_freq:'sf',engineering_annual:'ea',engineering_freq:'ef',board_annual:'ba',board_freq:'bf',fin_advisor:'fa',mgmt_fee_mode:'mfm',mgmt_fee_pct:'mfp',mgmt_fee_fixed:'mff',marketing_cost:'mc',marketing_date:'md',vat_rate:'vr',vat_refund:'vrf',vat_refund_months:'vrm',vat_advisor_pct:'vap',hurdle_rate:'hr',perf_fee_pct:'pfp',bank_mgmt_pct:'bmp',ik_land_pct:'ilp',ik_brok_pct:'ibp',ik_dev_pct:'idp',ik_mkt_pct:'imp',ik_con_pct:'icp',ik_sell_pct:'isp',equity:'eq',gp_commit_cash:'gcc',gp_commit_inkind_pct:'gip',saibor:'sb',margin:'mg',arr_fee_pct:'afp',min_cash:'mnc',vat_refund_con:'vrc',rett_pct:'rtp'};
+const _DK={fund_name:'fn',is_fund:'if',project_location:'pl',project_type:'pt',fund_period_months:'fpm',start_date:'sd',num_projects:'np',custody_annual:'ca',custody_freq:'cf',spv_setup:'ss',fund_setup:'fs',auditor_annual:'aa',auditor_freq:'af',sharia_annual:'sa',sharia_freq:'sf',engineering_annual:'ea',engineering_freq:'ef',board_annual:'ba',board_freq:'bf',fin_advisor:'fa',mgmt_fee_mode:'mfm',mgmt_fee_pct:'mfp',mgmt_fee_fixed:'mff',marketing_cost:'mc',marketing_date:'md',vat_rate:'vr',vat_refund:'vrf',vat_refund_months:'vrm',vat_advisor_pct:'vap',hurdle_rate:'hr',perf_fee_pct:'pfp',bank_mgmt_pct:'bmp',ik_land_pct:'ilp',ik_brok_pct:'ibp',ik_dev_pct:'idp',ik_mkt_pct:'imp',ik_con_pct:'icp',ik_sell_pct:'isp',equity:'eq',gp_commit_cash:'gcc',gp_commit_inkind_pct:'gip',gp_commit_inkind_cap:'gic',saibor:'sb',margin:'mg',arr_fee_pct:'afp',min_cash:'mnc',vat_refund_con:'vrc',rett_pct:'rtp'};
 const _DKR={};for(const k in _DK) _DKR[_DK[k]]=k;
 function compactD(obj){const r={};for(const k in obj){r[_DK[k]||k]=obj[k];}return r;}
 function expandD(obj){const r={};for(const k in obj){const kk=_DKR[k]||k;if(isUnsafeKey(k)||isUnsafeKey(kk)) continue;r[kk]=obj[k];}return r;}
@@ -1675,7 +1675,7 @@ const D={
   vat_rate:15, vat_refund:0, vat_refund_months:6, vat_advisor_pct:3,
   hurdle_rate:15, perf_fee_pct:35, bank_mgmt_pct:1,
   ik_land_pct:60, ik_brok_pct:0, ik_dev_pct:0, ik_mkt_pct:0, ik_con_pct:0, ik_sell_pct:0,
-  equity:17470731, gp_commit_cash:0, gp_commit_inkind_pct:0,
+  equity:17470731, gp_commit_cash:0, gp_commit_inkind_pct:0, gp_commit_inkind_cap:0,
   saibor:6.8, margin:2, arr_fee_pct:1, min_cash:500000,
 };
 
@@ -1815,7 +1815,7 @@ const TX={
       hurdle:'Hurdle Rate % (Annual)',perfFee:'Performance Fee %',
       sellAreaAuto:'Sellable Area (sqm) (Auto)',salePriceAuto:'Sale Price per sqm (SAR) (Auto)',
       wafi:'WAFI %',sellExp:'Commission Fees %',
-      equity:'Investor Equity (SAR)',gpCommitCash:'GP Cash Commitment (SAR)',gpCommitInkind:'GP In-Kind % of Mgmt Fees',ikLand:'In-Kind Land %',ikBrok:'In-Kind Brokerage %',ikDev:'In-Kind Developer %',
+      equity:'Investor Equity (SAR)',gpCommitCash:'GP Cash Commitment (SAR)',gpCommitInkind:'GP In-Kind % of Mgmt Fees',gpCommitInkindCap:'GP In-Kind cap (SAR, total; 0 = no cap)',ikLand:'In-Kind Land %',ikBrok:'In-Kind Brokerage %',ikDev:'In-Kind Developer %',
       ikCon:'In-Kind Contractor %',ikMkt:'In-Kind Marketing %',ikSell:'In-Kind Commission %',
       saibor:'SAIBOR %',margin:'Margin %',arrFee:'Arrangement Fee %',
       bankMgmt:'Bank Mgmt Fee % (One-Time)',minCash:'Min Cash Reserve (SAR)',
@@ -1901,7 +1901,7 @@ const TX={
       hurdle:'معدل العائد المستهدف % (سنوي)',perfFee:'رسوم الأداء %',
       sellAreaAuto:'المساحة القابلة للبيع (م²) (تلقائي)',salePriceAuto:'سعر البيع / م² (ريال) (تلقائي)',
       wafi:'رسوم وافي %',sellExp:'نسبة السعي %',
-      equity:'رأس مال المستثمرين (ريال)',gpCommitCash:'استثمار مدير الصندوق النقدي (ريال)',gpCommitInkind:'% عيني من رسوم الإدارة',ikLand:'حصة عينية أرض %',ikBrok:'حصة عينية سعي %',ikDev:'حصة عينية مطور %',
+      equity:'رأس مال المستثمرين (ريال)',gpCommitCash:'استثمار مدير الصندوق النقدي (ريال)',gpCommitInkind:'% عيني من رسوم الإدارة',gpCommitInkindCap:'سقف المساهمة العينية لمدير الصندوق (ريال، إجمالي؛ 0 = بلا سقف)',ikLand:'حصة عينية أرض %',ikBrok:'حصة عينية سعي %',ikDev:'حصة عينية مطور %',
       ikCon:'حصة عينية مقاول %',ikMkt:'حصة عينية تسويق %',ikSell:'حصة عينية نسبة السعي %',
       saibor:'سايبور %',margin:'الهامش %',arrFee:'رسوم الترتيب %',
       bankMgmt:'رسوم إدارة البنك % (لمرة واحدة)',minCash:'الحد الأدنى للنقد (ريال)',
@@ -2079,7 +2079,8 @@ function buildForm(){
   let capSec=`<div class="sec"><div class="sec-t">${TX[lang].s[5]}</div>
     ${fld('equity',F.equity,D.equity)}
     ${_isFund?`${fld('gp_commit_cash',F.gpCommitCash||'GP Cash Commitment (SAR)',D.gp_commit_cash)}
-    ${fld('gp_commit_inkind_pct',F.gpCommitInkind||'GP In-Kind % of Mgmt Fees',D.gp_commit_inkind_pct)}`:''}
+    ${fld('gp_commit_inkind_pct',F.gpCommitInkind||'GP In-Kind % of Mgmt Fees',D.gp_commit_inkind_pct)}
+    ${fld('gp_commit_inkind_cap',F.gpCommitInkindCap||'GP In-Kind cap (SAR, 0 = none)',D.gp_commit_inkind_cap||0)}`:''}
     ${fld('ik_land_pct',F.ikLand,D.ik_land_pct)}
     ${fld('ik_brok_pct',F.ikBrok,D.ik_brok_pct)}
     ${fld('ik_dev_pct',F.ikDev,D.ik_dev_pct)}
@@ -2696,7 +2697,7 @@ function calculate(){
     }
 
     // GP In-Kind = % of mgmt fee added back as in-kind equity. Reset qIKTotal so debt sizing accounts for it.
-    for(let qi=0;qi<nq;qi++) qIKTotal[qi]=qIKBase[qi]+(isFund?qMgmtFee[qi]*gpIKPct:0);
+    {let _gpLeft=Number(A.gp_commit_inkind_cap)>0?Number(A.gp_commit_inkind_cap):Infinity;for(let qi=0;qi<nq;qi++){const g=isFund?Math.min(qMgmtFee[qi]*gpIKPct,_gpLeft):0;_gpLeft-=g;qIKTotal[qi]=qIKBase[qi]+g;}} // GP share of the fee, capped at the committed in-kind amount
 
     // Expense VAT — Interest EXCLUDED (bank loan interest is VAT-exempt in KSA)
     for(let qi=0;qi<nq;qi++){
@@ -2808,7 +2809,7 @@ function calculate(){
 
   // GP In-Kind: GP contributes back a % of management fees as in-kind equity.
   // gpIKPct already defined earlier. RESET (not add) to avoid double-counting since iter loop already set it.
-  for(let qi=0;qi<nq;qi++) qIKTotal[qi]=qIKBase[qi]+(isFund?qMgmtFee[qi]*gpIKPct:0);
+  {let _gpLeft=Number(A.gp_commit_inkind_cap)>0?Number(A.gp_commit_inkind_cap):Infinity;for(let qi=0;qi<nq;qi++){const g=isFund?Math.min(qMgmtFee[qi]*gpIKPct,_gpLeft):0;_gpLeft-=g;qIKTotal[qi]=qIKBase[qi]+g;}} // GP share of the fee, capped at the committed in-kind amount
 
   for(let qi=0;qi<nq;qi++){
     // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
@@ -2933,7 +2934,7 @@ function calculate(){
 
   // Capital structure — how totalCost is financed
   // Sources: Cash Equity + In-Kind + Off-Plan Sales + Debt = totalCost
-  const gpInKindAmt=(A.gp_commit_inkind_pct||0)/100*qMgmtFee.reduce((a,b)=>a+b,0);
+  const gpInKindAmt=Math.min((A.gp_commit_inkind_pct||0)/100*qMgmtFee.reduce((a,b)=>a+b,0),Number(A.gp_commit_inkind_cap)>0?Number(A.gp_commit_inkind_cap):Infinity);
   const capCash=A.equity+gpCash;
   const capInKind=totalIK;
   const capDebt=totalDebt;
@@ -3338,6 +3339,15 @@ function renderCashFlow(){
   h+=tr(L.netBorrow,qNetBorrow);
   h+=tr(L.equity,r.qEquity);
   h+=tr(L.inKind,r.qIKTotal);
+  { // in-kind by source (sub-rows): the total above = land + brokerage + developer fee + construction + marketing + selling + GP share of the management fee
+    const ar=lang==='ar',z=Array(nq).fill(0),g=k=>r[k]||z,parts=[['Land','الأرض',g('qIKLand')],['Brokerage','السعي',g('qIKBrok')],['Developer fee','رسوم التطوير',g('qIKDev')],['Construction','البناء',g('qIKCon')],['Marketing','التسويق',g('qIKMkt')],['Selling','عمولات البيع',g('qIKSell')]];
+    const known=Array.from({length:nq},(_,i)=>parts.reduce((a,p)=>a+(p[2][i]||0),0));const gpRow=r.qIKTotal.map((v,i)=>v-known[i]);
+    const A_=r.A||D,pk={Land:'ik_land_pct',Brokerage:'ik_brok_pct','Developer fee':'ik_dev_pct',Construction:'ik_con_pct',Marketing:'ik_mkt_pct',Selling:'ik_sell_pct'};
+    parts.forEach(([en,a,arr])=>{if(arr.some(v=>Math.abs(v)>0.5))h+=sub('↳ '+(ar?a:en)+' · '+(Number(A_[pk[en]])||0)+'%',arr);});
+    const gpPct=pct(A_.gp_commit_inkind_pct||0);let gpLeft=Number(A_.gp_commit_inkind_cap)>0?Number(A_.gp_commit_inkind_cap):Infinity;const gpProper=(r.qMgmtFee||z).map(v=>{const g=Math.min(v*gpPct,Math.max(0,gpLeft));gpLeft-=g;return g;});const rest=gpRow.map((v,i)=>v-gpProper[i]);
+    if(gpProper.some(v=>Math.abs(v)>0.5))h+=sub('↳ '+(ar?'رسوم الإدارة (حصة المدير)':'Management fee (GP share)')+' · '+(Number(A_.gp_commit_inkind_pct)||0)+'%',gpProper);
+    if(rest.some(v=>Math.abs(v)>0.5))h+=sub('↳ '+(isRF?(ar?'تسوية الأرباع المقفلة (المستحق − المسجّل)':'Catch-up for closed quarters (entitled − booked)'):(ar?'أخرى':'Other')),rest);
+  }
   h+=tr(L.dividends,r.qDividends.map(v=>-v));
   h+=sub(L.netFin,r.qNetFin);
 
@@ -4963,9 +4973,16 @@ function _rfRebuildIK(RX,cut,rfLand,rfBrok){
   for(let i=0;i<cut;i++){const c=comp(i);KINDS.forEach(k=>ent[k]+=c[k]);}
   if(RX._finStrict){actuals.filter(p=>p.include!==false&&p.category==='equity_ik'&&p.quarter<cut).forEach(p=>{const a=Number(p.amount)||0;bookedTot+=a;const k=String(p.component||'').replace(/^ik:/,'');if(booked[k]!==undefined)booked[k]+=a;else unalloc+=a;});}
   else{for(let i=0;i<cut;i++)setQ(i,comp(i));KINDS.forEach(k=>booked[k]=ent[k]);bookedTot=KINDS.reduce((a,k)=>a+booked[k],0);} // nothing recorded yet: assume in-kind was taken as its percentage of what was actually paid
-  for(let i=cut;i<nq;i++)setQ(i,comp(i));
+  { // GP share is capped at the committed in-kind amount (cumulative over the fund)
+    const cap=Number(A.gp_commit_inkind_cap)>0?Number(A.gp_commit_inkind_cap):Infinity;
+    if(!RX._finStrict){let left=cap;ent.gp=0;for(let i=0;i<cut;i++){const c=comp(i);c.gp=Math.min(c.gp,Math.max(0,left));left-=c.gp;ent.gp+=c.gp;setQ(i,c);}booked.gp=ent.gp;bookedTot=KINDS.reduce((a,k)=>a+booked[k],0);}
+    else{ent.gp=Math.min(ent.gp,cap);}
+    // after the catch-up the closed quarters will carry max(entitled, booked); the open quarters get whatever is left of the cap
+    let left=cap-Math.max(ent.gp,booked.gp);
+    for(let i=cut;i<nq;i++){const c=comp(i);c.gp=Math.min(c.gp,Math.max(0,left));left-=c.gp;setQ(i,c);} }
   const expected=KINDS.reduce((a,k)=>a+ent[k],0);
-  RX._ikByKind=KINDS.map(k=>({kind:k,entitled:ent[k],booked:booked[k],diff:ent[k]-booked[k],open:Array.from({length:nq-cut},(_,j)=>comp(cut+j)[k]).reduce((a,b)=>a+b,0)}));
+  const arrOf={land:RX.qIKLand,brok:RX.qIKBrok,dev:RX.qIKDev,con:RX.qIKCon,mkt:RX.qIKMkt,sell:RX.qIKSell};
+  RX._ikByKind=KINDS.map(k=>({kind:k,entitled:ent[k],booked:booked[k],diff:ent[k]-booked[k],open:Array.from({length:nq-cut},(_,j)=>k==='gp'?(RX.qIKTotal[cut+j]-KINDS.filter(x=>x!=='gp').reduce((a,x)=>a+arrOf[x][cut+j],0)):arrOf[k][cut+j]).reduce((a,b)=>a+b,0)}));
   RX._ikUnallocated=unalloc;RX._ikExpectedClosed=expected;RX._ikBookedClosed=bookedTot;
   let catchUp=cut>0?expected-bookedTot:0;RX._ikCatchUp=catchUp; // unallocated rows count towards the total so the cash picture stays right; the per-kind table shows what still needs tagging
   for(let i=cut;i<nq&&Math.abs(catchUp)>0.005;i++){const add=catchUp>0?catchUp:Math.max(catchUp,-(RX.qIKTotal[i]||0));RX.qIKTotal[i]+=add;catchUp-=add;}
@@ -5083,6 +5100,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
+const BUILD='2026-10-16';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -5267,7 +5285,7 @@ function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings
 
 // Forward parameters that may change during the life of the fund (key, label en, label ar, kind)
 const OPS_FIELDS=[['fund_period_months','Fund term (months)','مدة الصندوق (أشهر)'],['saibor','SAIBOR %','سايبور %'],['margin','Bank margin %','هامش البنك %'],['min_cash','Minimum cash balance','الحد الأدنى للرصيد النقدي'],
-  ['mgmt_fee_fixed','Management fee (fixed, annual)','رسوم الإدارة (ثابت سنوي)'],['mgmt_fee_pct','Management fee %','رسوم الإدارة %'],['hurdle_rate','Hurdle rate %','العائد المطلوب %'],['perf_fee_pct','Performance fee %','رسوم الأداء %'],
+  ['mgmt_fee_fixed','Management fee (fixed, annual)','رسوم الإدارة (ثابت سنوي)'],['gp_commit_inkind_cap','GP in-kind cap (SAR)','سقف المساهمة العينية للمدير'],['mgmt_fee_pct','Management fee %','رسوم الإدارة %'],['hurdle_rate','Hurdle rate %','العائد المطلوب %'],['perf_fee_pct','Performance fee %','رسوم الأداء %'],
   ['vat_refund_months','VAT refund period (months)','فترة الاسترداد الضريبي (أشهر)'],['custody_annual','Custody (annual)','رسوم الحفظ (سنوي)'],['auditor_annual','Auditor (annual)','المحاسب القانوني (سنوي)'],['engineering_annual','Engineering consultant (annual)','الاستشاري الهندسي (سنوي)'],
   ['board_annual','Board compensation (annual)','مكافآت مجلس الإدارة (سنوي)'],['marketing_cost','Marketing (total)','التسويق (إجمالي)'],['equity','Cash equity (top-up allowed)','رأس المال النقدي']];
 
@@ -6875,7 +6893,7 @@ function dlExcel(){
   rows.push('<row/>');                                                               // 77
   rows.push('<row>'+secHdr('GP COMMITMENT')+'</row>');                               // 78
   rows.push('<row>'+lbl('GP Cash Commitment (SAR)',0)+blueNum(A.gp_commit_cash||0)+'</row>'); // 79
-  rows.push('<row>'+lbl('GP In-Kind % of Mgmt Fees',1)+bluePct((A.gp_commit_inkind_pct||0)/100)+'</row>'); // 80
+  rows.push('<row>'+lbl('GP In-Kind % of Mgmt Fees',1)+bluePct((A.gp_commit_inkind_pct||0)/100)+(Number(A.gp_commit_inkind_cap)>0?tx('capped at SAR '+Math.round(A.gp_commit_inkind_cap).toLocaleString('en-US')+' in total',S.lblA):'')+'</row>'); // 80
   // forecast overrides (Operations → Forecast & Scenarios): what the Reforecast CF sheet was run with
   {const ov=(reforecastSettings&&reforecastSettings.assumptionOverrides)||{};const keys=Object.keys(ov);
     if(keys.length&&R2&&R2._isReforecast){rows.push('<row/>');rows.push('<row>'+secHdr('FORECAST OVERRIDES (Operations)')+tx('Baseline',S.secHdr)+tx('Forecast',S.secHdr)+'</row>');
@@ -8238,7 +8256,7 @@ function calcWith(overrides){
       qTotalFundExp[qi]=baseExp+qMgmtFee[qi];
     }
     // GP In-Kind = % of mgmt fee added back as in-kind. Reset qIKTotal so debt sizing accounts for it.
-    for(let qi=0;qi<nq;qi++) qIKTotal[qi]=qIKBase[qi]+(isFund?qMgmtFee[qi]*gpIKPct:0);
+    {let _gpLeft=Number(A.gp_commit_inkind_cap)>0?Number(A.gp_commit_inkind_cap):Infinity;for(let qi=0;qi<nq;qi++){const g=isFund?Math.min(qMgmtFee[qi]*gpIKPct,_gpLeft):0;_gpLeft-=g;qIKTotal[qi]=qIKBase[qi]+g;}} // GP share of the fee, capped at the committed in-kind amount
     // Expense VAT — Interest EXCLUDED (bank loan interest is VAT-exempt in KSA)
     for(let qi=0;qi<nq;qi++){const _vb=qTotalFundExp[qi]-(Number(A.board_vat)?0:qBoard[qi]);qExpVAT[qi]=_vb-_vb/V;}
     qVATRefundExp.fill(0);
@@ -8336,7 +8354,7 @@ function calcWith(overrides){
     qVATNet[qi]=totalRef-qVATAdvisor[qi];
   }
   // GP In-Kind in calcWith — gpIKPct already defined above. RESET to avoid double-counting (iter loop already added).
-  for(let qi=0;qi<nq;qi++) qIKTotal[qi]=qIKBase[qi]+(isFund?qMgmtFee[qi]*gpIKPct:0);
+  {let _gpLeft=Number(A.gp_commit_inkind_cap)>0?Number(A.gp_commit_inkind_cap):Infinity;for(let qi=0;qi<nq;qi++){const g=isFund?Math.min(qMgmtFee[qi]*gpIKPct,_gpLeft):0;_gpLeft-=g;qIKTotal[qi]=qIKBase[qi]+g;}} // GP share of the fee, capped at the committed in-kind amount
 
   for(let qi=0;qi<nq;qi++){
     // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
