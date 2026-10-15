@@ -8,7 +8,7 @@
 - `supabase/schema.sql` applied (projects, project_versions, actuals + RLS). Automatic RLS is on for new tables.
 - Email provider on, magic link / OTP available. Site URL `https://abdulazizssr-code.github.io/re-fund-platform/`; redirect URLs: that + `/**` and `http://localhost:5173/**`.
 - Hosting: GitHub Pages, repo `abdulazizssr-code/re-fund-platform` (public), file `index.html` at the root = `dist/index.html` from `python3 scripts/build-static.py`.
-- First user invited: abdulazizssr@gmail.com — accept the invitation email once.
+- First user invited by email from the dashboard — accept the invitation email once.
 
 The original step-by-step guide is kept below for reference / a second project.
 
@@ -68,6 +68,8 @@ The Sketch tab's "Turn the idea above into rules" button calls `https://<project
 Setup (once, from a machine with the Supabase CLI logged in to the project):
 1. `supabase functions deploy sketch-ai` (source: `supabase/functions/sketch-ai/index.ts`).
 2. `supabase secrets set ANTHROPIC_API_KEY=sk-ant-...` — optional: `SKETCH_AI_MODEL=claude-sonnet-4-5`.
+   Also set `SKETCH_AI_ALLOWED=you@example.com,other@example.com` (comma-separated emails). When this secret is set, only those signed-in users can call the function; anyone else gets 403. Leave it unset only while testing.
+   Also put a monthly spend limit on the key in the Anthropic console (Settings → Limits) so abuse is capped.
 3. Dashboard → Edge Functions → sketch-ai → keep "Verify JWT" on (the function also checks the user itself).
 Cost: one model call per click (a few cents). Remove: delete the function and the secret; the button then reports "AI service failed" and everything else keeps working.
 To point the app at a different URL (e.g. a self-hosted function) set `localStorage.sketchAiUrl` in the browser.
