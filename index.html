@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <title>RE Fund Financial Study</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;500;600&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=DM+Serif+Display&family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;500;600&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@emran-alhaddad/saudi-riyal-font/index.css" rel="stylesheet">
 <!-- Firebase SDK (compat mode for single-file apps) -->
+<script>try{if(localStorage.theme==='gulf')document.documentElement.dataset.theme='gulf'}catch(e){}</script>
 <style>
 :root{
   /* Desert Oasis Editorial — Rich Oasis Palette */
@@ -678,6 +679,89 @@ canvas{max-width:100%;display:block}
 .proj-sub-tab{padding:6px 14px;border:1px solid var(--outline);border-radius:var(--radius);background:var(--surface);cursor:pointer;font-size:13px;transition:var(--t)}
 .proj-sub-tab:hover{background:var(--surface-cl);border-color:var(--primary)}
 .proj-sub-tab.act{background:var(--primary);color:var(--primary-on);border-color:var(--primary);font-weight:600}
+
+/* ═══ THEME: GULF (Direction C — optional skin, removable: delete this block, the .btn-theme button and toggleTheme()) ═══ */
+html[data-theme=gulf]{
+  --primary:#0f4d3f;--primary-c:#1b6b58;--primary-on:#ffffff;
+  --secondary:#b58a3a;--secondary-l:#c99c4a;--secondary-on:#ffffff;
+  --surface:#f4efe6;--surface-cl:#ece5d8;--surface-ch:#e3dccd;--surface-cw:#ffffff;
+  --on-surface:#1f2a26;--on-surface-v:#55615b;--on-surface-vl:#6c766f;
+  --outline:#e3dccd;--outline-v:#eee8dc;
+  --error:#b3432f;--success:#1b6b58;
+  --radius:14px;--radius-s:10px;--shadow:none;--shadow-l:none;
+  --g-soft:#e4efea;--g-gold-soft:#f5ecd9;--g-serif:'DM Serif Display',Georgia,'Noto Serif',serif;
+}
+html[data-theme=gulf] body{background:var(--surface);color:var(--on-surface)}
+/* header + project bar become one sand band */
+html[data-theme=gulf] .hdr{background:var(--surface);color:var(--on-surface);border-bottom:none;height:64px}
+html[data-theme=gulf] .hdr-logo{background:var(--primary);border-color:var(--primary);backdrop-filter:none}
+html[data-theme=gulf] .hdr h1{font-family:var(--g-serif);font-weight:400;font-size:1.25rem;color:var(--primary);letter-spacing:0}
+html[data-theme=gulf] .hdr-sub{color:var(--on-surface-vl);text-transform:none;letter-spacing:0;font-size:.78rem}
+html[data-theme=gulf] .user-badge{color:var(--on-surface-v)}
+html[data-theme=gulf] .hdr-btns button,html[data-theme=gulf] .project-bar button,html[data-theme=gulf] .baseline-bar button{border-radius:999px;padding:8px 16px;font-size:.84rem;font-weight:600}
+html[data-theme=gulf] .btn-lang,html[data-theme=gulf] .btn-dl,html[data-theme=gulf] .btn-logout{background:#fff;color:var(--on-surface);border:1px solid var(--outline)!important;letter-spacing:0}
+html[data-theme=gulf] .btn-dl:hover,html[data-theme=gulf] .btn-lang:hover{background:var(--surface-cl);color:var(--primary)}
+html[data-theme=gulf] .btn-theme{background:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important}
+html[data-theme=gulf] .project-bar{background:var(--surface);border-bottom:1px solid var(--outline);top:64px}
+html[data-theme=gulf] .project-bar select{border-radius:999px;border:1px solid var(--outline);background:#fff;padding:7px 14px}
+html[data-theme=gulf] .project-bar .proj-new,html[data-theme=gulf] .project-bar .proj-save,html[data-theme=gulf] .project-bar .proj-del{background:#fff;color:var(--on-surface);border:1px solid var(--outline)}
+html[data-theme=gulf] .project-bar .proj-del:hover{color:var(--error);border-color:var(--error)}
+html[data-theme=gulf] .project-bar .btn-calc,html[data-theme=gulf] .btn-calc{background:var(--primary);color:#fff;border-radius:999px;letter-spacing:0;box-shadow:none}
+html[data-theme=gulf] .btn-calc:hover{background:var(--primary-c)}
+html[data-theme=gulf] .ws-switch{background:var(--surface-ch);border-radius:999px}
+html[data-theme=gulf] .ws-switch button{border-radius:999px;color:var(--on-surface-v)}
+html[data-theme=gulf] .ws-switch button.act{background:var(--primary);color:#fff}
+/* pill tabs */
+html[data-theme=gulf] .tabs,html[data-theme=gulf] .ops-nav{background:var(--surface);border-bottom:none;gap:4px;padding-top:6px;padding-bottom:6px}
+html[data-theme=gulf] .tab,html[data-theme=gulf] .ops-nav button{border:none;border-radius:999px;padding:8px 14px;font-weight:600;color:var(--on-surface-v)}
+html[data-theme=gulf] .tab:hover:not(:disabled),html[data-theme=gulf] .ops-nav button:hover{background:var(--surface-ch);color:var(--primary)}
+html[data-theme=gulf] .tab.act,html[data-theme=gulf] .ops-nav button.on{background:#fff;color:var(--primary);box-shadow:0 1px 2px rgba(31,42,38,.08);font-weight:700}
+html[data-theme=gulf] .ops-period{background:var(--surface-cl);border-bottom:1px solid var(--outline);box-shadow:none}
+html[data-theme=gulf] .ops-view{border-radius:999px;background:var(--surface-ch)}
+html[data-theme=gulf] .view-stamp .vs-sw a.on{background:var(--primary)}
+/* cards: flat white, generous radius, serif headings */
+html[data-theme=gulf] .sec,html[data-theme=gulf] .ch-card,html[data-theme=gulf] .tbl-wrap,html[data-theme=gulf] .ops-card,html[data-theme=gulf] .kpi,html[data-theme=gulf] .ops-kpi,html[data-theme=gulf] .ds-item,html[data-theme=gulf] .sens-kpi,html[data-theme=gulf] .hm-wrap,html[data-theme=gulf] .act-section,html[data-theme=gulf] .rfcs-panel,html[data-theme=gulf] .scenario-wrap,html[data-theme=gulf] .sch-wrap,html[data-theme=gulf] .act-sum-card,html[data-theme=gulf] .import-method{background:#fff;border:none;box-shadow:none;border-radius:var(--radius)}
+html[data-theme=gulf] .sec-t,html[data-theme=gulf] .ch-card h3,html[data-theme=gulf] .tbl-wrap h3,html[data-theme=gulf] .ops-card h3,html[data-theme=gulf] .sch-wrap h3,html[data-theme=gulf] .scenario-wrap h3,html[data-theme=gulf] .sens-sidebar h3,html[data-theme=gulf] .hm-wrap h3,html[data-theme=gulf] .act-section h2,html[data-theme=gulf] .rfcs-panel h3{font-family:var(--g-serif);font-weight:400;font-size:1.15rem;color:var(--primary);letter-spacing:0}
+html[data-theme=gulf] .sec-t::before,html[data-theme=gulf] .ch-card h3::before,html[data-theme=gulf] .tbl-wrap h3::before,html[data-theme=gulf] .sch-wrap h3::before,html[data-theme=gulf] .scenario-wrap h3::before,html[data-theme=gulf] .sens-sidebar h3::before,html[data-theme=gulf] .act-section h2::before{display:none}
+html[data-theme=gulf] .sec-t{border-bottom:1px solid var(--outline-v)}
+/* KPI tiles: left aligned, serif numerals */
+html[data-theme=gulf] .kpi{text-align:start;padding:18px 20px}
+html[data-theme=gulf] .kpi-v,html[data-theme=gulf] .ds-val,html[data-theme=gulf] .ops-kpi b,html[data-theme=gulf] .sens-kpi .sv{font-family:var(--g-serif);font-weight:400;font-size:1.7rem;color:var(--primary);letter-spacing:0;font-variant-numeric:tabular-nums;line-height:1.1}
+html[data-theme=gulf] .kpi-l,html[data-theme=gulf] .ds-lbl,html[data-theme=gulf] .ops-kpi small,html[data-theme=gulf] .ops-stat small{font-size:.68rem;letter-spacing:.1em;color:var(--on-surface-vl);font-weight:700}
+html[data-theme=gulf] .kpi-l{order:-1;margin-bottom:6px;display:block}
+html[data-theme=gulf] .kpi{display:flex;flex-direction:column}
+/* forms */
+html[data-theme=gulf] .frow input,html[data-theme=gulf] .frow select,html[data-theme=gulf] .act-form input,html[data-theme=gulf] .act-form select,html[data-theme=gulf] .act-form textarea,html[data-theme=gulf] .rfcs-field select,html[data-theme=gulf] .rfcs-field input,html[data-theme=gulf] .act-filters select,html[data-theme=gulf] .act-filters input{background:var(--surface);border:1px solid var(--outline);border-radius:10px}
+html[data-theme=gulf] .frow input:focus,html[data-theme=gulf] .frow select:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px var(--g-soft)}
+html[data-theme=gulf] .frow input[readonly]{background:var(--surface-cl);color:var(--on-surface-v)}
+/* tables: one quiet header style, green totals, sand actual columns */
+html[data-theme=gulf] .dt th,html[data-theme=gulf] .sch-tbl th,html[data-theme=gulf] .scenario-tbl th,html[data-theme=gulf] .rfcs-tbl th,html[data-theme=gulf] .act-bva th,html[data-theme=gulf] .act-log th,html[data-theme=gulf] .import-review th,html[data-theme=gulf] .cx-tbl thead th{background:#fff!important;color:var(--on-surface-v)!important;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-bottom:2px solid var(--outline)}
+html[data-theme=gulf] .dt th:first-child,html[data-theme=gulf] .dt th:last-child{border-radius:0}
+html[data-theme=gulf] .dt td,html[data-theme=gulf] .rfcs-tbl td,html[data-theme=gulf] .cx-tbl td{border-bottom:1px solid var(--outline-v)}
+html[data-theme=gulf] .dt .rl{box-shadow:none;border-right:1px solid var(--outline)}
+html[data-theme=gulf] .dt tbody tr:hover td:not(.rl){background:var(--surface)}
+html[data-theme=gulf] .dt .bld td,html[data-theme=gulf] .dt .sub td,html[data-theme=gulf] .rfcs-tbl tr.tot td,html[data-theme=gulf] .cx-tbl tr.tot td,html[data-theme=gulf] .sch-tbl .tot,html[data-theme=gulf] .act-bva .act-sect-total td{background:var(--g-soft);color:var(--primary);font-family:'Manrope',system-ui,sans-serif;font-weight:700}
+html[data-theme=gulf] .cx-grp td{background:var(--surface-cl);border-top:none;color:var(--primary)}
+html[data-theme=gulf] .cx-sub td,html[data-theme=gulf] .cx-pay td{background:#fff}
+html[data-theme=gulf] .rfcs-hdr-actual{background:var(--surface-cl)!important;color:var(--primary)!important}
+html[data-theme=gulf] .rfcs-actual{background:var(--surface)!important}
+html[data-theme=gulf] .rfcs-tbl tr:nth-child(even){background:#fff}
+html[data-theme=gulf] .ops-pill.good{background:var(--g-soft);color:var(--primary)}
+html[data-theme=gulf] .ops-pill.warn{background:var(--g-gold-soft);color:#6d5320}
+html[data-theme=gulf] .view-stamp.fc{background:var(--g-gold-soft);border-color:#e6d6ad;color:#6d5320}
+/* login: green hero with lattice */
+html[data-theme=gulf] .login-overlay{background:var(--surface)}
+html[data-theme=gulf] .login-brand{background-color:var(--primary);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cpath d='M28 2 L54 28 L28 54 L2 28 Z M28 16 L40 28 L28 40 L16 28 Z' fill='none' stroke='%23fff' stroke-opacity='.06'/%3E%3C/svg%3E");background-size:56px 56px}
+html[data-theme=gulf] .login-btn{background:var(--primary);border-radius:999px}
+html[data-theme=gulf] .login-field input{border-radius:10px}
+/* executive summary pages: green masthead, gold accent, serif display */
+html[data-theme=gulf] .es-page{--es-primary:#0f4d3f;--es-primary-ctr:#b58a3a;--es-secondary:#0f4d3f;--es-surface:#fbf9f4;--es-surface-low:#f4efe6;--es-gold-grad:linear-gradient(135deg,#0f4d3f,#1b6b58);--es-font-display:'DM Serif Display',Georgia,serif}
+html[data-theme=gulf] .es-hdr{background-color:var(--primary)!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cpath d='M28 2 L54 28 L28 54 L2 28 Z M28 16 L40 28 L28 40 L16 28 Z' fill='none' stroke='%23fff' stroke-opacity='.13'/%3E%3C/svg%3E");background-size:56px 56px}
+html[data-theme=gulf] .es-hdr h1{font-weight:400;font-size:17px}
+html[data-theme=gulf] .dt td{padding:6px 14px}
+html[data-theme=gulf] .btn-theme{font-size:.8rem;padding:8px 12px!important}
+html[data-theme=gulf] .footer{background:var(--surface-cl);color:var(--on-surface-v)}
+/* ═══ END THEME ═══ */
 </style>
 </head>
 <body>
@@ -777,6 +861,7 @@ canvas{max-width:100%;display:block}
   <div class="hdr-btns">
     <span class="user-badge" id="userBadge"></span>
     <button class="btn-lang" data-no-i18n onclick="toggleLang()">العربية</button>
+    <button class="btn-lang btn-theme" data-no-i18n onclick="toggleTheme()" title="Switch look (Gulf theme)">◐ Theme</button>
     <button class="btn-dl" id="btnDL" onclick="dlExcel()">Excel</button>
     <button class="btn-dl" id="btnPDF" onclick="dlPDF()">PDF</button>
     <button class="btn-dl" id="btnAcct" onclick="openAcctSettings()" title="Account Settings" style="font-size:.85rem">⚙ Account</button>
@@ -5112,7 +5197,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-10-17';
+const BUILD='2026-10-17b';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -8926,6 +9011,7 @@ const _i18nObs=new MutationObserver(muts=>{
 });
 _i18nObs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title']});
 
+function toggleTheme(){const on=document.documentElement.dataset.theme==='gulf';if(on)delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme='gulf';try{localStorage.theme=on?'':'gulf';}catch(e){}} // THEME: GULF toggle (removable)
 function toggleLang(){
   {const t=document.getElementById('authToggle');if(t){const nl=lang==='ar'?'en':'ar';t.textContent=nl==='ar'?'الدخول بدعوة فقط — اطلب حساباً من مدير النظام.':'Access is by invitation only — ask your administrator for an account.';}}
   lang=lang==='en'?'ar':'en';
