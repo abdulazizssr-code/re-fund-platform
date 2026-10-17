@@ -36,6 +36,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 [dir=rtl] .sec-hd{text-align:right;font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif}
 [dir=rtl] .role-tabs{direction:rtl}
 [dir=rtl] .es-tbl .es-val{text-align:left}
+[dir=rtl] .es-sec::after{left:auto;right:0}
 [dir=rtl] .es-tbl .es-pct{text-align:left}
 [dir=rtl] .es-tbl3 td:nth-child(2),[dir=rtl] .es-tbl3 td:nth-child(3){text-align:left}
 [dir=rtl] .es-sales th:first-child{text-align:right}
@@ -183,7 +184,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .ops-packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.ops-pack{background:var(--surface-cl);border-radius:10px;padding:14px 16px}.ops-pack h4{margin:0 0 6px;font-family:'Noto Serif',serif;font-size:.9rem;color:var(--primary)}.ops-pack p{font-size:.8rem;color:var(--on-surface-v);margin:0 0 10px}
 .ops-comm{width:100%;font:inherit;font-size:.86rem;padding:10px 12px;border:1.5px solid var(--outline);border-radius:8px;background:#fff;resize:vertical}
 .ops-drawer-btn{position:fixed;inset-inline-end:24px;bottom:24px;background:var(--primary);color:#fff;border:none;border-radius:99px;padding:12px 18px;font:inherit;font-weight:700;display:inline-flex;align-items:center;gap:6px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:.86rem;cursor:pointer;z-index:95}
-.ops-drawer{position:fixed;top:0;bottom:0;inset-inline-end:0;width:min(920px,96vw);background:var(--surface);box-shadow:-12px 0 40px rgba(0,0,0,.25);transform:translateX(110%);transition:transform .3s ease;z-index:200;display:flex;flex-direction:column}[dir=rtl] .ops-drawer{transform:translateX(-110%)}.ops-drawer.open{transform:none}.ops-drawer-head{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#fff;border-bottom:1px solid var(--outline)}.ops-drawer-body{overflow:auto;padding:20px;flex:1}.ops-drawer-body .pnl{display:block}
+.ops-drawer{position:fixed;top:0;bottom:0;inset-inline-end:0;width:min(920px,96vw);background:var(--surface);box-shadow:-12px 0 40px rgba(0,0,0,.25);transform:translateX(110%);transition:transform .3s ease;z-index:200;display:flex;flex-direction:column}[dir=rtl] .ops-drawer{transform:translateX(-110%)}.ops-drawer.open{transform:none}.ops-drawer-head{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#fff;border-bottom:1px solid var(--outline)}.ops-drawer-body{overflow:auto;padding:20px;flex:1}.ops-drawer-ttl{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;color:var(--primary)}.ops-drawer-body .pnl{display:block}
 .rfcs-tbl tr.tot td{background:var(--surface-cl)}
 .baseline-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#eef6f2;border:1px solid #cfe5da;border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:.88rem}
 .baseline-bar.locked{background:#fff6e5;border-color:#f3d9a4}
@@ -198,7 +199,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .tab:disabled{color:var(--on-surface-vl);cursor:not-allowed;opacity:.35}
 .tab{display:inline-flex;align-items:center}.tab .tab-icon{margin-right:7px;font-size:.82rem;display:inline-flex;align-items:center}.tab .tab-icon .ic{width:18px;height:18px}
 [dir=rtl] .tab .tab-icon{margin-right:0;margin-left:7px}
-.ic{width:1em;height:1em;vertical-align:-0.15em;display:inline-block;flex-shrink:0}
+.ic{width:1em;height:1em;vertical-align:-0.15em;display:inline-block;flex-shrink:0}[dir=rtl] .ic-flip{transform:scaleX(-1)}
 .hdr-btns button,.project-bar button,.act-btn,.ops-close,.baseline-bar button,.btn-share-close{display:inline-flex;align-items:center;justify-content:center;gap:6px}.hdr-btns button .ic,.project-bar button .ic,.act-btn .ic,.baseline-bar button .ic,.btn-share-close .ic,.ops-close .ic{width:16px;height:16px}
 .ops-link .ic{width:14px;height:14px}.bk-h a .ic{width:16px;height:16px}h2 .ic,h3 .ic{width:1em;height:1em}.user-badge{display:inline-flex;align-items:center;gap:5px}.user-badge .ic{width:15px;height:15px}
 .kpi-hl{border-left:4px solid var(--secondary)}[dir=rtl] .kpi-hl{border-left:none;border-right:4px solid var(--secondary)}
@@ -259,6 +260,8 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .kpi:hover{transform:translateY(-2px);box-shadow:0 2px 6px rgba(27,28,25,.06),0 8px 24px rgba(27,28,25,.04)}
 .kpi-v{font-family:'Noto Serif',serif;font-size:1.25rem;font-weight:700;color:var(--primary);margin-bottom:6px;letter-spacing:-.02em}
 .kpi-l{font-size:.76rem;color:var(--on-surface-vl);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.kpi-section-t{font-family:'Noto Serif',serif;font-size:.88rem;font-weight:600;color:var(--secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.kpi-pct{display:block;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--on-surface-vl);letter-spacing:0;margin-top:3px}
 
 /* ── CHARTS ── */
 .ch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:24px;margin-top:12px}
@@ -810,6 +813,122 @@ html[data-theme=gulf] .rfcs-num,html[data-theme=gulf] .act-bva td,html[data-them
   html[data-theme=gulf] .hdr-btns button{padding:7px 10px;font-size:.76rem;white-space:nowrap}html[data-theme=gulf] .btn-theme .bt-l{display:none}html[data-theme=gulf] .btn-theme{padding:7px 9px!important}
 }
 html[data-theme=gulf] .ops-card h3 .cx-seg a{font-family:'Manrope',system-ui,sans-serif}
+/* ── v3 (2026-10-19): visual QA pass — offsets, Arabic parity, Summary system, mobile ── */
+/* sticky stack: header 64 → project bar 58 → tab bar 62 → operations period bar */
+html[data-theme=gulf] .tabs,html[data-theme=gulf] .ops-nav{height:62px;padding-top:0;padding-bottom:0;align-items:center}
+html[data-theme=gulf] .ops-nav{height:auto;padding-top:6px;padding-bottom:6px}
+html[data-theme=gulf] .ops-period{top:184px;gap:12px 14px;padding:10px 40px}
+html[data-theme=gulf] .ops-period .ops-chips{gap:8px}
+html[data-theme=gulf] .ops-chip{min-width:0;padding:7px 12px}
+html[data-theme=gulf] .ops-chip small{font-size:.62rem}
+html[data-theme=gulf] .ops-chip b{font-size:.9rem}
+html[data-theme=gulf] .ops-period .ops-sub{font-size:.78rem}
+html[data-theme=gulf] .project-bar .btn-calc{padding:9px 18px}
+html[data-theme=gulf] .ws-switch{margin-top:0;margin-bottom:0}
+/* header: workspace label hierarchy; tab icons + labels share one baseline */
+html[data-theme=gulf] .tab .tab-icon{margin-right:0;margin-inline-end:7px}
+html[data-theme=gulf] .tab .ic,html[data-theme=gulf] .hdr-btns .ic,html[data-theme=gulf] .project-bar .ic{flex-shrink:0;vertical-align:middle}
+html[data-theme=gulf] .tab:focus-visible,html[data-theme=gulf] .ops-nav button:focus-visible{outline-offset:-2px}
+html[data-theme=gulf] .ops-nav button:focus-visible{outline-offset:0}
+/* forms: one control height in both languages (Cairo's tall metrics no longer stretch the Arabic rows); wider selects so option text is not clipped */
+html[data-theme=gulf] .frow{grid-template-columns:1fr 150px 150px}
+html[data-theme=gulf] .frow-2{grid-template-columns:1fr 150px}
+html[data-theme=gulf] .frow input,html[data-theme=gulf] .frow select{height:40px;padding-top:0;padding-bottom:0;line-height:1.2}
+html[data-theme=gulf] .frow input[readonly]{height:40px;padding-top:0;padding-bottom:0}
+html[data-theme=gulf] .project-bar select{height:36px;padding-top:0;padding-bottom:0}
+/* KPI tiles: value and its share on one block; share on a deliberate muted second line */
+html[data-theme=gulf] .kpi-v{white-space:nowrap}
+html[data-theme=gulf] .kpi-v .kpi-pct,html[data-theme=gulf] .sens-kpi .sv .kpi-pct{display:block;font-family:'Manrope',system-ui,sans-serif;font-size:.8rem;font-weight:600;color:var(--on-surface-vl);letter-spacing:0;margin-top:4px;line-height:1.2}
+html[data-theme=gulf] .kpi-l{white-space:normal}
+html[data-theme=gulf][dir=rtl] .kpi-v,html[data-theme=gulf][dir=rtl] .ds-val,html[data-theme=gulf][dir=rtl] .ops-kpi b,html[data-theme=gulf][dir=rtl] .sens-kpi .sv{font-size:1.5rem;letter-spacing:-.01em}
+html[data-theme=gulf][dir=rtl] .kpi-v{white-space:normal}
+html[data-theme=gulf] .ops-kpi b{white-space:nowrap}
+html[data-theme=gulf][dir=rtl] .ops-kpi b{white-space:normal;font-size:1.3rem}
+/* Arabic is a joined script: no tracking on labels and small caps */
+html[data-theme=gulf][dir=rtl] .kpi-l,html[data-theme=gulf][dir=rtl] .kpi-section-t,html[data-theme=gulf][dir=rtl] .ds-lbl,html[data-theme=gulf][dir=rtl] .ops-kpi small,html[data-theme=gulf][dir=rtl] .ops-stat small,html[data-theme=gulf][dir=rtl] .dt th,html[data-theme=gulf][dir=rtl] .sch-tbl th,html[data-theme=gulf][dir=rtl] .rfcs-tbl th,html[data-theme=gulf][dir=rtl] .cx-tbl thead th,html[data-theme=gulf][dir=rtl] .ch-card h3 .ch-unit,html[data-theme=gulf][dir=rtl] .ops-card h3>span:not(.cx-seg),html[data-theme=gulf][dir=rtl] .sum-bar>span:first-child,html[data-theme=gulf][dir=rtl] .es-sec-title,html[data-theme=gulf][dir=rtl] .es-tbl-hdr td,html[data-theme=gulf][dir=rtl] .es-sales th,html[data-theme=gulf][dir=rtl] .es-vcard-lbl,html[data-theme=gulf][dir=rtl] .es-kpi-lbl{letter-spacing:0}
+html[data-theme=gulf][dir=rtl] .kpi-section-t{font-size:.84rem}
+html[data-theme=gulf] .kpi-section-t{font-family:'Manrope',system-ui,sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.1em;color:var(--secondary);text-transform:uppercase}
+/* dashboard chart cards share one height per row */
+html[data-theme=gulf] .ch-grid{align-items:stretch}
+html[data-theme=gulf] .ch-card{display:flex;flex-direction:column}
+/* sensitivity sidebar: readable number fields, stacked pill actions */
+html[data-theme=gulf] .sens-num{width:100px;max-width:none;min-width:0;text-align:end;padding:5px 8px;font-size:.92rem;font-weight:700;border:1px solid var(--outline);background:var(--surface);border-radius:8px}
+html[data-theme=gulf] .sens-num:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--g-soft)}
+html[data-theme=gulf] .sld-group label{align-items:center;gap:8px}
+html[data-theme=gulf] .sens-sidebar>div:has(.btn-sens){flex-wrap:wrap}
+html[data-theme=gulf] .btn-sens{flex:1 1 100%;font-family:'Manrope',system-ui,sans-serif;font-size:.86rem;font-weight:700;border-radius:999px;padding:10px 16px;letter-spacing:0}
+html[data-theme=gulf] .btn-sens:hover{filter:brightness(1.08)}
+/* segmented controls: one vocabulary (sand track, white active pill) */
+html[data-theme=gulf] .cx-seg,html[data-theme=gulf] .view-stamp .vs-sw,html[data-theme=gulf] .sum-bar .sum-seg{display:inline-flex;background:var(--surface-ch);border-radius:999px;padding:3px;gap:2px}
+html[data-theme=gulf] .cx-seg a,html[data-theme=gulf] .view-stamp .vs-sw a,html[data-theme=gulf] .sum-bar a{padding:4px 12px;border-radius:999px;font-size:.78rem;font-weight:600;color:var(--on-surface-v);border:none;margin:0;cursor:pointer}
+html[data-theme=gulf] .cx-seg a:hover,html[data-theme=gulf] .view-stamp .vs-sw a:hover,html[data-theme=gulf] .sum-bar a:hover,html[data-theme=gulf] .ops-view span:hover{color:var(--primary)}
+html[data-theme=gulf] .cx-seg a.on,html[data-theme=gulf] .view-stamp .vs-sw a.on,html[data-theme=gulf] .sum-bar a.on{background:#fff;color:var(--primary);box-shadow:0 1px 2px rgba(31,42,38,.08);border:none}
+html[data-theme=gulf] .view-stamp{background:#fff;border:1px solid var(--outline);color:var(--on-surface-v);font-family:'Manrope',system-ui,sans-serif}
+html[data-theme=gulf] .view-stamp.fc{background:#fff;border-color:var(--outline);color:#6d5320}
+/* Summary controls: schedule toggle aligned to the page's start edge, no column-count hint */
+html[data-theme=gulf] .sum-bar{padding:0 0 14px;gap:10px;color:var(--on-surface-v);justify-content:flex-start;max-width:297mm}
+html[data-theme=gulf] .sum-bar>span:first-child{font-family:'Manrope',system-ui,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--on-surface-vl)}
+html[data-theme=gulf] .sum-bar-note{display:none}
+html[data-theme=gulf] #p-summary .view-stamp{max-width:297mm}
+/* Summary pages (.es-page): one quiet system — ivory page, green masthead, thin rules, tinted totals */
+html[data-theme=gulf] .es-page{--es-surface:#fbf9f4;--es-surface-low:#f4efe6;--es-surface-high:#e3dccd;--es-surface-highest:#ffffff;--es-on-surface:#1f2a26;--es-on-surface-v:#55615b;--es-on-surface-vl:#6c766f;--es-gold-grad:#0f4d3f;--es-shadow:none;--es-rule:#e3dccd;--es-rule-soft:#eee8dc;--es-tint:#e4efea;--es-font-label:'Manrope',system-ui,sans-serif}
+html[data-theme=gulf] .es-vcard,html[data-theme=gulf] .es-kpi{box-shadow:none;border:1px solid var(--es-rule);border-radius:2mm;background:#fff}
+html[data-theme=gulf] .es-vcard::before,html[data-theme=gulf] .es-kpi::before{display:none}
+html[data-theme=gulf] .es-vcard-val{font-weight:400;font-size:17px;color:var(--es-primary)!important;font-variant-numeric:tabular-nums}
+html[data-theme=gulf] .es-kpi-val{font-weight:400;font-size:12.5px;color:var(--es-primary)!important;font-variant-numeric:tabular-nums}
+html[data-theme=gulf] .es-vcard-lbl,html[data-theme=gulf] .es-kpi-lbl{font-weight:700;letter-spacing:.7px;color:var(--es-on-surface-vl)}
+html[data-theme=gulf] .es-sec{border-bottom:1px solid var(--es-rule);padding-bottom:1.2mm;margin-bottom:1.5mm}
+html[data-theme=gulf] .es-sec::after{display:none}
+html[data-theme=gulf] .es-sec-title{font-family:var(--es-font-label);font-size:7.5px;font-weight:700;letter-spacing:.9px;color:var(--es-primary)}
+html[data-theme=gulf] .es-tbl tr:nth-child(odd),html[data-theme=gulf] .es-tbl tr:nth-child(even),html[data-theme=gulf] .es-sales tr:nth-child(odd){background:transparent}
+html[data-theme=gulf] .es-tbl td{border-bottom:1px solid var(--es-rule-soft);padding:1.5mm 2mm}
+html[data-theme=gulf] .es-tbl tr:last-child td{border-bottom:none}
+html[data-theme=gulf] .es-tbl .es-hl{background:var(--es-tint)!important;color:var(--es-primary);font-weight:700}
+html[data-theme=gulf] .es-tbl .es-hl td{color:var(--es-primary)}
+html[data-theme=gulf] .es-tbl .es-val{white-space:nowrap;font-weight:500}
+html[data-theme=gulf] .es-tbl .es-pct{font-family:var(--es-font-body);font-size:8px;color:var(--es-on-surface-vl);white-space:nowrap;font-variant-numeric:tabular-nums;width:9mm}
+html[data-theme=gulf] .es-tbl-hdr td{background:transparent;color:var(--es-on-surface-v)!important;border-bottom:1px solid var(--es-rule);font-size:6.5px;letter-spacing:.7px;padding:1.2mm 2mm;font-weight:700}
+html[data-theme=gulf] .es-total,html[data-theme=gulf] .es-total-inv{background:var(--es-tint);color:var(--es-primary);font-family:var(--es-font-label);font-weight:700;font-size:8px;letter-spacing:.2px;padding:2mm 2.5mm;border-radius:1.5mm;margin-top:1.5mm;font-variant-numeric:tabular-nums}
+html[data-theme=gulf] .es-total-inv{background:transparent;border:1px solid var(--es-primary)}
+html[data-theme=gulf] .es-sales th{background:transparent;color:var(--es-on-surface-v);border-bottom:1px solid var(--es-rule);font-size:6.5px;letter-spacing:.7px;padding:1.8mm 2mm;font-weight:700;border-radius:0!important}
+html[data-theme=gulf] .es-sales td{border-bottom:1px solid var(--es-rule-soft);font-variant-numeric:tabular-nums}
+html[data-theme=gulf] .es-sales .es-row-total{color:var(--es-primary)}
+html[data-theme=gulf] .es-sales .es-row-lbl{color:var(--es-on-surface-v)}
+html[data-theme=gulf] .es-note{color:var(--es-on-surface-vl)}
+html[data-theme=gulf] .es-footer{color:var(--es-on-surface-vl)}
+html[data-theme=gulf] .es-hdr .es-sub,html[data-theme=gulf] .es-hdr-right .es-meta{color:rgba(255,255,255,.72)}
+html[data-theme=gulf] .es-page[dir=rtl] .es-vcard-val,html[data-theme=gulf] .es-page[dir=rtl] .es-kpi-val{font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif;font-weight:700}
+html[data-theme=gulf] .vq-head h2{font-family:var(--g-serif)!important;font-weight:400;font-size:1.35rem;color:var(--primary)!important;letter-spacing:0}
+html[data-theme=gulf][dir=rtl] .vq-head h2{font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif!important;font-weight:700}
+html[data-theme=gulf] .ops-drawer-ttl{font-family:var(--g-serif);font-weight:400;font-size:1.1rem}
+html[data-theme=gulf][dir=rtl] .ops-drawer-ttl{font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif;font-weight:700}
+html[data-theme=gulf] .ops-drawer-head{background:#fff;border-bottom:1px solid var(--outline)}
+html[data-theme=gulf] .rfcs-banner{background:#fff;border:1px solid var(--outline);color:var(--on-surface-v);padding:10px 16px;font-size:.86rem}
+html[data-theme=gulf] .rfcs-badge{background:var(--g-gold-soft);color:#6d5320;font-weight:700;letter-spacing:.04em}
+/* mobile: header wraps to two clean rows, sticky offsets follow */
+@media(max-width:768px){
+  html[data-theme=gulf] .hdr{height:auto;min-height:0;flex-wrap:wrap;padding:8px 16px;gap:6px 10px;overflow:visible;row-gap:6px}
+  html[data-theme=gulf] .hdr-left{flex:1 1 auto;min-width:0}
+  html[data-theme=gulf] .hdr h1{font-size:.98rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  html[data-theme=gulf] .hdr-sub{display:none}
+  html[data-theme=gulf] .hdr-btns{flex:1 1 100%;max-width:none;overflow:visible;flex-wrap:wrap;gap:6px;justify-content:flex-start}
+  html[data-theme=gulf] .hdr-btns button{padding:6px 10px;font-size:.76rem}
+  html[data-theme=gulf] .project-bar{top:96px;height:52px}
+  html[data-theme=gulf] .hdr{height:96px}
+  html[data-theme=gulf] .tabs{top:148px;height:56px}
+  html[data-theme=gulf] .tab{padding:7px 12px}
+  html[data-theme=gulf] .ops-period{position:relative;top:auto;padding:10px 16px;margin:-20px -16px 0}
+  html[data-theme=gulf] .ops-nav{margin:0 -16px 20px;padding-left:16px;padding-right:16px}
+  html[data-theme=gulf] .ops-period .ops-chips{margin-inline-start:0}
+  html[data-theme=gulf] .ws-switch{margin-inline-end:8px}
+  html[data-theme=gulf] .kpi{padding:14px 14px}
+  html[data-theme=gulf] .kpi-v,html[data-theme=gulf][dir=rtl] .kpi-v,html[data-theme=gulf] .ds-val,html[data-theme=gulf][dir=rtl] .ds-val,html[data-theme=gulf] .ops-kpi b,html[data-theme=gulf][dir=rtl] .ops-kpi b{font-size:1.2rem;white-space:normal;overflow-wrap:anywhere}
+  html[data-theme=gulf] .kpi-grid{gap:10px}
+  html[data-theme=gulf] .ops-drawer-btn{bottom:16px;padding:10px 14px;font-size:.8rem}
+  html[data-theme=gulf] .main{padding-bottom:88px}
+  html[data-theme=gulf] .baseline-bar{flex-wrap:wrap;gap:10px}
+  html[data-theme=gulf] .sum-bar{flex-wrap:wrap}
+}
 /* ═══ END THEME ═══ */
 </style>
 <script>
@@ -977,8 +1096,8 @@ function icoHydrate(root){(root||document).querySelectorAll('i[data-ico]').forEa
   <div class="pnl" id="p-sketch"></div><!-- SKETCH panel -->
   <div id="reforecastPanel" style="display:none"></div>
 </main>
-<div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span class="ops-drawer-ic"><i class="ic" data-ico="card"></i></span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
-<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-18</span></div>
+<div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span class="ops-drawer-ttl"><span class="ops-drawer-ic"><i class="ic" data-ico="card"></i></span><span class="ops-drawer-name">Payments</span></span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
+<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-19</span></div>
 </div><!-- end appMain -->
 
 <script>
@@ -1290,7 +1409,7 @@ async function loadProjectList(){
     projNames={}; data.forEach(p=>projNames[p.id]=p.name); shared.forEach(p=>projNames[p.id]=p.name);
     let h=_unsavedOpt()+data.map(p=>'<option value="'+escH(p.id)+'">'+escH(p.name)+'</option>').join('');
     if(shared.length){
-      h+='<optgroup label="'+(lang==='ar'?'مشاريع مشاركة معي (مباشرة)':'Shared with me (live)')+'">'+shared.map(p=>'<option value="'+escH(p.id)+'">🔗 '+escH(p.name)+(sharedWithMe[p.id].can_edit?'':(lang==='ar'?' — عرض فقط':' — view only'))+'</option>').join('')+'</optgroup>';
+      h+='<optgroup label="'+(lang==='ar'?'مشاريع مشاركة معي (مباشرة)':'Shared with me (live)')+'">'+shared.map(p=>'<option value="'+escH(p.id)+'">'+escH(p.name)+(sharedWithMe[p.id].can_edit?'':(lang==='ar'?' — عرض فقط':' — view only'))+'</option>').join('')+'</optgroup>';
     }
     sel.innerHTML=h;
     if(currentProjectId) sel.value=currentProjectId;
@@ -2131,6 +2250,7 @@ function showTab(k){
   if(k==='ops') renderOps();
   if(k==='audit') renderAudit();
   if(k==='sketch') renderSketch(); // SKETCH
+  if(k==='sensitivity'&&R&&document.getElementById('sr_sp')) onSensSlider(); // charts drawn while the panel was hidden have no width
   if(workspace==='operations'&&(k==='cashflow'||k==='debt'||k==='summary')&&R){ensureForecast();if(k==='cashflow')renderCashFlow();if(k==='debt')renderDebt();if(k==='summary')renderSummary();}
 }
 
@@ -2430,13 +2550,13 @@ function buildSchedule(){
   // Project switcher for schedule tab
   const schProjTabs=projects.length>1?`<div class="proj-sub-tabs" style="margin-bottom:16px">${projects.map((proj,idx)=>`<button class="proj-sub-tab${idx===activeProjectIdx?' act':''}" onclick="activeProjectIdx=${idx};buildSchedule()">${escH(proj.name)}</button>`).join('')}</div>`:'';
   p.innerHTML=schProjTabs+`
-  <div style="margin-bottom:8px;font-family:'Manrope',system-ui;font-size:1.1rem;font-weight:700;color:var(--primary);letter-spacing:.03em"${lang==='ar'?' dir="rtl"':''}>${lang==='ar'?'① مكونات التطوير':'① Construction Components'}</div>
+  <div style="margin-bottom:8px;font-family:'Manrope',system-ui;font-size:1.1rem;font-weight:700;color:var(--primary);letter-spacing:.03em"${lang==='ar'?' dir="rtl"':''}>${lang==='ar'?'مكونات التطوير':'Construction Components'}</div>
   `+buildConTable()+`
   <div class="sch-wrap"><h3>${tl.schConDist}</h3>
   <table class="sch-tbl"><thead><tr><th>${schHdr}</th>${qlabels.map(q=>`<th>${q}</th>`).join('')}<th>${schTot}</th></tr></thead>
   <tbody>${sitems.map(it=>schRow(it.label,it.key)).join('')}</tbody></table></div>
   ${String(projects[activeProjectIdx].strategy)!==String('lease')?secSep+`
-  <div style="margin-bottom:8px;font-family:'Manrope',system-ui;font-size:1.1rem;font-weight:700;color:var(--primary);letter-spacing:.03em"${lang==='ar'?' dir="rtl"':''}>${lang==='ar'?'② مكونات المبيعات':'② Sales Components'}</div>
+  <div style="margin-bottom:8px;font-family:'Manrope',system-ui;font-size:1.1rem;font-weight:700;color:var(--primary);letter-spacing:.03em"${lang==='ar'?' dir="rtl"':''}>${lang==='ar'?'مكونات المبيعات':'Sales Components'}</div>
   `+buildSalesTable()+`
   <div class="sch-wrap"><h3>${tl.schSalesDist}</h3>
   <table class="sch-tbl"><thead><tr><th>${schHdr}</th>${qlabels.map(q=>`<th>${q}</th>`).join('')}<th>${schTot}</th></tr></thead>
@@ -3201,17 +3321,17 @@ function renderDashboard(){
         [[DH.totalDebt,fN(R.totalDebt)+' '+cur],[DH.annROI,fP(R.annualROI)],[DH.ltcRatio,fP(R.ltc)],[DH.dcr,fP(dcr)]]:
         [[DH.totalDebt,fN(R.totalDebt)+' '+cur],[DH.annROI,fP(R.annualROI)],[DH.ltcRatio,fP(R.ltc)]]},
       {title:DH.capStruct+' ('+fN(R.capTotal)+' '+cur+')',items:[
-        [DH.capCash,fN(R.capCash)+' '+cur+' ('+fP(R.capTotal?R.capCash/R.capTotal:0)+')'],
-        [DH.capInKind,fN(R.capInKind)+' '+cur+' ('+fP(R.capTotal?R.capInKind/R.capTotal:0)+')'],
-        [DH.capOffPlan,fN(R.capOffPlan)+' '+cur+' ('+fP(R.capTotal?R.capOffPlan/R.capTotal:0)+')'],
-        [DH.capDebt,fN(R.capDebt)+' '+cur+' ('+fP(R.capTotal?R.capDebt/R.capTotal:0)+')'],
+        [DH.capCash,fN(R.capCash)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capCash/R.capTotal:0)+'</span>'],
+        [DH.capInKind,fN(R.capInKind)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capInKind/R.capTotal:0)+'</span>'],
+        [DH.capOffPlan,fN(R.capOffPlan)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capOffPlan/R.capTotal:0)+'</span>'],
+        [DH.capDebt,fN(R.capDebt)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capDebt/R.capTotal:0)+'</span>'],
         ...(((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))>0.5?
           [[tipLabel(lang==='ar'?'ضرائب قابلة للاسترداد (تمويل مؤقت)':'Recoverable taxes (bridge)',[[lang==='ar'?'ضريبة التصرفات العقارية':'RETT',R.rettRecoverable||0],[lang==='ar'?'ضريبة القيمة المضافة':'VAT',Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0]]),
             fN((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))+' '+cur+' — '+(lang==='ar'?'تُسترد خلال المدة':'recovered within the term')]]:[])]},
     ];
     let kH='';
     kG.forEach(g=>{
-      kH+=`<div style="margin-bottom:28px"><div style="font-family:'Noto Serif',serif;font-size:.88rem;font-weight:600;color:var(--secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">${g.title}</div>
+      kH+=`<div style="margin-bottom:28px"><div class="kpi-section-t">${g.title}</div>
       <div class="kpi-grid" style="margin-bottom:0">${g.items.map(([l,v])=>`<div class="kpi"><div class="kpi-v">${v}</div><div class="kpi-l">${l}</div></div>`).join('')}</div></div>`;
     });
     // Max Land Price KPI badge
@@ -3329,7 +3449,7 @@ function renderDashboard(){
     ];
     let kH='';
     kG.forEach(g=>{
-      kH+=`<div style="margin-bottom:28px"><div style="font-family:'Noto Serif',serif;font-size:.88rem;font-weight:600;color:var(--secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">${g.title}</div>
+      kH+=`<div style="margin-bottom:28px"><div class="kpi-section-t">${g.title}</div>
       <div class="kpi-grid" style="margin-bottom:0">${g.items.map(([l,v])=>`<div class="kpi"><div class="kpi-v">${v}</div><div class="kpi-l">${l}</div></div>`).join('')}</div></div>`;
     });
     html+=kH+`<div class="ch-grid">
@@ -3347,7 +3467,7 @@ function renderDashboard(){
     const kG=[{title:DH.debtFin,items:finItems}];
     let kH='';
     kG.forEach(g=>{
-      kH+=`<div style="margin-bottom:28px"><div style="font-family:'Noto Serif',serif;font-size:.88rem;font-weight:600;color:var(--secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">${g.title}</div>
+      kH+=`<div style="margin-bottom:28px"><div class="kpi-section-t">${g.title}</div>
       <div class="kpi-grid" style="margin-bottom:0">${g.items.map(([l,v])=>`<div class="kpi"><div class="kpi-v">${v}</div><div class="kpi-l">${l}</div></div>`).join('')}</div></div>`;
     });
     html+=kH+`<div class="ch-grid">`+
@@ -3456,7 +3576,7 @@ function renderCashFlow(){
     <label><span>${sliderLabel}</span> <b id="cfScrollVal">Q1</b></label>
     <input type="range" id="cfScrollSlider" min="1" max="${nq}" value="1" step="1">
   </div>`;
-  h+=`<div class="tbl-wrap" id="cfTableWrap"><table class="dt"><thead><tr><th class="rl">${L.hdr}</th>${lb.map((q,i)=>`<th class="${isRF&&i<cutoffQ?'rfcs-hdr-actual':''}">${q}${isRF?(i<cutoffQ?' ✓':' ⟶'):''}<small class="qe">${fmtDateS(qEndDate(i))}</small></th>`).join('')}<th>${lang==='ar'?'المجموع':'Total'}</th></tr></thead><tbody>`;
+  h+=`<div class="tbl-wrap" id="cfTableWrap"><table class="dt"><thead><tr><th class="rl">${L.hdr}</th>${lb.map((q,i)=>`<th class="${isRF&&i<cutoffQ?'rfcs-hdr-actual':''}">${q}${isRF?(i<cutoffQ?' '+ico('check'):' '+ico('arrow','ic-flip')):''}<small class="qe">${fmtDateS(qEndDate(i))}</small></th>`).join('')}<th>${lang==='ar'?'المجموع':'Total'}</th></tr></thead><tbody>`;
 
   h+=tr(L.grossSales,r.qGrossSales);
   // Murabaha & Other Income from actuals
@@ -3600,8 +3720,9 @@ function chartColor(c,i){return _CMAP[c]||c||CHART.series[(i||0)%CHART.series.le
 // compact SAR: "12.4 M", "850 K", "0"; Arabic units
 function fmtCompact(v){const a=Math.abs(v),ar=lang==='ar',sg=v<0?'−':'';
   const u=a>=1e9?[1e9,1,ar?' مليار':' B']:a>=1e6?[1e6,1,ar?' مليون':' M']:a>=1e3?[1e3,0,ar?' ألف':' K']:null;
-  if(!u) return sg+Math.round(a);
-  let t=(a/u[0]).toFixed(u[1]); if(u[1]&&/\.0$/.test(t)) t=t.slice(0,-2); return sg+t+u[2];}
+  const iso=x=>(ar&&sg)?'\u2066'+x+'\u2069':x;
+  if(!u) return iso(sg+(a%1?+a.toFixed(2):Math.round(a)));
+  let t=(a/u[0]).toFixed(u[1]); if(u[1]&&/\.0$/.test(t)) t=t.slice(0,-2); return iso(sg+t)+u[2];}
 function niceScale(mn,mx,n){n=n||4;if(mn>0)mn=0;if(mx<0)mx=0;let range=mx-mn||1;let step=Math.pow(10,Math.floor(Math.log10(range/n)));const m=range/n/step;step*=m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10;
   const lo=Math.floor(mn/step+1e-9)*step,hi=Math.ceil(mx/step-1e-9)*step;const ticks=[];for(let t=lo;t<=hi+step/2;t+=step)ticks.push(Math.abs(t)<step/1e6?0:t);return {lo,hi,step,ticks};}
 function _cvSetup(id,H){const cv=document.getElementById(id);if(!cv)return null;const W=cv.parentElement.clientWidth-40;if(W<=0)return null;
@@ -3723,7 +3844,7 @@ function renderSummary(){
 
   const p=document.getElementById('p-summary');
   let h=viewStamp();
-  h+=`<div class="sum-bar no-print"><span>${L('Schedule','الجدول')}:</span>${[['auto',L('Auto','تلقائي')],['q',L('Quarterly','ربعي')],['h',L('Semi-annual','نصف سنوي')],['y',L('Annual','سنوي')]].map(([v,t])=>`<a class="${sumPeriod===v?'on':''}" onclick="setSumPeriod('${v}')">${t}</a>`).join('')}<span class="sum-bar-note">${nq} ${L('quarters','ربع')} → ${nP} ${L('columns','عمود')}</span></div>`;
+  h+=`<div class="sum-bar no-print"><span>${L('Schedule','الجدول')}</span><span class="sum-seg">${[['auto',L('Auto','تلقائي')],['q',L('Quarterly','ربعي')],['h',L('Semi-annual','نصف سنوي')],['y',L('Annual','سنوي')]].map(([v,t])=>`<a class="${sumPeriod===v?'on':''}" onclick="setSumPeriod('${v}')">${t}</a>`).join('')}</span></div>`;
 
   // ═══ PAGE 1: EXECUTIVE SUMMARY ═══
   h+=`<div class="es-page" dir="${isAr?'rtl':'ltr'}" style="font-family:${fontF}">`;
@@ -3950,10 +4071,12 @@ function renderSummary(){
     const bc=document.getElementById('esBarChart');
     if(!bc) return;
     const bCtx=bc.getContext('2d');
-    const bW=bc.parentElement.offsetWidth||500, bH=185;
+    const bW=bc.parentElement.offsetWidth||500, bH=215;
     bc.style.width=bW+'px'; bc.style.height=bH+'px';
     bc.width=bW*2; bc.height=bH*2; bCtx.scale(2,2);
     const maxS=Math.max(...pSales,1);
+    const _esG=document.documentElement.dataset.theme==='gulf';
+    const _esC=_esG?{bar0:CHART.green,bar1:CHART.green2,label:CHART.label,ink:CHART.ink,pie:[CHART.green,CHART.gold,CHART.green2,CHART.sand],hole:'#fbf9f4',center:CHART.green,shadow:'transparent'}:{bar0:'#735b23',bar1:'#b5985a',label:'#9a9a8d',ink:'#3a3a32',pie:['#3a3a32','#735b23','#b5985a','#d0c5b5'],hole:'#fbf9f3',center:'#735b23',shadow:'rgba(115,91,35,.12)'};
     const cM={top:8,right:8,bottom:20,left:42};
     const pW=bW-cM.left-cM.right, pH=bH-cM.top-cM.bottom;
     const bGap=pW/nP;
@@ -3961,14 +4084,14 @@ function renderSummary(){
       const gy=cM.top+pH-g*(pH/4);
       bCtx.strokeStyle='rgba(228,226,221,.6)'; bCtx.lineWidth=0.5;
       bCtx.beginPath(); bCtx.moveTo(cM.left,gy); bCtx.lineTo(cM.left+pW,gy); bCtx.stroke();
-      bCtx.fillStyle='#9a9a8d'; bCtx.font='500 8px Inter,system-ui'; bCtx.textAlign='right';
+      bCtx.fillStyle=_esC.label; bCtx.font='500 8px Inter,system-ui'; bCtx.textAlign='right';
       bCtx.fillText(Math.round(maxS*g/4/1e6)+'M',cM.left-4,gy+3);
     }
     // Draw ALL quarter labels first (even for zero-revenue quarters)
     for(let i=0;i<nP;i++){
       const bi=isAr?(nP-1-i):i;
       const lx=cM.left+bi*bGap+bGap*0.12+bGap*0.76/2;
-      bCtx.fillStyle='#9a9a8d'; bCtx.font=isAr?'500 7px Cairo,system-ui':'500 8px Inter,system-ui'; bCtx.textAlign='center';
+      bCtx.fillStyle=_esC.label; bCtx.font=isAr?'500 7px Cairo,system-ui':'500 8px Inter,system-ui'; bCtx.textAlign='center';
       bCtx.fillText(qLbl[i],lx,cM.top+pH+12);
     }
     // Draw bars only for non-zero quarters
@@ -3977,15 +4100,15 @@ function renderSummary(){
       const bi=isAr?(nP-1-i):i;
       const bh=(v/maxS)*pH, bx=cM.left+bi*bGap+bGap*0.12, bw=bGap*0.76, by=cM.top+pH-bh;
       const grad=bCtx.createLinearGradient(bx,by,bx+bw,by+bh);
-      grad.addColorStop(0,'#735b23'); grad.addColorStop(1,'#b5985a');
+      grad.addColorStop(0,_esC.bar0); grad.addColorStop(1,_esC.bar1);
       bCtx.fillStyle=grad;
       bCtx.beginPath();
       if(bCtx.roundRect) bCtx.roundRect(bx,by,bw,bh,[3,3,0,0]);
       else { bCtx.moveTo(bx+3,by); bCtx.lineTo(bx+bw-3,by); bCtx.quadraticCurveTo(bx+bw,by,bx+bw,by+3); bCtx.lineTo(bx+bw,by+bh); bCtx.lineTo(bx,by+bh); bCtx.lineTo(bx,by+3); bCtx.quadraticCurveTo(bx,by,bx+3,by); }
       bCtx.fill();
-      bCtx.shadowColor='rgba(115,91,35,.12)'; bCtx.shadowBlur=8; bCtx.shadowOffsetY=4;
+      bCtx.shadowColor=_esC.shadow; bCtx.shadowBlur=8; bCtx.shadowOffsetY=4;
       bCtx.fill(); bCtx.shadowColor='transparent'; bCtx.shadowBlur=0; bCtx.shadowOffsetY=0;
-      const inside=by-3<cM.top+8; bCtx.fillStyle=inside?'#fff':'#3a3a32'; bCtx.font='700 8px Inter,system-ui'; bCtx.textAlign='center';
+      const inside=by-3<cM.top+8; bCtx.fillStyle=inside?'#fff':_esC.ink; bCtx.font='700 8px Inter,system-ui'; bCtx.textAlign='center';
       bCtx.fillText((v/1e6).toFixed(1)+'M',bx+bw/2,inside?by+11:by-3);
     });
 
@@ -3996,14 +4119,14 @@ function renderSummary(){
     const dW2=dc.parentElement.offsetWidth||220, dH2=195;
     dc.style.width=dW2+'px'; dc.style.height=dH2+'px';
     dc.width=dW2*2; dc.height=dH2*2; dCtx.scale(2,2);
-    const capI=[{label:L('Equity','نقد المستثمرين'),val:RS.capCash,color:'#3a3a32'},
-      {label:L('In-Kind','حصص عينية'),val:RS.capInKind,color:'#735b23'},
-      {label:L('Off-Plan','على الخارطة'),val:RS.capOffPlan,color:'#b5985a'},
-      {label:L('Debt','تمويل بنكي'),val:RS.capDebt,color:'#d0c5b5'}].filter(c=>c.val>0);
+    const capI=[{label:L('Equity','نقد المستثمرين'),val:RS.capCash,color:_esC.pie[0]},
+      {label:L('In-Kind','حصص عينية'),val:RS.capInKind,color:_esC.pie[1]},
+      {label:L('Off-Plan','على الخارطة'),val:RS.capOffPlan,color:_esC.pie[2]},
+      {label:L('Debt','تمويل بنكي'),val:RS.capDebt,color:_esC.pie[3]}].filter(c=>c.val>0);
     const cS=capI.reduce((a,c)=>a+c.val,0)||1;
     const cx2=dW2/2, cy2=54, oR=42, iR=24;
     let sA=-Math.PI/2;
-    dCtx.shadowColor='rgba(115,91,35,.1)'; dCtx.shadowBlur=12; dCtx.shadowOffsetY=4;
+    dCtx.shadowColor=_esG?'transparent':'rgba(115,91,35,.1)'; dCtx.shadowBlur=12; dCtx.shadowOffsetY=4;
     capI.forEach(item=>{
       const sw=(item.val/cS)*Math.PI*2;
       dCtx.beginPath(); dCtx.moveTo(cx2,cy2); dCtx.arc(cx2,cy2,oR,sA,sA+sw); dCtx.closePath();
@@ -4011,16 +4134,16 @@ function renderSummary(){
     });
     dCtx.shadowColor='transparent'; dCtx.shadowBlur=0; dCtx.shadowOffsetY=0;
     dCtx.beginPath(); dCtx.arc(cx2,cy2,iR,0,Math.PI*2);
-    dCtx.fillStyle='#fbf9f3'; dCtx.fill();
-    dCtx.fillStyle='#735b23'; dCtx.font='800 14px Manrope,system-ui'; dCtx.textAlign='center';
+    dCtx.fillStyle=_esC.hole; dCtx.fill();
+    dCtx.fillStyle=_esC.center; dCtx.font=_esG?'400 15px "DM Serif Display",Georgia,serif':'800 14px Manrope,system-ui'; dCtx.textAlign='center';
     dCtx.fillText(Math.round(cS/1e6)+'M',cx2,cy2+1);
-    dCtx.fillStyle='#9a9a8d'; dCtx.font='500 7px Inter,system-ui';
+    dCtx.fillStyle=_esC.label; dCtx.font='500 7px Inter,system-ui';
     dCtx.fillText(L('SAR TOTAL',curText+' إجمالي'),cx2,cy2+10);
     let lY=cy2+oR+14;
     capI.forEach(item=>{
-      dCtx.fillStyle=item.color; dCtx.beginPath(); dCtx.arc(14,lY,3.5,0,Math.PI*2); dCtx.fill();
-      dCtx.fillStyle='#2c2c26'; dCtx.font='500 9px Inter,system-ui'; dCtx.textAlign='left';
-      dCtx.fillText(item.label+': '+_fP(item.val/cS),22,lY+3); lY+=15;
+      dCtx.fillStyle=item.color; dCtx.beginPath(); dCtx.arc(isAr?dW2-14:14,lY,3.5,0,Math.PI*2); dCtx.fill();
+      dCtx.fillStyle=_esG?CHART.ink:'#2c2c26'; dCtx.font=isAr?'500 9px Cairo,system-ui':'500 9px Inter,system-ui'; dCtx.textAlign=isAr?'right':'left';
+      dCtx.fillText(item.label+': '+_fP(item.val/cS),isAr?dW2-22:22,lY+3); lY+=15;
     });
   });
 }
@@ -5259,7 +5382,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-10-18';
+const BUILD='2026-10-19';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -5653,8 +5776,8 @@ function renderOps(){
   let h=`<div class="ops-period">
     <div class="ops-asof"><span class="lbl">${ot('asof')}</span><select id="opsCut" onchange="reforecastSettings.cutoffQ=Number(this.value);opsRefresh()">${Array.from({length:nq},(_,i)=>`<option value="${i}"${cut===i?' selected':''}>Q${i} · ${fmtDate(qEndDate(i-1))}</option>`).join('')}</select><span class="ops-sub">${cut} / ${nq} ${ot('closed')} · ${monthsLeft} ${ot('toEnd')}</span></div>
     <div class="ops-view">${['baseline','forecast','both'].map(v=>`<span class="${opsView===v?'on':''}" onclick="opsView='${v}';renderOps()">${ot(v)}</span>`).join('')}</div>
-    <div class="ops-chips">${chip(sp,ot('spend'),M_(actToDate),ot('plan')+' '+M_(planToDate))}${chip(fc,ot('fac'),M_(R2.totalCost),(dFac>=0?'+':'−')+M_(Math.abs(dFac))+' '+ot('vsBase'))}${chip(ir,ot('irr'),fP(b.irr)+' → '+fP(R2.irr),'')}${chip(sl,ot('sales_'),fP(soldPct)+' '+ot('sold'),ot('plan')+' '+fP(planSoldPct))}</div>
-    <button class="ops-close" onclick="reforecastSettings.cutoffQ=Math.min(${nq-1},${cut}+1);opsRefresh()">${ot('close')} Q${cut+1} →</button>
+    <div class="ops-chips">${chip(sp,ot('spend'),M_(actToDate),ot('plan')+' '+M_(planToDate))}${chip(fc,ot('fac'),M_(R2.totalCost),(dFac>=0?'+':'−')+M_(Math.abs(dFac))+' '+ot('vsBase'))}${chip(ir,ot('irr'),fP(b.irr)+(lang==='ar'?' ← ':' → ')+fP(R2.irr),'')}${chip(sl,ot('sales_'),fP(soldPct)+' '+ot('sold'),ot('plan')+' '+fP(planSoldPct))}</div>
+    <button class="ops-close" onclick="reforecastSettings.cutoffQ=Math.min(${nq-1},${cut}+1);opsRefresh()">${ot('close')} Q${cut+1} ${lang==='ar'?'←':'→'}</button>
   </div>
   <nav class="ops-nav">${OPS_SECTIONS.map(s=>`<button class="${opsSection===s?'on':''}" onclick="opsSection='${s}';renderOps()">${ot(s)}${opsBadge(s)}</button>`).join('')}</nav>
   <div class="ops-body">${hint}${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:opsFinancing,vat:opsVat,nav:opsNav,scenarios:opsScenarios,reports:opsReports})[opsSection]()}</div>
@@ -6253,7 +6376,7 @@ function docStep3(q){_pick('.pdf,.xlsx,.xlsm,.xls,.csv',async file=>{docBusy(tru
   for(const r of rows){const m=inv.find(i=>i.no&&r.no&&String(i.no)===String(r.no)&&(!i.supplierVat||!r.supplierVat||i.supplierVat===r.supplierVat))||inv.find(i=>i.no&&r.no&&String(i.no)===String(r.no)&&Math.abs(i.vat-r.vat)<1)||inv.find(i=>Math.abs(i.vat-r.vat)<1&&i.date===r.date);r.invoiceId=m?m.id:null;}
   const tot=k=>rows.reduce((s,r)=>s+(r[k]||0),0);
   const body=`<p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${escH(file.name)} · ${rows.length} ${ar?'صف':'rows'} · ${ar?'الضريبة':'VAT'} ${fN(tot('vat'))}</p><div class="dm-grid">${dmF('sub',ar?'الضريبة المقدَّمة للهيئة في الإقرار':'VAT submitted to ZATCA in the return',tot('vat').toFixed(2),'number','step="0.01"')}${dmF('date',ar?'تاريخ التقديم':'Submission date',new Date().toISOString().slice(0,10),'date')}${dmF('ref',ar?'رقم طلب الاسترداد':'Refund request no.','')}</div>
-    <div class="cx-wrap" style="max-height:40vh"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>#</th><th>${ar?'المورّد':'Supplier'}</th><th>${ar?'المبلغ':'Amount'}</th><th>${ar?'الضريبة':'VAT'}</th><th>${ar?'مطابق':'Matched'}</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${escH(r.date)}</td><td>${escH(r.no)}</td><td>${escH(r.supplier.slice(0,30))}</td><td class="rfcs-num">${fN(r.base)}</td><td class="rfcs-num"><input id="dm_v${i}" type="number" step="0.01" value="${r.vat}" style="width:100px"></td><td>${r.invoiceId?'✓ '+escH(invoiceById(r.invoiceId).no):`<span class="ops-muted">${ar?'غير مسجّلة':'not in register'}</span>`}</td></tr>`).join('')}</tbody></table></div>`;
+    <div class="cx-wrap" style="max-height:40vh"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>#</th><th>${ar?'المورّد':'Supplier'}</th><th>${ar?'المبلغ':'Amount'}</th><th>${ar?'الضريبة':'VAT'}</th><th>${ar?'مطابق':'Matched'}</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${escH(r.date)}</td><td>${escH(r.no)}</td><td>${escH(r.supplier.slice(0,30))}</td><td class="rfcs-num">${fN(r.base)}</td><td class="rfcs-num"><input id="dm_v${i}" type="number" step="0.01" value="${r.vat}" style="width:100px"></td><td>${r.invoiceId?ico('check')+' '+escH(invoiceById(r.invoiceId).no):`<span class="ops-muted">${ar?'غير مسجّلة':'not in register'}</span>`}</td></tr>`).join('')}</tbody></table></div>`;
   docModal((ar?'الخطوة 3 — ملخص طلب الاسترداد الربعي ':'Step 3 — Quarterly refund submission ')+qLabel(q),body,async g=>{
     rows.forEach((r,i)=>{r.vat=+g('v'+i).value||0;});
     let sub=submissions().find(s=>s.q===q);if(!sub){sub={id:'s'+_actGenId(),q,files:{}};submissions().push(sub);}
@@ -6740,7 +6863,7 @@ function opsFinancing(){
   const ov=reforecastSettings.assumptionOverrides, blF=(reforecastSettings.baseline&&reforecastSettings.baseline.fund)||D;
   const row=(l,bv,cv)=>`<tr><td>${l}</td><td class="rfcs-num">${bv}</td><td class="rfcs-num">${cv}</td></tr>`;
   const strict=!!R2._finStrict, commit=(Number(R.A.equity)||0)+(Number(R.A.gp_commit_cash)||0), called=strict?(R2._equityCalled||0):sumA(R2.qEquity.slice(0,cut)), facility=sumA(R.drawdowns);
-  const balSrc=reforecastSettings.actualLoanBalance!==null?ot('finConfirmed')+' ✓':(strict?ot('finFromLog'):ot('plan')+' '+M_(planAt));
+  const balSrc=reforecastSettings.actualLoanBalance!==null?ot('finConfirmed')+' '+ico('check'):(strict?ot('finFromLog'):ot('plan')+' '+M_(planAt));
   return `<div class="baseline-bar" style="margin:0 0 14px"><span>${ot('finMode')}: <b>${strict?ot('finStrict'):ot('finLenient')}</b></span></div>
   <div class="ops-kpis">${kpi(ot('eqCalled'),M_(called),ot('commitment')+' '+M_(commit),called<commit-0.5?'':'up')}${kpi(ot('loanBal'),M_(loanAt),balSrc,loanAt>planAt*1.05?'dn':'')}${kpi(ot('drawn'),M_(drawn),ot('facilityUse')+' '+M_(facility))}${kpi(ot('intToDate'),M_(intTo),ot('plan')+' '+M_(intPlan),intTo>intPlan*1.05?'dn':'')}${kpi(ot('ltc'),fP(ltc),'')}${kpi(ot('peak'),M_(peak),'Q'+peakQ)}</div>
   ${(()=>{const pd=i=>R.drawdowns[i]||0,ad=i=>i<cut?actualOf('debt_draw',i,i+1):(R2.drawdowns[i]||0),pr=i=>R.qRepay[i]||0,arp=i=>i<cut?actualOf('debt_repay',i,i+1):(R2.qRepay[i]||0),pdt=sumA(R.drawdowns.slice(0,cut)),adt=sumA(Array.from({length:cut},(_,i)=>ad(i))),fees=k=>[sumA((R[k]||[]).slice(0,cut)),actualOf(k==='qArrFee'?'arr_fee':'bank_mgmt',0,cut)];
@@ -9015,7 +9138,7 @@ const AR_EXACT={
  'Current Password (required)':'كلمة المرور الحالية (مطلوبة)','Recovery Email':'بريد الاستعادة','New Password (leave blank to keep current)':'كلمة مرور جديدة (اتركها فارغة للإبقاء على الحالية)',
  'Save Changes':'حفظ التغييرات','Account':'الحساب','Logout':'تسجيل الخروج','Excel':'إكسل',
  'SHARED VIEW':'عرض مشارك','You are viewing shared projects':'أنت تعرض مشاريع مشاركة','Exit Shared View':'الخروج من العرض المشارك',
- 'Reforecast':'إعادة التوقع','Exit Reforecast':'الخروج من إعادة التوقع','Classic look':'المظهر الكلاسيكي','Gulf look':'مظهر الخليج','Done':'تم','Built for':'صُممت لـ','Real Estate Fund Managers':'مديري الصناديق العقارية',
+ 'Reforecast':'إعادة التوقع','Exit Reforecast':'الخروج من إعادة التوقع','Classic look':'المظهر الكلاسيكي','Gulf look':'مظهر الخليج','Done':'تم','Payments':'المدفوعات','Built for':'صُممت لـ','Real Estate Fund Managers':'مديري الصناديق العقارية',
  'in the Kingdom of Saudi Arabia · All calculations are estimates for planning purposes only':'في المملكة العربية السعودية · جميع الحسابات تقديرية لأغراض التخطيط فقط',
  'RE Fund Financial Study':'الدراسة المالية للصندوق العقاري','Saved versions':'النسخ المحفوظة',
  'your@email.com':'your@email.com','Enter your password':'أدخل كلمة المرور','Confirm your password':'أعد إدخال كلمة المرور',
@@ -9034,9 +9157,11 @@ const AR_TOKENS=[
  [/\bSAR\b/g,'ريال'],[/\bSAIBOR\b/g,'سايبور'],[/\bIRR\b/g,'العائد الداخلي'],[/\bGuest\b/g,'زائر']
 ];
 function _arText(t){
-  const k=t.trim(); if(!k||!/[A-Za-z]/.test(k)) return t;
-  if(AR_EXACT[k]!==undefined) return t.replace(k,AR_EXACT[k]);
-  let o=t; for(const [re,to] of AR_TOKENS) o=o.replace(re,to); return o;
+  const k=t.trim(); if(!k) return t;
+  let o=t;
+  if(/[A-Za-z]/.test(k)){ if(AR_EXACT[k]!==undefined) o=t.replace(k,AR_EXACT[k]); else for(const [re,to] of AR_TOKENS) o=o.replace(re,to); }
+  // negative numbers: isolate "−8.6" / "−100.0%" so the sign stays in front of the digits in RTL text
+  return o.replace(/(^|[^\d\u2066\w])([−-]\d[\d,.]*%?)(?![\d\u2069])/g,'$1\u2066$2\u2069');
 }
 function _i18nSkip(el){ return !el||el.closest('[data-no-i18n],script,style,textarea,[contenteditable="true"]'); }
 let _i18nBusy=false;
