@@ -935,48 +935,22 @@ html[data-theme=gulf] .rfcs-badge{background:var(--g-gold-soft);color:#6d5320;fo
   html[data-theme=gulf] .sum-bar{flex-wrap:wrap}
 }
 /* ═══ END THEME ═══ */
-/* ═══ LEAN UI (removals, reversible: ?full=1) ═══
-   Everything here is gated on html[data-lean], set by UI_LEAN in the first script after the stylesheet.
-   Template-level removals use UI_LEAN?'':'…' in the renderers; the original markup stays in the file. */
-/* Cash Flow: the "Scroll to quarter" slider is replaced by a sticky quarter header — the table scrolls inside its card so the header row and the first column stay put (both directions, RTL included) */
-html[data-lean]{--lean-stack:184px} /* header 64 + project bar 58 + tab bar 62 (measured); the Operations period bar lives inside the control-room panel, not above the Cash Flow tab */
-html[data-lean] #cfTableWrap{max-height:calc(100vh - var(--lean-stack) - 48px);overflow:auto}
-html[data-lean] #cfTableWrap .dt thead th{position:sticky;top:0;z-index:7}
-html[data-lean] #cfTableWrap .dt thead th:first-child{z-index:8}
-/* Debt tab: one muted line instead of the three summary tiles */
-html[data-lean] .lean-line{font-size:.88rem;color:var(--on-surface-v);margin:0 0 14px;font-variant-numeric:tabular-nums}
-/* Assumptions: the baseline bar carries only the Lock button when nothing is locked */
-html[data-lean] .baseline-bar:not(.locked):has(>span[hidden]){background:none;border:none;box-shadow:none;padding:0;justify-content:flex-end}
-html[data-lean] .baseline-bar.lean-slim span[hidden]+label{margin-inline-start:auto}
-/* Operations: FAB hidden everywhere (it lives in the period bar as .ops-addpay) */
-html[data-lean] .ops-drawer-btn{display:none}
-/* Free-text (i) tooltips (tipText): plain paragraph, not the two-column rows of tipLabel */
-html[data-lean] .tip-h .tip-box.tip-text{width:420px;max-width:80vw;white-space:normal;line-height:1.45;text-transform:none;letter-spacing:0;font-weight:400}
-html[data-lean] .cx-tbl thead th .tip-h{border-bottom-color:rgba(255,255,255,.5)}
-/* Sales: cumulative columns behind "Show cumulative" */
-html[data-lean] .cx-tbl .lean-cum{display:none}
-html[data-lean] .cx-tbl.cum-on .lean-cum{display:table-cell}
-html[data-lean] .lean-toggle{display:flex;justify-content:flex-end;align-items:center;gap:6px;font-size:.78rem;color:var(--on-surface-vl);margin:0 0 6px;cursor:pointer}
-html[data-lean] .lean-toggle input{margin:0;accent-color:var(--primary)}
-/* VAT: empty state instead of empty axes */
-html[data-lean] .lean-empty{margin:0;padding:28px 0;text-align:center}
-/* Payments drawer: "Delete selected (0)" only when something is selected */
-html[data-lean] #actDelSel[disabled]{display:none}
-/* Audit: tolerance behind "⋯ settings" */
-html[data-lean] .lean-settings{display:inline-block;font-weight:500;font-size:.78rem;color:var(--on-surface-vl)}
-html[data-lean] .lean-settings summary{cursor:pointer;list-style:none;user-select:none}
-html[data-lean] .lean-settings summary::-webkit-details-marker{display:none}
-html[data-lean] .lean-settings[open] summary{margin-inline-end:10px}
-html[data-lean] .lean-settings>span{display:inline-flex;align-items:center;gap:6px}
-/* Summary page 2: the KPI strip is gone, the schedule moves up and the charts take the room */
-html[data-lean] .es-page .es-sales-wrap{margin-top:9mm}
-html[data-lean] .es-page .es-charts{padding-top:10mm}
-/* ═══ END LEAN UI ═══ */
+
+/* ═══ CF GROUPS ═══ */
+.cf-tools{display:flex;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.cfg-all{display:inline-flex;gap:4px;background:var(--surface-ch);border-radius:999px;padding:3px;margin-inline-start:auto}.cfg-all a{cursor:pointer;padding:5px 12px;border-radius:999px;font-size:.8rem;font-weight:600;color:var(--on-surface-v)}.cfg-all a:hover{background:#fff;color:var(--primary)}
+.dt tr.cfg-h td{background:var(--g-soft,#e4efea);color:var(--primary);font-weight:700;cursor:pointer;border-top:1px solid var(--outline);user-select:none}
+.dt tr.cfg-h td.rl{background:var(--g-soft,#e4efea)}
+.dt tr.cfg-h:hover td{background:#d9e8e1}
+.cfg-t{display:inline-flex;align-items:center;gap:8px}.cfg-ch{width:1em;height:1em;transform:rotate(90deg);transition:transform .2s}
+.dt.cfg-c-rev tr.cfg-r[data-g=rev],.dt.cfg-c-exp tr.cfg-r[data-g=exp],.dt.cfg-c-dev tr.cfg-r[data-g=dev],.dt.cfg-c-fin tr.cfg-r[data-g=fin]{display:none}
+.dt.cfg-c-rev tr.cfg-h[data-g=rev] .cfg-ch,.dt.cfg-c-exp tr.cfg-h[data-g=exp] .cfg-ch,.dt.cfg-c-dev tr.cfg-h[data-g=dev] .cfg-ch,.dt.cfg-c-fin tr.cfg-h[data-g=fin] .cfg-ch{transform:rotate(0deg)}
+[dir=rtl] .cfg-ch{transform:rotate(90deg)}[dir=rtl] .dt.cfg-c-rev tr.cfg-h[data-g=rev] .cfg-ch,[dir=rtl] .dt.cfg-c-exp tr.cfg-h[data-g=exp] .cfg-ch,[dir=rtl] .dt.cfg-c-dev tr.cfg-h[data-g=dev] .cfg-ch,[dir=rtl] .dt.cfg-c-fin tr.cfg-h[data-g=fin] .cfg-ch{transform:rotate(180deg)}
+.dt tr.cfg-r td.rl{padding-inline-start:28px}
+@media print{.cfg-all{display:none}}
+/* ═══ END CF GROUPS ═══ */
 </style>
 <script>
-// UI_LEAN: the 2026-10 "lean UI" removals. ?full=1 restores the full UI, ?lean=1 re-enables; stored in localStorage.uiLean. Flip the default here to roll back globally.
-const UI_LEAN=(()=>{try{const q=new URLSearchParams(location.search);if(q.has('full'))localStorage.uiLean='0';if(q.has('lean'))localStorage.uiLean='1';return localStorage.uiLean!=='0';}catch(e){return true;}})();
-if(UI_LEAN)document.documentElement.setAttribute('data-lean','');
 // ═══ ICONS — inline SVG icon set (stroke 1.75, 24 viewBox, currentColor). ico(name,cls) → markup; icoHydrate() fills static <i data-ico> placeholders.
 const ICONS={
  settings:'<path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h8M16 17h4"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="14" cy="17" r="2"/>',
@@ -2355,7 +2329,7 @@ function buildForm(){
 
   // Build per-project sections with tabs (Sections 1,2,4)
   let projSections=`<div style="margin-top:8px;margin-bottom:8px;padding-top:0">
-    <div class="proj-sub-tabs"${UI_LEAN&&projects.length<2?' hidden':''}>${projTabs}</div>
+    <div class="proj-sub-tabs">${projTabs}</div>
     <div class="form-grid">
     <div class="sec"><div class="sec-t">${TX[lang].s[1]} - ${escH(P.name)||(lang==='ar'?'مشروع ':'Project ')+( activeProjectIdx+1)}</div>
       <div class="frow frow-2"><label>${F.projName}</label><input type="text" id="proj_name" value="${escH(P.name||'')}" onchange="projects[${activeProjectIdx}].name=this.value;buildForm()"></div>
@@ -2595,13 +2569,15 @@ function buildSchedule(){
   const secSep='<div style="height:48px;border-top:3px solid var(--primary);margin:32px 0;position:relative"><div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--surface-bg);padding:0 16px;color:var(--primary);font-weight:700;font-size:.85rem;white-space:nowrap">'+(lang==='ar'?'جدول المبيعات':'Sales Schedule')+'</div></div>';
   // Project switcher for schedule tab
   const schProjTabs=projects.length>1?`<div class="proj-sub-tabs" style="margin-bottom:16px">${projects.map((proj,idx)=>`<button class="proj-sub-tab${idx===activeProjectIdx?' act':''}" onclick="activeProjectIdx=${idx};buildSchedule()">${escH(proj.name)}</button>`).join('')}</div>`:'';
-  // LEAN UI: the two page headings repeat the card headings directly under them, and the "Sales Schedule" divider is decorative
-  const _schHead=(en,ar)=>UI_LEAN?'':`<div style="margin-bottom:8px;font-family:'Manrope',system-ui;font-size:1.1rem;font-weight:700;color:var(--primary);letter-spacing:.03em"${lang==='ar'?' dir="rtl"':''}>${lang==='ar'?ar:en}</div>`;
-  p.innerHTML=schProjTabs+_schHead('Construction Components','مكونات التطوير')+buildConTable()+`
+  p.innerHTML=schProjTabs+`
+  <div style="margin-bottom:8px;font-family:'Manrope',system-ui;font-size:1.1rem;font-weight:700;color:var(--primary);letter-spacing:.03em"${lang==='ar'?' dir="rtl"':''}>${lang==='ar'?'مكونات التطوير':'Construction Components'}</div>
+  `+buildConTable()+`
   <div class="sch-wrap"><h3>${tl.schConDist}</h3>
   <table class="sch-tbl"><thead><tr><th>${schHdr}</th>${qlabels.map(q=>`<th>${q}</th>`).join('')}<th>${schTot}</th></tr></thead>
   <tbody>${sitems.map(it=>schRow(it.label,it.key)).join('')}</tbody></table></div>
-  ${String(projects[activeProjectIdx].strategy)!==String('lease')?(UI_LEAN?'':secSep)+_schHead('Sales Components','مكونات المبيعات')+buildSalesTable()+`
+  ${String(projects[activeProjectIdx].strategy)!==String('lease')?secSep+`
+  <div style="margin-bottom:8px;font-family:'Manrope',system-ui;font-size:1.1rem;font-weight:700;color:var(--primary);letter-spacing:.03em"${lang==='ar'?' dir="rtl"':''}>${lang==='ar'?'مكونات المبيعات':'Sales Components'}</div>
+  `+buildSalesTable()+`
   <div class="sch-wrap"><h3>${tl.schSalesDist}</h3>
   <table class="sch-tbl"><thead><tr><th>${schHdr}</th>${qlabels.map(q=>`<th>${q}</th>`).join('')}<th>${schTot}</th></tr></thead>
   <tbody>${schRow(tl.schSalesRow,'salesSchedule')}</tbody></table></div>`
@@ -3356,17 +3332,7 @@ function renderDashboard(){
     const vatLabel=Number(R.A.vat_refund)?
       (lang==='ar'?'إجمالي التكاليف (بدون ضريبة)':'Total Cost (ex-VAT)'):
       (lang==='ar'?'إجمالي التكاليف (شامل الضريبة)':'Total Cost (Inclusive of VAT)');
-    const _recTile=(((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))>0.5?
-          [[tipLabel(lang==='ar'?'ضرائب قابلة للاسترداد (تمويل مؤقت)':'Recoverable taxes (bridge)',[[lang==='ar'?'ضريبة التصرفات العقارية':'RETT',R.rettRecoverable||0],[lang==='ar'?'ضريبة القيمة المضافة':'VAT',Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0]]),
-            fN((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))+' '+cur+'<span class="kpi-pct">'+(lang==='ar'?'تُسترد خلال مدة الصندوق':'recovered within the fund term')+'</span>']]:[]);
-    const kG=UI_LEAN?[
-      // LEAN UI: Total debt / LTC tiles (repeat the capital-structure chart + Debt tab) and the four capital-structure tiles (the chart shows amount + share) are dropped; Annual ROI joins Investor returns, Recoverable taxes joins Revenue & cost. DCR (lease projects) stays.
-      {title:DH.revCost,items:[
-        [DH.totalRev,fN(R.tRev)+' '+cur],[vatLabel,fN(R.totalCost)+' '+cur],[DH.grossProfit,fN(R.grossProfit)+' '+cur],[DH.profitMargin,fP(R.profitMargin)],..._recTile]},
-      {title:DH.invRet,items:[
-        [DH.irr,fP(irr)],[DH.annROI,fP(R.annualROI)],[DH.eqMult,eqMult.toFixed(2)+'x'],[DH.totalDiv,fN(R.totalDiv)+' '+cur],[DH.perfFee,fN(perfFee)+' '+cur]]},
-      ...(R.hasLeaseProjects?[{title:DH.debtFin,items:[[DH.dcr,fP(dcr)]]}]:[])
-    ]:[
+    const kG=[
       {title:DH.revCost,items:[
         [DH.totalRev,fN(R.tRev)+' '+cur],[vatLabel,fN(R.totalCost)+' '+cur],[DH.grossProfit,fN(R.grossProfit)+' '+cur],[DH.profitMargin,fP(R.profitMargin)]]},
       {title:DH.invRet,items:[
@@ -3379,7 +3345,9 @@ function renderDashboard(){
         [DH.capInKind,fN(R.capInKind)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capInKind/R.capTotal:0)+'</span>'],
         [DH.capOffPlan,fN(R.capOffPlan)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capOffPlan/R.capTotal:0)+'</span>'],
         [DH.capDebt,fN(R.capDebt)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capDebt/R.capTotal:0)+'</span>'],
-        ..._recTile]},
+        ...(((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))>0.5?
+          [[tipLabel(lang==='ar'?'ضرائب قابلة للاسترداد (تمويل مؤقت)':'Recoverable taxes (bridge)',[[lang==='ar'?'ضريبة التصرفات العقارية':'RETT',R.rettRecoverable||0],[lang==='ar'?'ضريبة القيمة المضافة':'VAT',Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0]]),
+            fN((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))+' '+cur+'<span class="kpi-pct">'+(lang==='ar'?'تُسترد خلال مدة الصندوق':'recovered within the fund term')+'</span>']]:[])]},
     ];
     let kH='';
     kG.forEach(g=>{
@@ -3444,7 +3412,7 @@ function renderDashboard(){
       <div class="ch-card"><h3>${DH.closingCash}<span class="ch-unit">SAR</span></h3><canvas id="c3"></canvas></div>
       <div class="ch-card"><h3>${DH.debtSch}<span class="ch-unit">SAR</span></h3><canvas id="c4"></canvas></div>
       <div class="ch-card"><h3>${L('Cumulative Investor CF','التدفق النقدي التراكمي')}<span class="ch-unit">SAR</span></h3><canvas id="c6"></canvas></div>
-      ${UI_LEAN?'':`<div class="ch-card"><h3>${L('Revenue vs Cost','الإيرادات مقابل التكاليف')}<span class="ch-unit">SAR</span></h3><canvas id="c7"></canvas></div>`}
+      <div class="ch-card"><h3>${L('Revenue vs Cost','الإيرادات مقابل التكاليف')}<span class="ch-unit">SAR</span></h3><canvas id="c7"></canvas></div>
     </div>`;
     // GP/LP Waterfall Distribution — starts with cash BEFORE perf fee deduction
     const _vr=Number(R.A.vat_refund);
@@ -3605,16 +3573,28 @@ function renderScenarioComparison(){
 function showPop(title,rows,foot){let el=document.getElementById('bkPop');if(!el){el=document.createElement('div');el.id='bkPop';el.className='bk-pop';el.onclick=e=>{if(e.target===el)el.remove();};document.body.appendChild(el);}
   el.innerHTML=`<div class="bk-box"><div class="bk-h"><b>${title}</b><a onclick="document.getElementById('bkPop').remove()" aria-label="Close">${ico('close')}</a></div><div class="bk-body">${rows.length?rows.map(r=>`<div class="bk-r ${r[2]||''}"><span>${r[0]}</span><b>${typeof r[1]==='number'?fN(r[1]):r[1]}</b></div>`).join(''):'<p class="ops-muted">—</p>'}</div>${foot?`<div class="bk-f">${foot}</div>`:''}</div>`;}
 function cfVatPop(i){const P=window._cfVatParts||[];const L=TX[lang].cf;const rows=P.map(([l,a])=>[l,i<0?a.reduce((x,y)=>x+y,0):a[i]]).filter(r=>Math.abs(r[1])>0.5);const tot=rows.reduce((s,r)=>s+r[1],0);rows.push([L.netRefunds,tot,'tot']);showPop((i<0?(lang==='ar'?'الإجمالي':'Total'):qLabel(i))+' — '+L.netRefunds,rows,lang==='ar'?'استردادات موجبة، رسوم المستشار سالبة':'refunds positive, advisor fee negative');}
+// CF GROUPS (2026-10-21): collapsible groups in the Cash Flow statement. Render-only; remove by deleting gh()/ge() calls, these helpers and the .cfg-* CSS.
+function cfGroupsState(){try{return JSON.parse(localStorage.cfGroups||'{}');}catch(e){return {};}}
+function cfApplyGroups(){const st=cfGroupsState();document.querySelectorAll('#p-cashflow table.dt').forEach(t=>{['rev','exp','dev','fin'].forEach(g=>t.classList.toggle('cfg-c-'+g,!!st[g]));});}
+function cfToggle(g){const st=cfGroupsState();st[g]=!st[g];try{localStorage.cfGroups=JSON.stringify(st);}catch(e){}cfApplyGroups();}
+function cfAll(collapse){const st={};['rev','exp','dev','fin'].forEach(g=>st[g]=!!collapse);try{localStorage.cfGroups=JSON.stringify(st);}catch(e){}cfApplyGroups();}
 function renderCashFlow(){
   const r=viewR(); if(!r) return; const nq=r.nq;
   const cutoffQ=r._cutoffQ||0;
   const isRF=r===R2&&!!r._isReforecast;
   const lb=lang==='ar'?r.labels.map(q=>q.replace('Q','ربع ')):r.labels;
+  let _cfG=''; // CF GROUPS: current group key; rows rendered while set belong to that collapsible group
   function tr(label,data,cls){
     const tot=data.reduce((a,b)=>a+b,0);
     const neg=v=>v<0?'neg':'';
-    return `<tr class="${cls||''}"><td class="rl">${label}</td>${data.map((v,i)=>`<td class="${neg(v)}${isRF&&i<cutoffQ?' rfcs-actual':''}">${fN(v)}</td>`).join('')}<td class="${neg(tot)}">${fN(tot)}</td></tr>`;
+    return `<tr class="${cls||''}${_cfG?' cfg-r':''}"${_cfG?` data-g="${_cfG}"`:''}><td class="rl">${label}</td>${data.map((v,i)=>`<td class="${neg(v)}${isRF&&i<cutoffQ?' rfcs-actual':''}">${fN(v)}</td>`).join('')}<td class="${neg(tot)}">${fN(tot)}</td></tr>`;
   }
+  // CF GROUPS: a group header row carries the group's net total; clicking it folds the detail rows below (state in localStorage.cfGroups)
+  function gh(key,label,data){
+    _cfG=key;const tot=data.reduce((a,b)=>a+b,0),neg=v=>v<0?'neg':'';
+    return `<tr class="cfg-h" data-g="${key}" onclick="cfToggle('${key}')"><td class="rl"><span class="cfg-t">${ico('arrow','cfg-ch')}${label}</span></td>${data.map((v,i)=>`<td class="${neg(v)}${isRF&&i<cutoffQ?' rfcs-actual':''}">${fN(v)}</td>`).join('')}<td class="${neg(tot)}">${fN(tot)}</td></tr>`;
+  }
+  function ge(){_cfG='';}
   function sep(){return `<tr class="sep"><td colspan="${nq+2}"></td></tr>`;}
   function sub(label,data){return tr(label,data,'sub');}
 
@@ -3624,14 +3604,16 @@ function renderCashFlow(){
   if(isRF){
     h+=`<div class="rfcs-banner"><span class="rfcs-badge">${lang==='ar'?'وضع إعادة التوقع':'REFORECAST MODE'}</span> <span>${lang==='ar'?'الأرباع الفعلية':'Actual Quarters'}: Q1–Q${cutoffQ} | ${lang==='ar'?'التوقع':'Forecast'}: Q${cutoffQ+1}–Q${nq}</span></div>`;
   }
-  if(!UI_LEAN){ // LEAN UI: slider replaced by a sticky quarter header (CSS, #cfTableWrap)
-  h+=`<div class="sld-group" style="margin-bottom:20px;max-width:500px">
+  h+=`<div class="cf-tools"><div class="sld-group" style="margin-bottom:0;max-width:500px;flex:1">
     <label><span>${sliderLabel}</span> <b id="cfScrollVal">Q1</b></label>
     <input type="range" id="cfScrollSlider" min="1" max="${nq}" value="1" step="1">
-  </div>`;
-  }
+  </div><span class="cfg-all"><a onclick="cfAll(false)">${lang==='ar'?'توسيع الكل':'Expand all'}</a><a onclick="cfAll(true)">${lang==='ar'?'طيّ الكل':'Collapse all'}</a></span></div>`;
   h+=`<div class="tbl-wrap" id="cfTableWrap"><table class="dt"><thead><tr><th class="rl">${L.hdr}</th>${lb.map((q,i)=>`<th class="${isRF&&i<cutoffQ?'rfcs-hdr-actual':''}">${q}${isRF?(i<cutoffQ?' '+ico('check'):' '+ico('arrow','ic-flip')):''}<small class="qe">${fmtDateS(qEndDate(i))}</small></th>`).join('')}<th>${lang==='ar'?'المجموع':'Total'}</th></tr></thead><tbody>`;
 
+  const G=lang==='ar'?{rev:'الإيرادات',exp:'مصاريف الصندوق وتكلفة التمويل',dev:'تكاليف التطوير (صافي الاستثمار)',fin:'التمويل (صافي)',cash:'النقد'}:{rev:'Revenue',exp:'Fund expenses & financing cost',dev:'Development costs (net investing)',fin:'Financing (net)',cash:'Cash position'};
+  const _qRevX=Array(nq).fill(0);if(typeof actuals!=='undefined'&&actuals.length)for(const p of actuals){if((p.category==='murabaha'||p.category==='other_inc')&&p.quarter>=0&&p.quarter<nq)_qRevX[p.quarter]+=p.amount;}
+  const qRevNet=r.qGrossSales.map((v,i)=>v+r.qVATNet[i]+_qRevX[i]); // = the rows of this group; Revenue − (Fund expenses & financing cost) = Net operating cash flow
+  h+=gh('rev',G.rev,qRevNet);
   h+=tr(L.grossSales,r.qGrossSales);
   // Murabaha & Other Income from actuals
   if(typeof actuals!=='undefined' && actuals.length){
@@ -3644,14 +3626,15 @@ function renderCashFlow(){
     if(qMurabaha.some(v=>v>0)) h+=tr(L.murabaha||'Murabaha Income',qMurabaha);
     if(qOtherInc.some(v=>v>0)) h+=tr(L.otherInc||'Other Income',qOtherInc);
   }
-  h+=tr(L.wafi,r.qWafi.map(v=>-v));
-  h+=tr(L.sellExp,r.qSellExp.map(v=>-v));
   // VAT & RETT — one line; click a cell for its breakdown (construction VAT, fund-expense VAT, brokerage VAT, RETT refund, advisor fee)
   {const parts=[[L.vatRefCon,r.qVATRefundCon],[L.vatRefExp,r.qVATRefundExp],[L.vatRefBrok,r.qBrokVATRefund],[L.rettRef,r.qRETTRefund],[L.vatAdvisor,r.qVATAdvisor.map(v=>-v)]];
     window._cfVatParts=parts.map(x=>[x[0],x[1].slice()]);
     const tot=r.qVATNet.reduce((a,b)=>a+b,0);
-    h+=`<tr class="sub"><td class="rl">${L.netRefunds} <i class="cf-i">ⓘ</i></td>${r.qVATNet.map((v,i)=>`<td class="${v<0?'neg':''}${isRF&&i<cutoffQ?' rfcs-actual':''} cf-click" onclick="cfVatPop(${i})" title="${lang==='ar'?'انقر للتفاصيل':'click for breakdown'}">${fN(v)}</td>`).join('')}<td class="${tot<0?'neg':''} cf-click" onclick="cfVatPop(-1)">${fN(tot)}</td></tr>`;}
-  h+=sep();
+    h+=`<tr class="sub cfg-r" data-g="rev"><td class="rl">${L.netRefunds} <i class="cf-i">ⓘ</i></td>${r.qVATNet.map((v,i)=>`<td class="${v<0?'neg':''}${isRF&&i<cutoffQ?' rfcs-actual':''} cf-click" onclick="cfVatPop(${i})" title="${lang==='ar'?'انقر للتفاصيل':'click for breakdown'}">${fN(v)}</td>`).join('')}<td class="${tot<0?'neg':''} cf-click" onclick="cfVatPop(-1)">${fN(tot)}</td></tr>`;}
+  ge();h+=sep();
+  h+=gh('exp',G.exp,r.qTotalFundExp.map((v,i)=>-v-r.qInterest[i]));
+  h+=tr(L.wafi,r.qWafi.map(v=>-v)); // WAFI + selling commission are part of qTotalFundExp in the engine, so they sit in this group
+  h+=tr(L.sellExp,r.qSellExp.map(v=>-v));
   h+=tr(L.custody,r.qCustody.map(v=>-v));
   h+=tr(L.spv,r.qSPV.map(v=>-v));
   h+=tr(L.fundSetup,r.qFundSetup.map(v=>-v));
@@ -3667,9 +3650,10 @@ function renderCashFlow(){
   h+=tr(L.perfFee,r.qPerfFee.map(v=>-v));
   h+=sub(L.totalFundExp,r.qTotalFundExp.map(v=>-v));
   h+=tr(L.interest,r.qInterest.map(v=>-v));
-  h+=sub(L.netOp,r.qNetOp);
+  ge();h+=sub(L.netOp,r.qNetOp);
 
   h+=sep();
+  h+=gh('dev',G.dev,r.qNetInv);
   h+=tr(L.land,r.qLandCF);
   h+=tr(L.conBase,r.qBaseCon.map(v=>-v));
   h+=tr(L.conDevFee,r.qDevFee.map(v=>-v));
@@ -3679,9 +3663,10 @@ function renderCashFlow(){
   h+=tr(L.conSupervision,r.qSupervision.map(v=>-v));
   h+=tr(L.conLicensing,r.qLicensing.map(v=>-v));
   h+=sub(L.conCost,r.qCon.map(v=>-v));
-  h+=sub(L.netInv,r.qNetInv);
+  ge();
 
   h+=sep();
+  h+=gh('fin',G.fin,r.qNetFin);
   const qNetBorrow=r.drawdowns.map((d,i)=>d-r.qRepay[i]);
   h+=tr(L.netBorrow,qNetBorrow);
   h+=tr(L.equity,r.qEquity);
@@ -3699,7 +3684,7 @@ function renderCashFlow(){
     if(other&&other.some(v=>Math.abs(v)>0.5))h+=sub('↳ '+(ar?'مسجّل بدون مصدر':'Booked, source not tagged'),other);
   }
   h+=tr(L.dividends,r.qDividends.map(v=>-v));
-  h+=sub(L.netFin,r.qNetFin);
+  ge();
 
   h+=sep();
   h+=tr(L.openCash,r.qCashOpen,'bld');
@@ -3720,6 +3705,7 @@ function renderCashFlow(){
 
   h+=`</tbody></table></div>`;
   document.getElementById('p-cashflow').innerHTML=viewStamp()+h;
+  cfApplyGroups();
   // Wire up the scroll slider
   const cfSlider=document.getElementById('cfScrollSlider');
   const cfVal=document.getElementById('cfScrollVal');
@@ -3745,12 +3731,7 @@ function renderDebt(){
   function tr(label,data,cls){return `<tr class="${cls||''}"><td class="rl">${label}</td>${data.map(v=>`<td>${fN(v)}</td>`).join('')}</tr>`;}
 
   const DL=TX[lang].debt;
-  let h='';
-  if(UI_LEAN){ // LEAN UI: the three tiles repeat the Dashboard — one muted line instead
-    let pk=0;r.qLoanClose.forEach((v,i)=>{if(v>r.qLoanClose[pk])pk=i;});
-    const _ar=lang==='ar';
-    h+=`<p class="lean-line">${_ar?'التسهيل':'Facility'} ${fmtCompact(r.totalDebt)} · ${_ar?'ذروة السحب':'peak drawn'} ${lb[pk]} (${fmtCompact(r.qLoanClose[pk])}) · ${_ar?'إجمالي أرباح التمويل':'total profit charge'} ${fmtCompact(r.totalInt)} · ${DL.ltc} ${fP(r.ltc)}</p>`;
-  }else h+=`<div class="debt-sum">
+  let h=`<div class="debt-sum">
     <div class="ds-item"><div class="ds-lbl">${DL.totalDrawn}</div><div class="ds-val">${fN(r.totalDebt)} ${lang==='ar'?'ريال':'SAR'}</div></div>
     <div class="ds-item"><div class="ds-lbl">${DL.totalInt}</div><div class="ds-val">${fN(r.totalInt)} ${lang==='ar'?'ريال':'SAR'}</div></div>
     <div class="ds-item"><div class="ds-lbl">${DL.ltc}</div><div class="ds-val">${fP(r.ltc)}</div></div>
@@ -4078,7 +4059,6 @@ function renderSummary(){
   </div>`;
 
   // KPI Strip — Ordered: total sales, total costs, net profit, project return, equity return, annual equity return, IRR
-  if(!UI_LEAN){ // LEAN UI: page-2 strip repeats page 1 (page-2 content is re-spaced by the lean CSS + taller bar chart)
   h+=`<div class="es-kpi-strip">`;
   [[fU(fmt(RS.tRev),cur),L('Total Sales','إجمالي المبيعات'),'dark'],
    [fU(fmt(RS.totalCost),cur),L('Total Costs','إجمالي التكاليف'),'dark'],
@@ -4092,7 +4072,6 @@ function renderSummary(){
     h+=`<div class="es-kpi ${cls}"><div class="es-kpi-val" style="color:${color}">${val}</div><div class="es-kpi-lbl">${lbl}</div></div>`;
   });
   h+=`</div>`;
-  }
 
   // Sales Schedule Table — RTL in Arabic
   const qLbl=pLbl;
@@ -4134,7 +4113,7 @@ function renderSummary(){
     const bc=document.getElementById('esBarChart');
     if(!bc) return;
     const bCtx=bc.getContext('2d');
-    const bW=bc.parentElement.offsetWidth||500, bH=UI_LEAN?360:215;
+    const bW=bc.parentElement.offsetWidth||500, bH=215;
     bc.style.width=bW+'px'; bc.style.height=bH+'px';
     bc.width=bW*2; bc.height=bH*2; bCtx.scale(2,2);
     const maxS=Math.max(...pSales,1);
@@ -4179,7 +4158,7 @@ function renderSummary(){
     const dc=document.getElementById('esDonutChart');
     if(!dc) return;
     const dCtx=dc.getContext('2d');
-    const dW2=dc.parentElement.offsetWidth||220, dH2=UI_LEAN?300:195;
+    const dW2=dc.parentElement.offsetWidth||220, dH2=195;
     dc.style.width=dW2+'px'; dc.style.height=dH2+'px';
     dc.width=dW2*2; dc.height=dH2*2; dCtx.scale(2,2);
     const capI=[{label:L('Equity','نقد المستثمرين'),val:RS.capCash,color:_esC.pie[0]},
@@ -4187,7 +4166,7 @@ function renderSummary(){
       {label:L('Off-Plan','على الخارطة'),val:RS.capOffPlan,color:_esC.pie[2]},
       {label:L('Debt','تمويل بنكي'),val:RS.capDebt,color:_esC.pie[3]}].filter(c=>c.val>0);
     const cS=capI.reduce((a,c)=>a+c.val,0)||1;
-    const cx2=dW2/2, cy2=UI_LEAN?82:54, oR=UI_LEAN?68:42, iR=UI_LEAN?40:24;
+    const cx2=dW2/2, cy2=54, oR=42, iR=24;
     let sA=-Math.PI/2;
     dCtx.shadowColor=_esG?'transparent':'rgba(115,91,35,.1)'; dCtx.shadowBlur=12; dCtx.shadowOffsetY=4;
     capI.forEach(item=>{
@@ -5422,8 +5401,6 @@ function _actCompToggle(){
   sel.innerHTML=has?componentOptions(cat,sel.dataset.sel||''):''; wrap.style.display=(has&&sel.options.length)?'':'none';
 }
 // Hover breakdown for rolled-up lines (label ⓘ). rows: [[label, amount]]. Works in tables and KPI tiles; PDF gets a footnote instead.
-// Free-text (i) tooltip with the same .tip-h markup (LEAN UI uses it for footnotes turned into tooltips)
-function tipText(label,text){return `<span class="tip-h">${label} <i>ⓘ</i><span class="tip-box tip-text">${escH(text)}</span></span>`;}
 function tipLabel(label,rows){
   const body=rows.filter(r=>Math.abs(r[1])>0.5).map(r=>`<div><span>${escH(r[0])}</span><b>${fN(r[1])}</b></div>`).join('');
   if(!body) return label;
@@ -5648,7 +5625,7 @@ function applyBaselineLock(){
   const b=reforecastSettings.baseline; const old=document.getElementById('baselineBar'); if(old) old.remove();
   const bar=document.createElement('div'); bar.id='baselineBar'; bar.className='baseline-bar'+(b?' locked':'');
   bar.innerHTML=b?`<span>${ico('lock')} ${lang==='ar'?'خط الأساس مقفل منذ':'Baseline locked on'} ${new Date(b.lockedAt).toLocaleDateString()} — ${lang==='ar'?'التعديلات المستقبلية تتم من تبويب التوقع في التشغيل والمتابعة':'future changes are made in Operations → Forecast'}</span><button onclick="lockBaseline()">${lang==='ar'?'إلغاء القفل':'Unlock'}</button>`
-    :`<span${UI_LEAN?' hidden':''}>${lang==='ar'?'هذه افتراضات دراسة الجدوى. عند إطلاق الصندوق اقفلها كخط أساس لقياس الانحرافات.':'These are the feasibility assumptions. When the fund launches, lock them as the baseline for variance tracking.'}</span><button onclick="lockBaseline()">${ico('lock')} ${lang==='ar'?'قفل كخط أساس':'Lock as baseline'}</button>`;
+    :`<span>${lang==='ar'?'هذه افتراضات دراسة الجدوى. عند إطلاق الصندوق اقفلها كخط أساس لقياس الانحرافات.':'These are the feasibility assumptions. When the fund launches, lock them as the baseline for variance tracking.'}</span><button onclick="lockBaseline()">${ico('lock')} ${lang==='ar'?'قفل كخط أساس':'Lock as baseline'}</button>`;
   p.prepend(bar);
   if(b){ p.querySelectorAll('input,select,button.sch-btn,button.add-btn').forEach(el=>{ if(!bar.contains(el)) el.disabled=true; }); }
 }
@@ -5841,14 +5818,12 @@ function renderOps(){
   let h=`<div class="ops-period">
     <div class="ops-asof"><span class="lbl">${ot('asof')}</span><select id="opsCut" onchange="reforecastSettings.cutoffQ=Number(this.value);opsRefresh()">${Array.from({length:nq},(_,i)=>`<option value="${i}"${cut===i?' selected':''}>Q${i} · ${fmtDate(qEndDate(i-1))}</option>`).join('')}</select><span class="ops-sub">${cut} / ${nq} ${ot('closed')} · ${monthsLeft} ${ot('toEnd')}</span></div>
     <div class="ops-view">${['baseline','forecast','both'].map(v=>`<span class="${opsView===v?'on':''}" onclick="opsView='${v}';renderOps()">${ot(v)}</span>`).join('')}</div>
-    <div class="ops-chips">${chip(sp,ot('spend'),M_(actToDate),ot('plan')+' '+M_(planToDate))}${UI_LEAN?'':chip(fc,ot('fac'),M_(R2.totalCost),(dFac>=0?'+':'−')+M_(Math.abs(dFac))+' '+ot('vsBase'))+chip(ir,ot('irr'),fP(b.irr)+(lang==='ar'?' ← ':' → ')+fP(R2.irr),'')+chip(sl,ot('sales_'),fP(soldPct)+' '+ot('sold'),ot('plan')+' '+fP(planSoldPct))}</div>
-    ${UI_LEAN?`<button class="ops-close ops-addpay" onclick="openPaymentsDrawer()">${ico('plus')} ${ot('addPay')}</button>`:''}
+    <div class="ops-chips">${chip(sp,ot('spend'),M_(actToDate),ot('plan')+' '+M_(planToDate))}${chip(fc,ot('fac'),M_(R2.totalCost),(dFac>=0?'+':'−')+M_(Math.abs(dFac))+' '+ot('vsBase'))}${chip(ir,ot('irr'),fP(b.irr)+(lang==='ar'?' ← ':' → ')+fP(R2.irr),'')}${chip(sl,ot('sales_'),fP(soldPct)+' '+ot('sold'),ot('plan')+' '+fP(planSoldPct))}</div>
     <button class="ops-close" onclick="reforecastSettings.cutoffQ=Math.min(${nq-1},${cut}+1);opsRefresh()">${ot('close')} Q${cut+1} ${lang==='ar'?'←':'→'}</button>
   </div>
-  <nav class="ops-nav">${OPS_SECTIONS.map(s=>`<button class="${opsSection===s?'on':''}" onclick="opsSection='${s}';renderOps()">${ot(s)}${UI_LEAN?'':opsBadge(s)}</button>`).join('')}</nav>
+  <nav class="ops-nav">${OPS_SECTIONS.map(s=>`<button class="${opsSection===s?'on':''}" onclick="opsSection='${s}';renderOps()">${ot(s)}${opsBadge(s)}</button>`).join('')}</nav>
   <div class="ops-body">${hint}${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:opsFinancing,vat:opsVat,nav:opsNav,scenarios:opsScenarios,reports:opsReports})[opsSection]()}</div>
-  ${UI_LEAN?'':`<button class="ops-drawer-btn" onclick="openPaymentsDrawer()">${ico('plus')} ${ot('addPay')}</button>`}`;
-  // LEAN UI (above): forecast / IRR / sales chips repeat the overview tiles, section badges repeat the decisions list, the floating "Add payments" button becomes a pill in the period bar.
+  <button class="ops-drawer-btn" onclick="openPaymentsDrawer()">${ico('plus')} ${ot('addPay')}</button>`;
   pnl.innerHTML=h;
 }
 function opsAlerts(){
@@ -5968,7 +5943,7 @@ function opsCosts(){
   let h=`<div class="ops-kpis">${kpi(ot('cxActual'),M_(TA),closed?ot('cxClosedN').replace('{n}',cut):ot('cxAllPay'))}${kpi(ot('cxBudget'),M_(TB),closed?ot('cxPlanTo').replace('{n}',cut):ot('cxFullPlan'))}${kpi(ot('cxVar'),(dv>=0?'+':'−')+M_(Math.abs(dv)),TB?(dv>=0?'+':'−')+Math.abs(dv/TB*100).toFixed(1)+'% '+ot('cxVsBudget'):'',vc==='bad'?'dn':vc==='good'?'up':'')}${kpi(ot('fac'),M_(TF),(dF>=0?'+':'−')+M_(Math.abs(dF))+' '+ot('vsBase'),dF>TO*0.005?'dn':'')}</div>`;
   h+=docInvoicesCard();
   // table
-  const colHdr=`<tr><th>${UI_LEAN?tipText(ot('cxLine'),ot('cxNote')):ot('cxLine')}</th><th>${ot('budget')}</th><th>${ot('actual')}</th><th>${ot('cxVarCol')}</th><th>${ot('commit')}</th><th>${ot('adj')}</th><th>${ot('facShort')}</th><th>${ot('cxTreatCol')}</th><th></th></tr>`;
+  const colHdr=`<tr><th>${ot('cxLine')}</th><th>${ot('budget')}</th><th>${ot('actual')}</th><th>${ot('cxVarCol')}</th><th>${ot('commit')}</th><th>${ot('adj')}</th><th>${ot('facShort')}</th><th>${ot('cxTreatCol')}</th><th></th></tr>`;
   const trow=r=>{const c=r.c,id=c.key,open=!!F.open[id],comps=(c.key==='base_con')?lineComponents(c.key):[],ct=comps.reduce((a,x)=>a+x.value,0),fq=nq-cut,ph=reforecastSettings.manualRedist[c.key]||[],rem=Math.max(0,r.fac-r.act-r.com);
     let s=`<tr class="cx-cat"><td><a class="cx-tg" onclick="cxToggle('${id}')">${open?'▾':'▸'}</a>${escH(ar?c.ar:c.en)}<small>${r.n} ${ot('payments')}${comps.length?' · '+comps.length+' '+ot('components'):''}</small></td><td class="rfcs-num">${fN(r.bud)}</td><td class="rfcs-num">${fN(r.act)}</td><td class="rfcs-num cx-var ${_vcls(r.bud,r.act,TB)}">${_vtxt(r.bud,r.act)}</td>
       <td><input type="number" class="ops-mini" value="${(reforecastSettings.committed||{})[c.key]==null?'':Math.round(r.com)}" placeholder="0" onchange="setCommittedNet('${c.key}',this.value)"></td><td><input type="number" class="ops-mini" placeholder="${M_(r.orig)}" value="${r.adj==null?'':Math.round(r.adj)}" onchange="setLineBudgetNet('${c.key}',this.value);opsRefresh()"></td>
@@ -5988,7 +5963,7 @@ function opsCosts(){
   body+=`<tr class="tot"><td><b>${ot('cxTotal')}</b></td><td class="rfcs-num"><b>${fN(TB)}</b></td><td class="rfcs-num"><b>${fN(TA)}</b></td><td class="rfcs-num cx-var ${vc}">${_vtxt(TB,TA)}</td><td></td><td></td><td class="rfcs-num"><b>${fN(TF)}</b></td><td colspan="2"></td></tr>`;
   h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ot('cxTable')}<span class="cx-seg">${[['closed',ot('cxToDate')],['all',ot('cxAll')]].map(([v,l])=>`<a class="${F.period===v?'on':''}" onclick="cxSet('period','${v}')">${l}</a>`).join('')}</span></h3>
     <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead>${colHdr}</thead><tbody>${body}</tbody></table></div>
-    ${UI_LEAN?'':`<p class="ops-muted" style="font-size:.76rem;margin:10px 0 0">${ot('cxNote')}</p>`}</div>`; // LEAN UI: the note is the (i) tooltip on the Line header
+    <p class="ops-muted" style="font-size:.76rem;margin:10px 0 0">${ot('cxNote')}</p></div>`;
   // one chart
   const byType=groups.map(g=>({label:etypeLabel(g.t.key),color:g.t.color,vals:[g.rows.reduce((s,r)=>s+r.bud,0),g.rows.reduce((s,r)=>s+r.act,0)]}));
   const byCat=rows.slice().sort((a,b)=>Math.max(b.bud,b.act)-Math.max(a.bud,a.act)).slice(0,12).map(r=>({label:ar?r.c.ar:r.c.en,color:EXP_TYPES.find(t=>t.cats.includes(r.c.key)).color,vals:[r.bud,r.act]}));
@@ -6052,12 +6027,10 @@ function salesTimingCard(cut,nq){const ar=lang==='ar',g=R2._fundingGap||Array(nq
   return `<div class="ops-card" style="margin-top:16px"><h3>${ar?'توقيت المبيعات والحاجة التمويلية':'Sales timing & funding need'}<span>${ar?'التسهيل ':'facility '}${isFinite(fac)?M_(fac):'—'} <input type="number" class="ops-mini" style="width:130px" value="${reforecastSettings.facilityLimit?Math.round(reforecastSettings.facilityLimit):''}" placeholder="${isFinite(fac)?Math.round(fac):''}" onchange="reforecastSettings.facilityLimit=this.value===''?null:Number(this.value);opsRefresh()"></span></h3>
   <p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${ar?'التوقع: ':'Forecast: '}${how}. ${totGap>0.5?'<b class="cx-var bad"><span>'+(ar?'فجوة تمويل ':'Funding gap ')+M_(totGap)+'</span></b> — '+(ar?'السحب يتوقف عند سقف التسهيل؛ العمود الأخير = ما يلزم بيعه (أو تمويله) بحلول كل ربع.':'drawdowns stop at the facility ceiling; the last column is what must be sold (or funded) by each quarter.'):(ar?'لا فجوة تمويل: التوقع ضمن سقف التسهيل.':'No funding gap: the forecast stays within the facility.')}</p>
   ${pctRow}
-  ${UI_LEAN?`<label class="lean-toggle"><input type="checkbox"${opsSalesCum?' checked':''} onchange="opsSalesCum=this.checked;renderOps()"> ${ar?'إظهار التراكمي':'Show cumulative'}</label>`:''}
-  <div class="cx-wrap"><table class="rfcs-tbl cx-tbl${opsSalesCum?' cum-on':''}"><thead><tr><th></th><th>${ar?'الخطة':'Plan sales'}</th><th>${ar?'التوقع':'Forecast sales'}</th><th class="lean-cum">${ar?'تراكمي الخطة':'Cum. plan'}</th><th class="lean-cum">${ar?'تراكمي التوقع':'Cum. forecast'}</th><th>${ar?'سحب التمويل':'Drawdown'}</th><th>${ar?'فجوة التمويل':'Funding gap'}</th><th>${ar?'مبيعات لازمة تراكمياً':'Sales needed (cum.)'}</th></tr></thead><tbody>
-  ${rows.map(r=>`<tr class="${r.i<cut?'':'cx-sub'}"><td>${qLabel(r.i)}${r.i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(r.p)}</td><td class="rfcs-num">${fN(r.f)}</td><td class="rfcs-num lean-cum">${fN(r.cumP)}</td><td class="rfcs-num cx-var lean-cum ${r.cumF<r.cumP-0.5?'warn':''}"><span>${fN(r.cumF)}</span></td><td class="rfcs-num">${fN(r.draw)}</td><td class="rfcs-num cx-var ${r.gap>0.5?'bad':''}"><span>${r.gap>0.5?fN(r.gap):'—'}</span></td><td class="rfcs-num"><b>${fN(r.cumF+r.cumG)}</b></td></tr>`).join('')}</tbody></table></div></div>`;}
+  <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ar?'الخطة':'Plan sales'}</th><th>${ar?'التوقع':'Forecast sales'}</th><th>${ar?'تراكمي الخطة':'Cum. plan'}</th><th>${ar?'تراكمي التوقع':'Cum. forecast'}</th><th>${ar?'سحب التمويل':'Drawdown'}</th><th>${ar?'فجوة التمويل':'Funding gap'}</th><th>${ar?'مبيعات لازمة تراكمياً':'Sales needed (cum.)'}</th></tr></thead><tbody>
+  ${rows.map(r=>`<tr class="${r.i<cut?'':'cx-sub'}"><td>${qLabel(r.i)}${r.i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(r.p)}</td><td class="rfcs-num">${fN(r.f)}</td><td class="rfcs-num">${fN(r.cumP)}</td><td class="rfcs-num cx-var ${r.cumF<r.cumP-0.5?'warn':''}"><span>${fN(r.cumF)}</span></td><td class="rfcs-num">${fN(r.draw)}</td><td class="rfcs-num cx-var ${r.gap>0.5?'bad':''}"><span>${r.gap>0.5?fN(r.gap):'—'}</span></td><td class="rfcs-num"><b>${fN(r.cumF+r.cumG)}</b></td></tr>`).join('')}</tbody></table></div></div>`;}
 // pin a quarter's share of the remaining revenue; the latest entry is capped at what the other pins leave (never more than 100 in total)
 let _salesCapNote=null;
-let opsSalesCum=false; // LEAN UI: "Show cumulative" toggle for the Cum. plan / Cum. forecast columns (render-only)
 function salesSetPct(i,v){_rfNorm();const P=reforecastSettings.salesPins=reforecastSettings.salesPins||{};const cut=R2?R2._cutoffQ:0;let others=0;for(const k in P){if(+k!==i&&+k>=cut)others+=Number(P[k])||0;}
   let val=Math.max(0,Number(v)||0);const room=Math.max(0,100-others);_salesCapNote=null;if(val>room+1e-9){_salesCapNote={i,asked:val,capped:room};val=room;}P[i]=+val.toFixed(4);opsRefresh();}
 function salesUnpin(i){_rfNorm();const P=reforecastSettings.salesPins||{};delete P[i];_salesCapNote=null;opsRefresh();}
@@ -6192,11 +6165,10 @@ function opsVat(){
   const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
   const outs=(R2._vatOutstanding||[]);
   const fcLine=outs.length?(ar?'التوقع يفترض استرداد ':'The forecast assumes refunds of ')+outs.map(o=>M_(o.amt)+' '+(ar?'في':'in')+' Q'+(o.t+1)).join(', ')+(ar?' (حسب تواريخ التقديم + ':' (submission date + ')+_refundMonths()+(ar?' أشهر)':' months)'):(ar?'لا استردادات معلّقة في التوقع':'No outstanding refunds in the forecast');
-  const vatEmpty=!(T.recorded>0.5||T.submitted>0.5||T.received>0.5||T.unclaimed>0.5||T.est>0.5); // LEAN UI: process sentence only as an empty state; chart shows an empty state instead of empty axes
-  let h=(UI_LEAN&&!vatEmpty?'':`<div class="baseline-bar" style="margin:0 0 14px"><span>${ar?'دورة الاسترداد: تُسجَّل الفواتير خلال الربع ← يُقدَّم طلب استرداد واحد بنهاية الربع ← مراجعة الهيئة ← القبول ← الاستلام بعد ':'Refund cycle: invoices recorded through the quarter → one claim filed at quarter end → ZATCA review → acceptance → refund received after '}${_refundMonths()}${ar?' أشهر. ':' months. '}${fcLine}</span></div>`)+`
+  let h=`<div class="baseline-bar" style="margin:0 0 14px"><span>${ar?'دورة الاسترداد: تُسجَّل الفواتير خلال الربع ← يُقدَّم طلب استرداد واحد بنهاية الربع ← مراجعة الهيئة ← القبول ← الاستلام بعد ':'Refund cycle: invoices recorded through the quarter → one claim filed at quarter end → ZATCA review → acceptance → refund received after '}${_refundMonths()}${ar?' أشهر. ':' months. '}${fcLine}</span></div>
   <div class="ops-kpis">${kpi(ot('vRecorded'),M_(T.recorded),(ar?'موثّق · مقدّر مستبعد ':'documented · excluded estimate ')+M_(T.est),'')}${kpi(ar?'لم يُطالَب به بعد':'Not yet claimed',M_(T.unclaimed),ar?'أرباع بلا طلب':'quarters without a claim',T.unclaimed>0.5?'dn':'')}${kpi(ot('vClaimed'),M_(T.submitted),(ar?'مرفوض ':'rejected ')+M_(T.rejected)+' · '+(ar?'مقبول ':'accepted ')+M_(T.accepted))}${kpi(ot('vRecv'),M_(T.received),ar?'من الهيئة':'from ZATCA')}${kpi(ar?'قيد الاسترداد':'Outstanding refunds',M_(T.outstanding),ar?'مقبول ولم يُستلم':'accepted, not yet received',T.outstanding>0.5?'dn':'')}${T.rettReceivable>0.5?kpi(ot('vRett'),M_(T.rettReceivable),ot('vRettSub')+' '+M_(T.rettPaid)):''}</div>`;
   const al=vatAlerts();
-  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ar?'الضريبة حسب الربع':'VAT by quarter'}<span>SAR</span></h3>${UI_LEAN&&vatEmpty?`<p class="ops-muted lean-empty">${ar?'لا توجد ضريبة مسجّلة بعد — يظهر الرسم عند تسجيل أول فاتورة أو دفعة بضريبة.':'No VAT recorded yet — the chart appears once the first invoice or payment with VAT is logged.'}</p>`:svgQuadBars(qs.map(x=>({label:'Q'+(x.q+1),vals:[x.recorded,x.submitted,x.confirmed!=null?x.confirmed:x.accepted,x.received]})))}</div>
+  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ar?'الضريبة حسب الربع':'VAT by quarter'}<span>SAR</span></h3>${svgQuadBars(qs.map(x=>({label:'Q'+(x.q+1),vals:[x.recorded,x.submitted,x.confirmed!=null?x.confirmed:x.accepted,x.received]})))}</div>
   <div class="ops-card"><h3>${ar?'يحتاج إجراء':'Needs action'}<span>${al.length}</span></h3><div class="ops-alerts">${al.length?al.map(a=>`<div class="ops-al"><span class="dot ${a[0]}"></span><div>${escH(a[1])}</div></div>`).join(''):`<p class="ops-muted">${ot('nothing')}</p>`}</div><p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ar?'التنبيهات: طلب لم يُقدَّم بعد شهر من نهاية الربع، استرداد متأخر عن الموعد المتوقع، فواتير مرفوضة تحتاج إجراء، ضريبة مخرجات مستحقة. فترة الاسترداد المتوقعة تُضبط في دراسة الجدوى ← فترة الاسترداد الضريبي (اضبطها على 3 أشهر لهذا الصندوق).':'Alerts: claim not filed a month after quarter end, refund overdue vs expected, rejected invoices needing action, output VAT payable. The expected refund period is the fund assumption in Feasibility → VAT refund period (set it to 3 months for this fund).'}</p></div></div>`;
   const st={recording:[ar?'قيد التسجيل':'recording',''],to_submit:[ar?'جاهز للتقديم':'ready to submit','warn'],submitted:[ar?'مُقدَّم — بانتظار المراجعة':'submitted — awaiting review',''],reviewed:[ar?'تمت المراجعة':'reviewed','warn'],accepted:[ar?'مقبول — بانتظار الاستلام':'accepted — awaiting refund',''],refunded:[ar?'مُستَرَد':'refunded','good'],rejected:[ar?'مرفوض':'rejected','bad']};
   const btn=(l,fn)=>`<button class="ops-close" style="padding:4px 10px;font-size:.74rem" onclick="${fn}">${l}</button>`;
@@ -6258,9 +6230,8 @@ function navModel(){
 function opsNav(){
   const m=navModel(),cut=R2._cutoffQ,nq=R2.nq,ar=lang==='ar',r=m.rows[Math.max(0,cut-1)],last=m.rows[nq-1];
   const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
-  // LEAN UI: the method paragraph is an (i) tooltip on the NAV tile heading, the footnote an (i) tooltip on the statement heading
-  let h=`<div class="baseline-bar lean-slim" style="margin:0 0 14px"><span${UI_LEAN?' hidden':''}>${ot('nBasis')}</span><label class="ops-field" style="margin:0">${ot('nUnitPrice')}<input type="number" class="ops-mini" style="width:90px" value="${m.unitPrice}" onchange="navSet('unitPrice',this.value)"></label></div>
-  <div class="ops-kpis">${kpi(UI_LEAN?tipText(ot('nNav')+' Q'+cut,ot('nBasis')):ot('nNav')+' Q'+cut,M_(r.nav),ot('plan')+' '+M_(r.planNav),r.nav<r.planNav*0.98?'dn':'up')}${kpi(ot('nNavU'),r.navU.toFixed(3),ot('plan')+' '+r.planU.toFixed(3)+' · '+ot('nUnits')+' '+fN(r.units),r.navU<r.planU*0.98?'dn':'up')}${kpi(ot('nAssets'),M_(r.assets),ot('nLoan')+' '+M_(r.loan))}${kpi(ot('nNavEnd'),M_(last.nav),ot('nNavUEnd')+' '+last.navU.toFixed(3))}</div>`;
+  let h=`<div class="baseline-bar" style="margin:0 0 14px"><span>${ot('nBasis')}</span><label class="ops-field" style="margin:0">${ot('nUnitPrice')}<input type="number" class="ops-mini" style="width:90px" value="${m.unitPrice}" onchange="navSet('unitPrice',this.value)"></label></div>
+  <div class="ops-kpis">${kpi(ot('nNav')+' Q'+cut,M_(r.nav),ot('plan')+' '+M_(r.planNav),r.nav<r.planNav*0.98?'dn':'up')}${kpi(ot('nNavU'),r.navU.toFixed(3),ot('plan')+' '+r.planU.toFixed(3)+' · '+ot('nUnits')+' '+fN(r.units),r.navU<r.planU*0.98?'dn':'up')}${kpi(ot('nAssets'),M_(r.assets),ot('nLoan')+' '+M_(r.loan))}${kpi(ot('nNavEnd'),M_(last.nav),ot('nNavUEnd')+' '+last.navU.toFixed(3))}</div>`;
   // chart NAV/unit plan vs actual+forecast
   const lp=m.rows.map(x=>x.planU),la=m.rows.map((x,i)=>i<cut?x.navU:null),lf=m.rows.map((x,i)=>i>=cut-1?x.navU:null);
   h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ot('nChart')}<span>SAR/${ot('nUnit')}</span></h3>${svgLines([[lp,CHART.sand],[la,CHART.green],[lf,CHART.gold,1]],cut,nq)}</div>
@@ -6273,14 +6244,14 @@ function opsNav(){
   const cols=m.rows;
   const line=(l,f,fmt,neg)=>`<tr><td>${l}</td>${cols.map(x=>`<td class="rfcs-num ${x.closed?'':'ops-muted'}">${neg&&x[f]?'('+fN(x[f])+')':(fmt?fmt(x[f]):fN(x[f]))}</td>`).join('')}</tr>`;
   const inp=(l,kind,f)=>`<tr class="cx-sub"><td>${l}</td>${cols.map(x=>`<td><input type="number" class="ops-mini" style="width:96px" placeholder="—" value="${((kind==='mark'?navSettings().marks[x.q]:navSettings().accr[x.q])||{})[f]??''}" onchange="${kind==='mark'?'navMark':'navAccr'}(${x.q},'${f}',this.value)"></td>`).join('')}</tr>`;
-  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${UI_LEAN?tipText(ot('nStatement'),ot('nNote')):ot('nStatement')}<span>${ot('nStmtSub')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${cols.map(x=>`<th>Q${x.q+1}<small class="qe">${fmtDateS(qEndDate(x.q))}</small>${x.closed?'':'<small class="qe">'+ot('forecast')+'</small>'}${x.marked?' ✎':''}</th>`).join('')}</tr></thead><tbody>
+  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ot('nStatement')}<span>${ot('nStmtSub')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${cols.map(x=>`<th>Q${x.q+1}<small class="qe">${fmtDateS(qEndDate(x.q))}</small>${x.closed?'':'<small class="qe">'+ot('forecast')+'</small>'}${x.marked?' ✎':''}</th>`).join('')}</tr></thead><tbody>
   ${line(ot('nLand'),'land')}${inp(ot('nMarkLand'),'mark','land')}${line(ot('nCip'),'cip')}${inp(ot('nMarkCip'),'mark','cip')}${line(ot('nCash'),'cash')}${line(ot('nVatRec'),'vatRec')}${line(ot('nRettRec'),'rettRec')}${inp(ot('nOther'),'accr','other')}
   <tr class="tot"><td><b>${ot('nAssets')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${fN(x.assets)}</b></td>`).join('')}</tr>
   ${line(ot('nLoan'),'loan',null,true)}${inp(ot('nAccrFee'),'accr','mgmt')}${inp(ot('nAccrPerf'),'accr','perf')}${inp(ot('nPayables'),'accr','payables')}
   <tr class="tot"><td><b>${ot('nNav')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${fN(x.nav)}</b></td>`).join('')}</tr>
   ${line(ot('nUnits'),'units')}<tr class="tot"><td><b>${ot('nNavU')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${x.navU.toFixed(3)}</b></td>`).join('')}</tr>
   <tr><td>${ot('nPlanU')}</td>${cols.map(x=>`<td class="rfcs-num ops-muted">${x.planU.toFixed(3)}</td>`).join('')}</tr></tbody></table></div>
-  ${UI_LEAN?'':`<p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ot('nNote')}</p>`}</div>`;
+  <p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ot('nNote')}</p></div>`;
   return h;
 }
 // ═══════════════════════════════════════════════
@@ -6488,8 +6459,6 @@ function docInvoicesCard(){
   const zt={submitted:[ar?'مُقدَّمة':'submitted',''],accepted:[ar?'مقبولة':'accepted','good'],rejected:[ar?'مرفوضة':'rejected','bad']};
   let h=`<div class="ops-card" style="margin-bottom:16px"><h3>${ar?'الفواتير والالتزامات القائمة':'Invoices & outstanding obligations'}<span><button class="ops-close" style="padding:6px 14px" onclick="docStep1()">${ico('upload')} ${ar?'فاتورة ضريبية (الخطوة 1)':'Tax invoice (Step 1)'}</button></span></h3>
     <div class="ops-kpis" style="margin-bottom:12px"><div class="ops-kpi"><small>${ar?'التزامات قائمة':'Outstanding obligations'}</small><b>${M_(sum(os,'total'))}</b><i>${ar?'قبل الضريبة':'base'} ${M_(sum(os,'base'))} · ${ar?'الضريبة':'VAT'} ${M_(sum(os,'vat'))} · ${os.length}</i></div><div class="ops-kpi"><small>${ar?'مدفوعة (مرتبطة بإيصالات)':'Paid (linked to receipts)'}</small><b>${M_(sum(inv.filter(i=>i.status==='paid'),'total'))}</b><i>${inv.filter(i=>i.status==='paid').length}</i></div><div class="ops-kpi"><small>${ar?'ضريبة الفواتير المسجّلة':'VAT on recorded invoices'}</small><b>${M_(sum(inv,'vat'))}</b><i>${ar?'مرفوضة من الهيئة':'rejected by ZATCA'} ${M_(sum(inv.filter(i=>i.zatca==='rejected'),'vat'))}</i></div></div>`;
-  if(!inv.length&&UI_LEAN) // LEAN UI: no invoices yet → one muted line instead of three zero counters + paragraph
-    return h.replace(/<div class="ops-kpis"[\s\S]*$/,'')+`<p class="ops-muted" style="margin:0">${ar?'لا توجد فواتير بعد — ارفع الفاتورة الضريبية الأصلية (الخطوة 1) ويقرأ النظام رمز QR الخاص بالهيئة أو نص الملف قبل الحفظ.':'No invoices yet — upload the original tax invoice (Step 1); the ZATCA QR code or PDF text is read and reviewed before saving.'}</p></div>`;
   if(!inv.length)return h+`<p class="ops-muted">${ar?'ارفع الفاتورة الضريبية الأصلية؛ يقرأ النظام رمز QR الخاص بالهيئة (المورّد، الرقم الضريبي، الإجمالي، الضريبة) أو نص الملف، وتراجع البيانات قبل الحفظ.':'Upload the original tax invoice; the system reads the ZATCA QR code (supplier, VAT no., total, VAT) or the PDF text, and you review the details before saving.'}</p></div>`;
   h+=`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الفاتورة':'Invoice'}</th><th>${ar?'المورّد':'Supplier'}</th><th>${ar?'البند':'Category'}</th><th>${ar?'قبل الضريبة':'Base'}</th><th>${ar?'الضريبة':'VAT'}</th><th>${ar?'الإجمالي':'Total'}</th><th>${ar?'الحالة':'Status'}</th><th>${ar?'الهيئة':'ZATCA'}</th><th>${ar?'المستندات':'Documents'}</th><th></th></tr></thead><tbody>
     ${inv.map(i=>`<tr><td><b>${escH(i.no||'—')}</b><small class="ops-muted">${escH(i.date||'')} · ${escH((i.description||'').slice(0,40))}</small></td><td>${escH((i.supplier||'').slice(0,30))}<small class="ops-muted">${escH(i.supplierVat||'')}</small></td><td>${escH(_actCatLabel(i.category))}</td><td class="rfcs-num">${fN(i.base)}</td><td class="rfcs-num">${fN(i.vat)}</td><td class="rfcs-num"><b>${fN(i.total)}</b></td><td>${i.status==='paid'?`<span class="ops-pill good">${ar?'مدفوعة':'paid'}</span><small class="ops-muted">${escH(i.paidDate||'')}${i.txn?' · '+escH(i.txn):''}</small>`:`<span class="ops-pill warn">${ar?'قائمة':'outstanding'}</span>`}</td><td>${i.zatca?`<span class="ops-pill ${zt[i.zatca][1]}">${zt[i.zatca][0]}</span>${i.zatcaReason?`<small class="ops-muted" title="${escH(i.zatcaReason)}">${escH(i.zatcaReason.slice(0,40))}</small>`:''}`:''}</td>
@@ -6892,15 +6861,12 @@ function renderAudit(){
   if(!R){pnl.innerHTML=`<div class="sec"><p>${ot('calcFirst')}</p></div>`;return;}ensureForecast();
   const b=bank();if(murabahaSync())opsRefresh();const ex=auditExplain(),checks=auditChecks(ex),qrows=auditQuarterRows(ex),cut=R2._cutoffQ;
   const stc={ok:'good',warn:'warn',bad:'bad',na:''},stl={ok:ar?'مطابق':'reconciled',warn:ar?'فروقات':'differences',bad:ar?'غير مطابق':'not reconciled',na:ar?'لا بيانات':'no data'};
-  let h=`<div class="sec"><div class="vq-head"><div><h2 style="margin:0;font-family:'Noto Serif',serif;color:#00322d">${ar?'التدقيق — فحص مستقل لأرقام فريق العمليات':'Audit — independent check of the operations team'}</h2><p class="ops-muted" style="margin:4px 0 0;font-size:.82rem"${UI_LEAN?' hidden':''}>${ar?'المصادر: كشوف الحساب البنكية (الحقيقة للنقد)، سجل المصروفات، ورقة الاستثمارات. تُفسَّر حركات البنك طبقة بعد طبقة، وما يتبقى يظهر هنا.':'Sources: bank statements (the truth for cash), the expense register, the treasury sheet. Ledger lines are explained in layers; whatever is left shows up here.'}</p></div>
+  let h=`<div class="sec"><div class="vq-head"><div><h2 style="margin:0;font-family:'Noto Serif',serif;color:#00322d">${ar?'التدقيق — فحص مستقل لأرقام فريق العمليات':'Audit — independent check of the operations team'}</h2><p class="ops-muted" style="margin:4px 0 0;font-size:.82rem">${ar?'المصادر: كشوف الحساب البنكية (الحقيقة للنقد)، سجل المصروفات، ورقة الاستثمارات. تُفسَّر حركات البنك طبقة بعد طبقة، وما يتبقى يظهر هنا.':'Sources: bank statements (the truth for cash), the expense register, the treasury sheet. Ledger lines are explained in layers; whatever is left shows up here.'}</p></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="ops-close" onclick="auditImportStatement()">${ico('upload')} ${ar?'كشف حساب':'Bank statement'}</button><button class="ops-close" onclick="auditImportRegister()">${ico('upload')} ${ar?'سجل المصروفات (Excel)':'Expense register (Excel)'}</button></div></div>`;
   // sources
-  // LEAN UI: source sentence hidden (repeats the upload hint), tolerance behind a "⋯ settings" disclosure, zero counters hidden
-  const _tolCtl=`${ar?'سماحية الفروق الصغيرة (رسوم بنكية)':'small-difference tolerance (bank fees)'} <input type="number" class="ops-mini" style="width:70px" value="${b.tol}" onchange="auditSetTol(this.value)"> SAR`;
-  const _regN=actuals.filter(p=>p.src==='register').length,_trN=actuals.filter(p=>p.src==='treasury').length,_othN=actuals.filter(p=>!p.src).length;
-  h+=`<div class="ops-card" style="margin:14px 0"><h3>${ar?'المصادر':'Sources'}<span>${UI_LEAN?`<details class="lean-settings"><summary>⋯ ${ar?'الإعدادات':'settings'}</summary><span>${_tolCtl}</span></details>`:_tolCtl}</span></h3>
+  h+=`<div class="ops-card" style="margin:14px 0"><h3>${ar?'المصادر':'Sources'}<span>${ar?'سماحية الفروق الصغيرة (رسوم بنكية)':'small-difference tolerance (bank fees)'} <input type="number" class="ops-mini" style="width:70px" value="${b.tol}" onchange="auditSetTol(this.value)"> SAR</span></h3>
     ${b.accounts.length?`<table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'الحساب':'Account'}</th><th>IBAN</th><th>${ar?'الدور':'Role'}</th><th>${ar?'الفترة':'Period'}</th><th>${ar?'حركات':'Lines'}</th><th>${ar?'الرصيد الختامي':'Closing'}</th><th>${ar?'آخر استيراد':'Last import'}</th><th></th></tr></thead><tbody>${b.accounts.map(a=>`<tr><td><b>${escH(a.name)}</b></td><td><small>${escH(a.iban)}</small></td><td><select class="ops-mini" onchange="bankSetRole('${a.id}',this.value)">${[['operating',ar?'تشغيل':'operating'],['fund',ar?'الصندوق / رأس المال':'fund / capital'],['facility',ar?'تسهيل':'facility'],['escrow',ar?'ضمان':'escrow']].map(([v,l])=>`<option value="${v}"${a.role===v?' selected':''}>${l}</option>`).join('')}</select></td><td>${escH(a.period||'')}</td><td class="rfcs-num">${a.lines.length}</td><td class="rfcs-num">${a.closing!=null?fN(a.closing):'—'}</td><td>${escH(a.lastImport||'')}${(a.files||[]).map(f=>` · <a class="ops-link" onclick="docOpen('${f.path}')">${ar?'ملف':'file'}</a>`).join('')}</td><td><a class="ops-link" onclick="bankRemove('${a.id}')" title="${ar?'إزالة':'Remove'}">${ico('close')}</a></td></tr>`).join('')}</tbody></table>`:`<p class="ops-muted">${ar?'ارفع كشف حساب (PDF الراجحي أو Excel) لكل حساب من حسابات الصندوق.':'Upload statements (Al Rajhi or Alinma PDF, ANB or any bank Excel) — several files at once; each is matched to its account.'}</p>`}
-    <p class="ops-muted" style="font-size:.78rem;margin:8px 0 0"${UI_LEAN&&!_regN&&!_trN&&!_othN?' hidden':''}>${ar?'سجل المصروفات: ':'Expense register: '}${actuals.filter(p=>p.src==='register').length} ${ar?'صف':'rows'} · ${ar?'الاستثمارات: ':'treasury: '}${actuals.filter(p=>p.src==='treasury').length} ${ar?'حركة':'movements'} · ${ar?'دفعات أخرى في السجل: ':'other logged payments: '}${actuals.filter(p=>!p.src).length}</p></div>`;
+    <p class="ops-muted" style="font-size:.78rem;margin:8px 0 0">${ar?'سجل المصروفات: ':'Expense register: '}${actuals.filter(p=>p.src==='register').length} ${ar?'صف':'rows'} · ${ar?'الاستثمارات: ':'treasury: '}${actuals.filter(p=>p.src==='treasury').length} ${ar?'حركة':'movements'} · ${ar?'دفعات أخرى في السجل: ':'other logged payments: '}${actuals.filter(p=>!p.src).length}</p></div>`;
   // checks
   h+=`<div class="ops-kpis" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${checks.map(c=>`<div class="ops-kpi au-check ${stc[c.state]}"><small>${c.title}</small><b><span class="ops-pill ${stc[c.state]}">${stl[c.state]}</span></b><i>${c.headline}</i></div>`).join('')}</div>`;
   // cash table + NAV entry
@@ -6913,9 +6879,9 @@ function renderAudit(){
   const types=[['',ar?'— اختر —':'— classify —'],['charge',ar?'رسوم بنكية':'bank charge'],['equity_in',ar?'ضخ رأس مال':'equity injection'],['debt_draw',ar?'سحب تمويل':'drawdown'],['debt_repay',ar?'سداد تمويل':'repayment'],['interest',ar?'أرباح تمويل':'loan profit'],['vat_received',ar?'استرداد ضريبة':'VAT refund'],['revenue',ar?'تحصيل مبيعات':'sales collection'],['inv_out',ar?'توظيف استثمار':'investment placed'],['inv_in',ar?'استرداد استثمار':'investment returned'],['transfer',ar?'تحويل داخلي':'internal transfer'],['murabaha',ar?'ربح مرابحة':'murabaha profit'],['rett_received',ar?'استرداد ضريبة التصرفات':'RETT refund'],['other_exp',ar?'مصروف آخر':'other expense'],...opsCats().filter(c=>c.group==='cost').map(c=>[c.key,(ar?'تكلفة: ':'cost: ')+(ar?c.ar:c.en)]),['rett',ar?'ضريبة التصرفات':'RETT'],['ignore',ar?'تجاهل':'ignore']];
   const unl=[];b.accounts.forEach(a=>a.lines.forEach(l=>{if(!ex.res[l.id])unl.push({a,l});}));
   const mvOpts=ex.unmatchedMv.map(m=>`<option value="${m.id}">${escH(m.date+' · '+m.label.slice(0,36)+' · '+fN(m.amount))}</option>`).join('');
-  h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'حركات بنكية غير مفسّرة':'Unexplained bank lines'}<span${UI_LEAN&&!unl.length?' hidden':''}>${unl.length} · ${M_(sumA(unl.map(x=>x.l.debit||x.l.credit)))}</span></h3>${unl.length?`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'الحساب':'Account'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'دائن':'Credit'}</th><th>${ar?'مدين':'Debit'}</th><th>${ar?'التصنيف':'Classify as'}</th><th>${ar?'أو اربطها بـ':'or link to'}</th></tr></thead><tbody>${unl.slice(0,200).map(({a,l})=>`<tr><td>${l.date}</td><td>${escH(a.name.slice(0,18))}</td><td>${escH(l.desc.slice(0,80))}</td><td class="rfcs-num">${l.credit?fN(l.credit):''}</td><td class="rfcs-num">${l.debit?fN(l.debit):''}</td><td><select class="ops-mini" onchange="auditSetClass('${l.id}',this.value)">${types.map(([v,t])=>`<option value="${v}"${v===''?' selected':''}>${t}</option>`).join('')}</select>${(()=>{const g=auditGuess(a,l);return g?`<small class="ops-muted" style="display:block">${ar?'مقترح: ':'suggested: '}<a class="ops-link" onclick="auditSetClass('${l.id}','${g[0]}')">${escH(g[1])}</a></small>`:'';})()}</td><td><select class="ops-mini" style="max-width:260px" onchange="if(this.value)auditLink('${l.id}',this.value)"><option value="">…</option>${mvOpts}</select></td></tr>`).join('')}</tbody></table></div>`:`<p class="ops-muted">${b.accounts.length?(ar?'لا شيء — كل حركات البنك مفسّرة.':'Nothing — every bank line is explained.'):(ar?'ارفع كشف حساب أولاً.':'Upload a statement first.')}</p>`}</div>`;
+  h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'حركات بنكية غير مفسّرة':'Unexplained bank lines'}<span>${unl.length} · ${M_(sumA(unl.map(x=>x.l.debit||x.l.credit)))}</span></h3>${unl.length?`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'الحساب':'Account'}</th><th>${ar?'البيان':'Description'}</th><th>${ar?'دائن':'Credit'}</th><th>${ar?'مدين':'Debit'}</th><th>${ar?'التصنيف':'Classify as'}</th><th>${ar?'أو اربطها بـ':'or link to'}</th></tr></thead><tbody>${unl.slice(0,200).map(({a,l})=>`<tr><td>${l.date}</td><td>${escH(a.name.slice(0,18))}</td><td>${escH(l.desc.slice(0,80))}</td><td class="rfcs-num">${l.credit?fN(l.credit):''}</td><td class="rfcs-num">${l.debit?fN(l.debit):''}</td><td><select class="ops-mini" onchange="auditSetClass('${l.id}',this.value)">${types.map(([v,t])=>`<option value="${v}"${v===''?' selected':''}>${t}</option>`).join('')}</select>${(()=>{const g=auditGuess(a,l);return g?`<small class="ops-muted" style="display:block">${ar?'مقترح: ':'suggested: '}<a class="ops-link" onclick="auditSetClass('${l.id}','${g[0]}')">${escH(g[1])}</a></small>`:'';})()}</td><td><select class="ops-mini" style="max-width:260px" onchange="if(this.value)auditLink('${l.id}',this.value)"><option value="">…</option>${mvOpts}</select></td></tr>`).join('')}</tbody></table></div>`:`<p class="ops-muted">${b.accounts.length?(ar?'لا شيء — كل حركات البنك مفسّرة.':'Nothing — every bank line is explained.'):(ar?'ارفع كشف حساب أولاً.':'Upload a statement first.')}</p>`}</div>`;
   const cov=auditCoverage();const miss=ex.unmatchedMv.filter(m=>(m.p.src==='register'||m.p.src==='treasury'||m.p.invoiceId)&&cov&&m.date>=cov[0]&&m.date<=cov[1]);const later=ex.unmatchedMv.filter(m=>(m.p.src==='register'||m.p.src==='treasury')&&cov&&m.date>cov[1]).length;
-  h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'صفوف في السجل بلا حركة بنكية':'Register rows with no bank line'}${cov?` <small class="ops-muted">${ar?'ضمن فترة الكشوف ':'within statement coverage '}${cov[0]} → ${cov[1]}${later?' · '+later+(ar?' صفوف بعد الفترة':' rows after the period'):''}</small>`:''}<span${UI_LEAN&&!miss.length?' hidden':''}>${miss.length} · ${M_(sumA(miss.map(m=>m.amount)))}</span></h3>${miss.length?`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'المستفيد':'Payee'}</th><th>${ar?'البند':'Category'}</th><th>${ar?'المبلغ':'Amount'}</th></tr></thead><tbody>${miss.map(m=>`<tr><td>${m.date}</td><td>${escH(m.label.slice(0,60))}</td><td>${escH(_actCatLabel(m.cat))}</td><td class="rfcs-num">${fN(m.amount)}</td></tr>`).join('')}</tbody></table></div><p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'غالباً: مدفوعة من حساب لم يُرفع كشفه (مثل حساب التسهيل)، أو فرق تاريخ أكبر من 10 أيام، أو مبلغ مختلف.':'Usually: paid from an account whose statement is not uploaded (e.g. the facility account), a date gap over 10 days, or a different amount.'}</p>`:`<p class="ops-muted">${ar?'لا شيء.':'Nothing.'}</p>`}</div>`;
+  h+=`<div class="ops-card" style="margin-bottom:14px"><h3>${ar?'صفوف في السجل بلا حركة بنكية':'Register rows with no bank line'}${cov?` <small class="ops-muted">${ar?'ضمن فترة الكشوف ':'within statement coverage '}${cov[0]} → ${cov[1]}${later?' · '+later+(ar?' صفوف بعد الفترة':' rows after the period'):''}</small>`:''}<span>${miss.length} · ${M_(sumA(miss.map(m=>m.amount)))}</span></h3>${miss.length?`<div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'التاريخ':'Date'}</th><th>${ar?'المستفيد':'Payee'}</th><th>${ar?'البند':'Category'}</th><th>${ar?'المبلغ':'Amount'}</th></tr></thead><tbody>${miss.map(m=>`<tr><td>${m.date}</td><td>${escH(m.label.slice(0,60))}</td><td>${escH(_actCatLabel(m.cat))}</td><td class="rfcs-num">${fN(m.amount)}</td></tr>`).join('')}</tbody></table></div><p class="ops-muted" style="font-size:.76rem;margin-top:8px">${ar?'غالباً: مدفوعة من حساب لم يُرفع كشفه (مثل حساب التسهيل)، أو فرق تاريخ أكبر من 10 أيام، أو مبلغ مختلف.':'Usually: paid from an account whose statement is not uploaded (e.g. the facility account), a date gap over 10 days, or a different amount.'}</p>`:`<p class="ops-muted">${ar?'لا شيء.':'Nothing.'}</p>`}</div>`;
   // explained lines (collapsible)
   const expl=[];b.accounts.forEach(a=>a.lines.forEach(l=>{const e=ex.res[l.id];if(e)expl.push({a,l,e});}));
   const howL={deal:ar?'صفقة تورّق':'tawarruq deal',manual:ar?'ربط يدوي':'manual link',class:ar?'مصنّف':'classified',returned:ar?'مرتجع':'returned',transfer:ar?'تحويل داخلي':'internal transfer',ref:ar?'بالمرجع':'by reference',amount:ar?'بالمبلغ':'by amount',fee:ar?'بالمبلغ + رسوم':'amount + fee',sum:ar?'مجموع صفّين':'sum of two rows',split:ar?'حركتان لصف':'two lines, one row',charge:ar?'رسوم بنكية':'bank charge'};
@@ -6940,15 +6906,12 @@ function opsFinancing(){
   const row=(l,bv,cv)=>`<tr><td>${l}</td><td class="rfcs-num">${bv}</td><td class="rfcs-num">${cv}</td></tr>`;
   const strict=!!R2._finStrict, commit=(Number(R.A.equity)||0)+(Number(R.A.gp_commit_cash)||0), called=strict?(R2._equityCalled||0):sumA(R2.qEquity.slice(0,cut)), facility=sumA(R.drawdowns);
   const balSrc=reforecastSettings.actualLoanBalance!==null?ot('finConfirmed')+' '+ico('check'):(strict?ot('finFromLog'):ot('plan')+' '+M_(planAt));
-  const pd=i=>R.drawdowns[i]||0,ad=i=>i<cut?actualOf('debt_draw',i,i+1):(R2.drawdowns[i]||0),pr=i=>R.qRepay[i]||0,arp=i=>i<cut?actualOf('debt_repay',i,i+1):(R2.qRepay[i]||0),pdt=sumA(R.drawdowns.slice(0,cut)),adt=sumA(Array.from({length:cut},(_,i)=>ad(i))),fees=k=>[sumA((R[k]||[]).slice(0,cut)),actualOf(k==='qArrFee'?'arr_fee':'bank_mgmt',0,cut)];
-  const fa=fees('qArrFee'),fb=fees('qBankMgmt');
-  // LEAN UI: one tile row — the two "Drawn to date" tiles (recorded vs forecast-used) become one "Drawn (recorded)" tile with the plan beside it, Peak debt folds into the LTC tile, the status sentence (same as the table caption) goes.
-  const kpisLean=`<div class="ops-kpis">${kpi(ot('eqCalled'),M_(called),ot('commitment')+' '+M_(commit),called<commit-0.5?'':'up')}${kpi(ot('loanBal'),M_(loanAt),balSrc,loanAt>planAt*1.05?'dn':'')}${kpi(lang==='ar'?'المسحوب (مسجّل)':'Drawn (recorded)',M_(adt),(lang==='ar'?'الخطة حتى الآن ':'plan to date ')+M_(pdt)+(strict?'':' · '+(lang==='ar'?'التوقع يستخدم الخطة':'forecast uses the plan')),adt>pdt*1.05?'dn':'')}${kpi(ot('fUndrawn'),M_(Math.max(0,facility-adt)),ot('facility')+' '+M_(facility))}${kpi(ot('intToDate'),M_(intTo),ot('plan')+' '+M_(intPlan),intTo>intPlan*1.05?'dn':'')}${kpi(lang==='ar'?'رسوم بنكية':'Bank fees',M_(fa[1]+fb[1]),(lang==='ar'?'ترتيب + إدارة · الخطة ':'arrangement + management · plan ')+M_(fa[0]+fb[0]),fa[1]+fb[1]>(fa[0]+fb[0])*1.05?'dn':'')}${kpi(ot('ltc'),fP(ltc),(lang==='ar'?'الذروة ':'peak ')+M_(peak)+' · Q'+peakQ)}</div>`;
-  return (UI_LEAN?kpisLean:`<div class="baseline-bar" style="margin:0 0 14px"><span>${ot('finMode')}: <b>${strict?ot('finStrict'):ot('finLenient')}</b></span></div>
+  return `<div class="baseline-bar" style="margin:0 0 14px"><span>${ot('finMode')}: <b>${strict?ot('finStrict'):ot('finLenient')}</b></span></div>
   <div class="ops-kpis">${kpi(ot('eqCalled'),M_(called),ot('commitment')+' '+M_(commit),called<commit-0.5?'':'up')}${kpi(ot('loanBal'),M_(loanAt),balSrc,loanAt>planAt*1.05?'dn':'')}${kpi(ot('drawn'),M_(drawn),ot('facilityUse')+' '+M_(facility))}${kpi(ot('intToDate'),M_(intTo),ot('plan')+' '+M_(intPlan),intTo>intPlan*1.05?'dn':'')}${kpi(ot('ltc'),fP(ltc),'')}${kpi(ot('peak'),M_(peak),'Q'+peakQ)}</div>
-  <div class="ops-kpis">${kpi(ot('fDrawnToDate'),M_(adt),ot('fPlanToDate')+' '+M_(pdt),adt>pdt*1.05?'dn':'')}${kpi(ot('fUndrawn'),M_(Math.max(0,facility-adt)),ot('facility')+' '+M_(facility))}${kpi(ot('fFees'),M_(fa[1]+fb[1]),ot('plan')+' '+M_(fa[0]+fb[0]),fa[1]+fb[1]>(fa[0]+fb[0])*1.05?'dn':'')}</div>`)+`
-  ${(()=>{
-    return `<div class="ops-card" style="margin-bottom:16px"><h3>${ot('fDrawTbl')}<span>${strict?ot('finStrict'):ot('finLenient')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ot('fPlanDraw')}</th><th>${ot('fActDraw')}</th><th>${ot('fPlanRepay')}</th><th>${ot('fActRepay')}</th><th>${ot('fPlanBal')}</th><th>${ot('fBal')}</th><th>${ot('fPlanInt')}</th><th>${ot('fActInt')}</th></tr></thead><tbody>
+  ${(()=>{const pd=i=>R.drawdowns[i]||0,ad=i=>i<cut?actualOf('debt_draw',i,i+1):(R2.drawdowns[i]||0),pr=i=>R.qRepay[i]||0,arp=i=>i<cut?actualOf('debt_repay',i,i+1):(R2.qRepay[i]||0),pdt=sumA(R.drawdowns.slice(0,cut)),adt=sumA(Array.from({length:cut},(_,i)=>ad(i))),fees=k=>[sumA((R[k]||[]).slice(0,cut)),actualOf(k==='qArrFee'?'arr_fee':'bank_mgmt',0,cut)];
+    const fa=fees('qArrFee'),fb=fees('qBankMgmt');
+    return `<div class="ops-kpis">${kpi(ot('fDrawnToDate'),M_(adt),ot('fPlanToDate')+' '+M_(pdt),adt>pdt*1.05?'dn':'')}${kpi(ot('fUndrawn'),M_(Math.max(0,facility-adt)),ot('facility')+' '+M_(facility))}${kpi(ot('fFees'),M_(fa[1]+fb[1]),ot('plan')+' '+M_(fa[0]+fb[0]),fa[1]+fb[1]>(fa[0]+fb[0])*1.05?'dn':'')}</div>
+    <div class="ops-card" style="margin-bottom:16px"><h3>${ot('fDrawTbl')}<span>${strict?ot('finStrict'):ot('finLenient')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ot('fPlanDraw')}</th><th>${ot('fActDraw')}</th><th>${ot('fPlanRepay')}</th><th>${ot('fActRepay')}</th><th>${ot('fPlanBal')}</th><th>${ot('fBal')}</th><th>${ot('fPlanInt')}</th><th>${ot('fActInt')}</th></tr></thead><tbody>
     ${Array.from({length:nq},(_,i)=>`<tr class="${i<cut?'':'cx-sub'}"><td>${qLabel(i)}${i<cut?'':' <small class="ops-muted">'+ot('forecast')+'</small>'}</td><td class="rfcs-num">${fN(pd(i))}</td><td class="rfcs-num ${i<cut&&ad(i)>pd(i)+0.5?'cx-var bad':''}"><span>${fN(ad(i))}</span></td><td class="rfcs-num">${fN(pr(i))}</td><td class="rfcs-num">${fN(arp(i))}</td><td class="rfcs-num">${fN(R.qLoanClose[i]||0)}</td><td class="rfcs-num"><b>${fN(R2.qLoanClose[i]||0)}</b></td><td class="rfcs-num">${fN(R.qInterest[i]||0)}</td><td class="rfcs-num">${fN(R2.qInterest[i]||0)}</td></tr>`).join('')}
     <tr class="tot"><td><b>${ot('gTotal')}</b></td><td class="rfcs-num"><b>${fN(sumA(R.drawdowns))}</b></td><td class="rfcs-num"><b>${fN(sumA(Array.from({length:nq},(_,i)=>ad(i))))}</b></td><td class="rfcs-num"><b>${fN(sumA(R.qRepay))}</b></td><td class="rfcs-num"><b>${fN(sumA(Array.from({length:nq},(_,i)=>arp(i))))}</b></td><td></td><td></td><td class="rfcs-num"><b>${fN(sumA(R.qInterest))}</b></td><td class="rfcs-num"><b>${fN(R2.totalInterest)}</b></td></tr></tbody></table></div></div>`;})()}
   ${ikTable()}
@@ -6973,11 +6936,8 @@ function opsScenarios(){
     <div class="ops-add"><select id="chgParam" class="ops-mini" style="width:auto"><option value="">${ot('param')}</option>${OPS_FIELDS.map(([k,en,ar])=>`<option value="${k}">${lang==='ar'?ar:en} (${blF[k]})</option>`).join('')}</select><input id="chgVal" type="number" class="ops-mini" placeholder="${ot('newVal')}"><input id="chgWhy" class="ops-mini" placeholder="${ot('why')}"><button class="act-btn act-btn-add" onclick="addChange()">${ot('apply')}</button></div></div></div>
   <div class="ops-card"><h3>${ot('scen')}</h3><table class="rfcs-tbl"><thead><tr><th>${ot('scenName')}</th><th>${ot('irr')}</th><th>${ot('mult')}</th><th>${ot('peakD')}</th><th>${ot('dist')}</th></tr></thead><tbody>
     <tr><td>${ot('baseline')}</td><td>${fP(b.irr)}</td><td>${b.eqMult.toFixed(2)}x</td><td>${M_(Math.max(0,...R.qLoanClose))}</td><td>${M_(sumA(R.qDividends))}</td></tr><tr class="tot"><td><b>${ot('current')}</b></td><td><b>${fP(R2.irr)}</b></td><td><b>${R2.eqMult.toFixed(2)}x</b></td><td><b>${M_(R2.peakDebt)}</b></td><td><b>${M_(R2.totalDiv)}</b></td></tr>${sc}</tbody></table>
-    ${UI_LEAN?`<div class="ops-add" style="margin-top:12px"><input id="scName" class="ops-mini" placeholder="${ot('scenName')}"><select id="scParam" class="ops-mini" style="width:auto;max-width:200px"><option value="">${ot('param')}</option>${OPS_FIELDS.map(([k,en,ar])=>`<option value="${k}">${lang==='ar'?ar:en} (${blF[k]})</option>`).join('')}</select><input id="scVal" type="number" class="ops-mini" placeholder="${ot('newVal')}"><input id="scDef" type="hidden"><button class="act-btn act-btn-add" onclick="leanScenDef();addScenario()">${ot('addScen')}</button></div>`
-    :`<div class="ops-add" style="margin-top:12px"><input id="scName" class="ops-mini" placeholder="${ot('scenName')}"><input id="scDef" class="ops-mini" style="flex:1" placeholder="saibor=9.5, fund_period_months=30"><button class="act-btn act-btn-add" onclick="addScenario()">${ot('addScen')}</button></div><p class="ops-muted" style="font-size:.78rem">${ot('scenHint')}</p>`}</div></div>`;
+    <div class="ops-add" style="margin-top:12px"><input id="scName" class="ops-mini" placeholder="${ot('scenName')}"><input id="scDef" class="ops-mini" style="flex:1" placeholder="saibor=9.5, fund_period_months=30"><button class="act-btn act-btn-add" onclick="addScenario()">${ot('addScen')}</button></div><p class="ops-muted" style="font-size:.78rem">${ot('scenHint')}</p></div></div>`;
 }
-// LEAN UI: the scenario picker (same control as the Changes card) writes "param=value" into the hidden #scDef so addScenario() is unchanged
-function leanScenDef(){const k=(document.getElementById('scParam')||{}).value,v=(document.getElementById('scVal')||{}).value,d=document.getElementById('scDef');if(d)d.value=k&&v!==''?k+'='+v:'';}
 function draftCommentary(){
   const cut=R2._cutoffQ,nq=R2.nq,b=baselineMetrics(),ar=lang==='ar',costCats=opsCats().filter(c=>c.group==='cost');
   let plan=0,act=0;for(const c of costCats){for(let i=0;i<cut;i++)plan+=c.getQ(R,i);act+=actualOf(c.key,0,cut);}
