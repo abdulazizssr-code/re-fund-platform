@@ -473,7 +473,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .rfcs-field select:focus,.rfcs-field input:focus{border-color:#0d6efd;outline:none;box-shadow:0 0 0 3px rgba(13,110,253,.12)}
 .rfcs-tbl{width:100%;border-collapse:collapse;font-size:.84rem}
 .rfcs-tbl th,.rfcs-tbl td{padding:10px 12px;border:1px solid var(--outline);text-align:right}
-[dir=rtl] .rfcs-tbl th,[dir=rtl] .rfcs-tbl td{text-align:left}
+[dir=rtl] .rfcs-tbl th,[dir=rtl] .rfcs-tbl td{text-align:right}[dir=rtl] .rfcs-tbl td.rfcs-num,[dir=rtl] .rfcs-tbl th.rfcs-num{direction:ltr;text-align:right}
 .rfcs-tbl th{background:#0d6efd;color:#fff;font-size:.78rem;font-weight:600}
 .rfcs-tbl tr:nth-child(even){background:var(--surface-cl)}
 .rfcs-num{font-family:'Noto Serif',serif;font-weight:500;font-variant-numeric:tabular-nums}
@@ -500,7 +500,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 }
 
 /* ── RTL polish ── */
-[dir=rtl] .kpi-v,[dir=rtl] .ds-val{unicode-bidi:plaintext}
+[dir=rtl] .kpi-v,[dir=rtl] .ds-val{unicode-bidi:isolate;text-align:right}
 [dir=rtl] .footer{direction:rtl}
 .live-toast{position:fixed;bottom:24px;inset-inline-start:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:10001;display:flex;gap:12px;align-items:center;font-size:.9rem}
 [dir=rtl] .live-toast{transform:translateX(50%)}
@@ -1102,7 +1102,7 @@ function icoHydrate(root){(root||document).querySelectorAll('i[data-ico]').forEa
   <div id="reforecastPanel" style="display:none"></div>
 </main>
 <div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span class="ops-drawer-ttl"><span class="ops-drawer-ic"><i class="ic" data-ico="card"></i></span><span class="ops-drawer-name">Payments</span></span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
-<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-19</span></div>
+<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-20</span></div>
 </div><!-- end appMain -->
 
 <script>
@@ -3333,7 +3333,7 @@ function renderDashboard(){
         [DH.capDebt,fN(R.capDebt)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capDebt/R.capTotal:0)+'</span>'],
         ...(((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))>0.5?
           [[tipLabel(lang==='ar'?'ضرائب قابلة للاسترداد (تمويل مؤقت)':'Recoverable taxes (bridge)',[[lang==='ar'?'ضريبة التصرفات العقارية':'RETT',R.rettRecoverable||0],[lang==='ar'?'ضريبة القيمة المضافة':'VAT',Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0]]),
-            fN((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))+' '+cur+' — '+(lang==='ar'?'تُسترد خلال المدة':'recovered within the term')]]:[])]},
+            fN((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))+' '+cur+'<span class="kpi-pct">'+(lang==='ar'?'تُسترد خلال مدة الصندوق':'recovered within the fund term')+'</span>']]:[])]},
     ];
     let kH='';
     kG.forEach(g=>{
@@ -5390,7 +5390,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-10-19b';
+const BUILD='2026-10-20';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
