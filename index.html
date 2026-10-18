@@ -589,9 +589,14 @@ canvas{max-width:100%;display:block}
   .main{padding:0!important;max-width:none!important}
   .pnl{display:none!important}
   #p-summary{display:block!important}
+  #p-summary .view-stamp,#p-summary .sum-bar,.no-print{display:none!important}
+  #p-summary .es-page{zoom:1!important;margin:0!important;break-after:page;page-break-after:always}
+  #p-summary .es-page:last-child{break-after:auto;page-break-after:auto}
   @page{size:A4 landscape;margin:0}
 }
 
+/* Summary sheets are print-sized (297mm); on screen they are scaled to the panel width by fitSummary() (print stays 1:1) */
+#p-summary .es-page{zoom:var(--es-zoom,1)}
 /* ── Page Shell ── */
 .es-page{width:297mm;height:210mm;position:relative;background:var(--es-surface);overflow:hidden;box-sizing:border-box;page-break-after:always;page-break-inside:avoid;font-family:var(--es-font-body);color:var(--es-on-surface);line-height:1.5}
 .es-page:last-child{page-break-after:auto}
@@ -869,7 +874,7 @@ html[data-theme=gulf] .view-stamp.fc{background:#fff;border-color:var(--outline)
 html[data-theme=gulf] .sum-bar{padding:0 0 14px;gap:10px;color:var(--on-surface-v);justify-content:flex-start;max-width:297mm}
 html[data-theme=gulf] .sum-bar>span:first-child{font-family:'Manrope',system-ui,sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--on-surface-vl)}
 html[data-theme=gulf] .sum-bar-note{display:none}
-html[data-theme=gulf] #p-summary .view-stamp{max-width:297mm}
+html[data-theme=gulf] #p-summary .view-stamp{max-width:none}
 /* Summary pages (.es-page): one quiet system — ivory page, green masthead, thin rules, tinted totals */
 html[data-theme=gulf] .es-page{--es-surface:#fbf9f4;--es-surface-low:#f4efe6;--es-surface-high:#e3dccd;--es-surface-highest:#ffffff;--es-on-surface:#1f2a26;--es-on-surface-v:#55615b;--es-on-surface-vl:#6c766f;--es-gold-grad:#0f4d3f;--es-shadow:none;--es-rule:#e3dccd;--es-rule-soft:#eee8dc;--es-tint:#e4efea;--es-font-label:'Manrope',system-ui,sans-serif}
 html[data-theme=gulf] .es-vcard,html[data-theme=gulf] .es-kpi{box-shadow:none;border:1px solid var(--es-rule);border-radius:2mm;background:#fff}
@@ -2252,6 +2257,7 @@ function showTab(k){
   if(k==='sketch') renderSketch(); // SKETCH
   if(k==='sensitivity'&&R&&document.getElementById('sr_sp')) onSensSlider(); // charts drawn while the panel was hidden have no width
   if(workspace==='operations'&&(k==='cashflow'||k==='debt'||k==='summary')&&R){ensureForecast();if(k==='cashflow')renderCashFlow();if(k==='debt')renderDebt();if(k==='summary')renderSummary();}
+  if(k==='summary')requestAnimationFrame(fitSummary);
 }
 
 // =============================================
@@ -3803,6 +3809,8 @@ function sumBuckets(nq,per,isAr){
   return out;
 }
 function sumAgg(arr,buckets){ return buckets.map(b=>b.idx.reduce((a,i)=>a+(arr[i]||0),0)); }
+function fitSummary(){const p=document.getElementById('p-summary');if(!p||!p.querySelector('.es-page'))return;const w=p.clientWidth||p.parentElement.clientWidth;if(!w)return;const z=Math.max(.5,Math.min(2,w/1123));p.style.setProperty('--es-zoom',z.toFixed(4));}
+window.addEventListener('resize',()=>{clearTimeout(window._fitT);window._fitT=setTimeout(fitSummary,120);});
 function setSumPeriod(v){ sumPeriod=v; renderSummary(); }
 function renderSummary(){
   if(!R) return;
@@ -4063,7 +4071,7 @@ function renderSummary(){
 
   h+=`<div class="es-footer"><span>${L('CONFIDENTIAL — For authorized recipients only.','سري — للمخولين فقط')}</span><span>${L('RE Fund Financial Study','الدراسة المالية للصندوق العقاري')}  |  ${L('Page','صفحة')} 2/2</span></div></div>`;
 
-  p.innerHTML=h;
+  p.innerHTML=h;fitSummary();
 
   // ── Draw Charts after DOM render ──
   requestAnimationFrame(()=>{
@@ -5382,7 +5390,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-10-19';
+const BUILD='2026-10-19b';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
