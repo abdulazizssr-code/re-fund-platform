@@ -143,6 +143,19 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .ops-view{display:flex;gap:2px;background:var(--surface-ch);border-radius:8px;padding:2px}.ops-view span{padding:4px 10px;border-radius:6px;font-size:.78rem;font-weight:700;color:var(--on-surface-vl);cursor:pointer}.ops-view span.on{background:#fff;color:var(--primary);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .ops-chips{display:flex;gap:8px;flex-wrap:wrap;margin-inline-start:auto}.ops-chip{display:flex;flex-direction:column;padding:6px 12px;border-radius:9px;background:var(--surface-cl);min-width:132px;border-inline-start:3px solid #9aa79f}.ops-chip small{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface-vl);font-weight:700}.ops-chip b{font-size:.92rem;font-variant-numeric:tabular-nums}.ops-chip.good{border-color:var(--success)}.ops-chip.warn{border-color:#b7791f}.ops-chip.bad{border-color:var(--error)}.ops-chip i{font-style:normal;font-size:.72rem;color:var(--on-surface-vl);font-weight:500}
 .ops-close{background:var(--secondary);color:#fff;border:none;border-radius:8px;padding:8px 14px;font:inherit;font-weight:700;font-size:.82rem;cursor:pointer}
+/* 2026-10-22 control-room strip: controls · six tiles · actions, wrapping at 1200 / 768 */
+.ops-ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;order:1}
+.ops-tiles{order:3;flex:1 1 900px;min-width:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-inline-start:0}
+.ops-tiles .ops-chip{min-width:0;padding:7px 12px}.ops-tiles .ops-chip b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ops-tiles .ops-chip i{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ops-acts{order:2;display:flex;gap:8px;align-items:center;margin-inline-start:auto}
+.ops-acts .ops-addpay{display:inline-flex;align-items:center;gap:6px}
+.ops-sec-head{display:flex;gap:10px 28px;flex-wrap:wrap;align-items:baseline;margin:0 0 14px;font-size:.84rem;color:var(--on-surface-v)}.ops-sec-head b{color:var(--on-surface-vl);font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;margin-inline-end:6px}.ops-sec-head em{font-style:normal;font-weight:700;font-size:1rem;color:var(--primary);font-variant-numeric:tabular-nums}.ops-sec-head em.dn{color:var(--error)}.ops-sec-head i{font-style:normal;color:var(--on-surface-vl);margin-inline-start:8px;font-size:.78rem}
+.ops-jump{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 16px;font-size:.8rem;font-weight:600}.ops-jump a{cursor:pointer;color:var(--on-surface-v);padding:4px 12px;border-radius:999px;background:var(--surface-ch)}.ops-jump a:hover{color:var(--primary)}.ops-jump i{color:var(--on-surface-vl);font-style:normal}
+.ops-blk{margin-bottom:28px}.ops-blk+.ops-blk{padding-top:22px;border-top:1px solid var(--outline)}
+.ops-blk-t{font-family:'Noto Serif',serif;font-size:1.15rem;font-weight:600;color:var(--primary);margin:0 0 14px}
+.ops-grid2.ops-ov{grid-template-columns:1fr 1.4fr}@media(max-width:900px){.ops-grid2.ops-ov{grid-template-columns:1fr}}
+@media(max-width:1200px){.ops-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.ops-period,html[data-theme=gulf] .ops-period{position:relative;top:auto}}
+@media(max-width:768px){.ops-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.ops-tiles .ops-chip i{white-space:normal}.ops-acts{margin-inline-start:0;flex-wrap:wrap}.ops-asof .lbl{white-space:nowrap}}
 .ops-nav{display:flex;gap:2px;background:#fff;padding:0 40px;border-bottom:1px solid var(--outline);overflow-x:auto;margin:0 -40px 24px}.ops-nav button{background:none;border:none;border-bottom:2.5px solid transparent;padding:13px 18px;font:inherit;font-weight:600;font-size:.86rem;color:var(--on-surface-vl);cursor:pointer;white-space:nowrap}.ops-nav button.on{color:var(--primary);border-color:var(--secondary);font-weight:800}.ops-nav button em{font-style:normal;background:var(--error);color:#fff;border-radius:99px;font-size:.66rem;padding:1px 6px;margin-inline-start:6px}
 .ops-grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}@media(max-width:900px){.ops-grid2{grid-template-columns:1fr}}
 .ops-card{background:#fff;border-radius:12px;padding:20px 22px;box-shadow:var(--shadow-l);border:1px solid rgba(27,28,25,.04)}.ops-card h3{font-family:'Noto Serif',serif;font-size:.95rem;color:var(--primary);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;font-weight:600}.ops-card h3 span{font-family:inherit;font-size:.72rem;font-weight:600;color:var(--on-surface-vl)}
@@ -588,7 +601,8 @@ canvas{max-width:100%;display:block}
   #appMain{display:block!important}
   .main{padding:0!important;max-width:none!important}
   .pnl{display:none!important}
-  #p-summary{display:block!important}
+  #p-statements,#p-summary{display:block!important}
+  #p-statements .stmt-head{display:none!important}
   #p-summary .view-stamp,#p-summary .sum-bar,.no-print{display:none!important}
   #p-summary .es-page{zoom:1!important;margin:0!important;break-after:page;page-break-after:always}
   #p-summary .es-page:last-child{break-after:auto;page-break-after:auto}
@@ -734,7 +748,7 @@ html[data-theme=gulf] .ops-view{border-radius:999px;background:var(--surface-ch)
 html[data-theme=gulf] .view-stamp .vs-sw a.on{background:var(--primary)}
 /* cards: flat white, generous radius, serif headings */
 html[data-theme=gulf] .sec,html[data-theme=gulf] .ch-card,html[data-theme=gulf] .tbl-wrap,html[data-theme=gulf] .ops-card,html[data-theme=gulf] .kpi,html[data-theme=gulf] .ops-kpi,html[data-theme=gulf] .ds-item,html[data-theme=gulf] .sens-kpi,html[data-theme=gulf] .hm-wrap,html[data-theme=gulf] .act-section,html[data-theme=gulf] .rfcs-panel,html[data-theme=gulf] .scenario-wrap,html[data-theme=gulf] .sch-wrap,html[data-theme=gulf] .act-sum-card,html[data-theme=gulf] .import-method{background:#fff;border:none;box-shadow:none;border-radius:var(--radius)}
-html[data-theme=gulf] .sec-t,html[data-theme=gulf] .ch-card h3,html[data-theme=gulf] .tbl-wrap h3,html[data-theme=gulf] .ops-card h3,html[data-theme=gulf] .sch-wrap h3,html[data-theme=gulf] .scenario-wrap h3,html[data-theme=gulf] .sens-sidebar h3,html[data-theme=gulf] .hm-wrap h3,html[data-theme=gulf] .act-section h2,html[data-theme=gulf] .rfcs-panel h3{font-family:var(--g-serif);font-weight:400;font-size:1.15rem;color:var(--primary);letter-spacing:0}
+html[data-theme=gulf] .sec-t,html[data-theme=gulf] .ch-card h3,html[data-theme=gulf] .tbl-wrap h3,html[data-theme=gulf] .ops-card h3,html[data-theme=gulf] .sch-wrap h3,html[data-theme=gulf] .scenario-wrap h3,html[data-theme=gulf] .sens-sidebar h3,html[data-theme=gulf] .hm-wrap h3,html[data-theme=gulf] .act-section h2,html[data-theme=gulf] .rfcs-panel h3,html[data-theme=gulf] .ops-blk-t{font-family:var(--g-serif);font-weight:400;font-size:1.15rem;color:var(--primary);letter-spacing:0}
 html[data-theme=gulf] .sec-t::before,html[data-theme=gulf] .ch-card h3::before,html[data-theme=gulf] .tbl-wrap h3::before,html[data-theme=gulf] .sch-wrap h3::before,html[data-theme=gulf] .scenario-wrap h3::before,html[data-theme=gulf] .sens-sidebar h3::before,html[data-theme=gulf] .act-section h2::before{display:none}
 html[data-theme=gulf] .sec-t{border-bottom:1px solid var(--outline-v)}
 /* KPI tiles: left aligned, serif numerals */
@@ -801,7 +815,7 @@ html[data-theme=gulf] *{scrollbar-color:#cfc6b4 var(--surface-cl);scrollbar-widt
 html[data-theme=gulf] ::-webkit-scrollbar{width:10px;height:10px}html[data-theme=gulf] ::-webkit-scrollbar-track{background:var(--surface-cl)}html[data-theme=gulf] ::-webkit-scrollbar-thumb{background:#cfc6b4;border-radius:999px;border:2px solid var(--surface-cl)}html[data-theme=gulf] ::-webkit-scrollbar-thumb:hover{background:#b9ae99}
 html[data-theme=gulf] .dt td,html[data-theme=gulf] .rfcs-num,html[data-theme=gulf] .kpi-v,html[data-theme=gulf] .ops-kpi b,html[data-theme=gulf] .cx-tbl td,html[data-theme=gulf] .sch-tbl td,html[data-theme=gulf] .act-bva td,html[data-theme=gulf] .rfcs-tbl td,html[data-theme=gulf] .scenario-tbl td,html[data-theme=gulf] .ops-chip b,html[data-theme=gulf] .ds-val,html[data-theme=gulf] .sens-kpi .sv{font-variant-numeric:tabular-nums}
 /* Arabic: serif display roles fall back to the Arabic family at the same size */
-html[data-theme=gulf][dir=rtl] .kpi-v,html[data-theme=gulf][dir=rtl] .ds-val,html[data-theme=gulf][dir=rtl] .ops-kpi b,html[data-theme=gulf][dir=rtl] .sens-kpi .sv,html[data-theme=gulf][dir=rtl] .sec-t,html[data-theme=gulf][dir=rtl] .ch-card h3,html[data-theme=gulf][dir=rtl] .tbl-wrap h3,html[data-theme=gulf][dir=rtl] .ops-card h3,html[data-theme=gulf][dir=rtl] .sch-wrap h3,html[data-theme=gulf][dir=rtl] .scenario-wrap h3,html[data-theme=gulf][dir=rtl] .sens-sidebar h3,html[data-theme=gulf][dir=rtl] .hm-wrap h3,html[data-theme=gulf][dir=rtl] .act-section h2,html[data-theme=gulf][dir=rtl] .rfcs-panel h3,html[data-theme=gulf][dir=rtl] .hdr h1,html[data-theme=gulf][dir=rtl] .login-brand h1,html[data-theme=gulf][dir=rtl] .vq-head b{font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif;font-weight:700}
+html[data-theme=gulf][dir=rtl] .kpi-v,html[data-theme=gulf][dir=rtl] .ds-val,html[data-theme=gulf][dir=rtl] .ops-kpi b,html[data-theme=gulf][dir=rtl] .sens-kpi .sv,html[data-theme=gulf][dir=rtl] .sec-t,html[data-theme=gulf][dir=rtl] .ch-card h3,html[data-theme=gulf][dir=rtl] .tbl-wrap h3,html[data-theme=gulf][dir=rtl] .ops-card h3,html[data-theme=gulf][dir=rtl] .sch-wrap h3,html[data-theme=gulf][dir=rtl] .scenario-wrap h3,html[data-theme=gulf][dir=rtl] .sens-sidebar h3,html[data-theme=gulf][dir=rtl] .hm-wrap h3,html[data-theme=gulf][dir=rtl] .act-section h2,html[data-theme=gulf][dir=rtl] .rfcs-panel h3,html[data-theme=gulf][dir=rtl] .hdr h1,html[data-theme=gulf][dir=rtl] .login-brand h1,html[data-theme=gulf][dir=rtl] .vq-head b,html[data-theme=gulf][dir=rtl] .ops-blk-t{font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif;font-weight:700}
 html[data-theme=gulf][dir=rtl] .kpi-v,html[data-theme=gulf][dir=rtl] .ds-val,html[data-theme=gulf][dir=rtl] .ops-kpi b,html[data-theme=gulf][dir=rtl] .sens-kpi .sv{font-family:'Manrope','Cairo',system-ui,sans-serif;font-weight:700}
 /* chart cards: serif title, unit as a small muted label to the right */
 html[data-theme=gulf] .ch-card h3{justify-content:space-between}
@@ -826,7 +840,7 @@ html[data-theme=gulf] .ops-period{top:184px;gap:12px 14px;padding:10px 40px}
 html[data-theme=gulf] .ops-period .ops-chips{gap:8px}
 html[data-theme=gulf] .ops-chip{min-width:0;padding:7px 12px}
 html[data-theme=gulf] .ops-chip small{font-size:.62rem}
-html[data-theme=gulf] .ops-chip b{font-size:.9rem}
+html[data-theme=gulf] .ops-chip b{font-size:.9rem}html[data-theme=gulf] .ops-tiles .ops-chip b{font-size:1rem}
 html[data-theme=gulf] .ops-period .ops-sub{font-size:.78rem}
 html[data-theme=gulf] .project-bar .btn-calc{padding:9px 18px}
 html[data-theme=gulf] .ws-switch{margin-top:0;margin-bottom:0}
@@ -949,6 +963,22 @@ html[data-theme=gulf] .rfcs-badge{background:var(--g-gold-soft);color:#6d5320;fo
 .dt tr.cfg-r td.rl{padding-inline-start:28px}
 @media print{.cfg-all{display:none}}
 /* ═══ END CF GROUPS ═══ */
+
+/* ═══ STATEMENTS (2026-10-22): one tab, segmented sub-switch above the three untouched panels ═══ */
+#p-statements>.pnl{animation:none}#p-statements>.pnl.stmt-on{display:block}
+.stmt-bar{display:flex;align-items:center;gap:12px;margin:0 0 14px;flex-wrap:wrap}
+.stmt-seg{display:inline-flex;background:var(--surface-ch,#e8eeec);border-radius:999px;padding:3px;gap:2px}
+.stmt-seg a{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;font-size:.82rem;font-weight:600;color:var(--on-surface-v);cursor:pointer;user-select:none;white-space:nowrap}
+.stmt-seg a .ic{width:16px;height:16px}
+.stmt-seg a:hover{color:var(--primary)}
+.stmt-seg a.on{background:#fff;color:var(--primary);box-shadow:0 1px 2px rgba(31,42,38,.08);font-weight:700}
+html:not([data-theme=gulf]) .stmt-seg a.on{background:#00322d;color:#fff}
+.stmt-seg a:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+@media(max-width:480px){.stmt-seg{width:100%}.stmt-seg a{flex:1;justify-content:center;padding:6px 8px}}
+@media print{.stmt-head{display:none!important}}
+/* control-room strip (2026-10-22): below 1200 the strip is two rows tall, so it stops being sticky — this must sit after the theme block */
+@media(max-width:1200px){.ops-period,html[data-theme=gulf] .ops-period{position:relative;top:auto}}
+/* ═══ END STATEMENTS ═══ */
 </style>
 <script>
 // ═══ ICONS — inline SVG icon set (stroke 1.75, 24 viewBox, currentColor). ico(name,cls) → markup; icoHydrate() fills static <i data-ico> placeholders.
@@ -984,7 +1014,8 @@ const ICONS={
  palette:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/>',
  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
  dots:'<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
- play:'<path d="M7 4.5v15l12-7.5z"/>'
+ play:'<path d="M7 4.5v15l12-7.5z"/>',
+ book:'<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v16H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5V4.5M6.5 18H20v4H6.5A2.5 2.5 0 0 1 4 19.5"/><path d="M9 7h7M9 10.5h7"/>'
 };
 function ico(n,cls){return '<svg class="ic'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(ICONS[n]||'')+'</svg>';}
 function icoHydrate(root){(root||document).querySelectorAll('i[data-ico]').forEach(el=>{el.outerHTML=ico(el.dataset.ico,el.className.replace(/\bic\b/,'').trim());});}
@@ -1104,10 +1135,14 @@ function icoHydrate(root){(root||document).querySelectorAll('i[data-ico]').forEa
   <div class="pnl act" id="p-assumptions"></div>
   <div class="pnl" id="p-schedule"></div>
   <div class="pnl" id="p-dashboard"></div>
-  <div class="pnl" id="p-cashflow"></div>
-  <div class="pnl" id="p-debt"></div>
+  <!-- STATEMENTS (2026-10-22): one tab, three sub-views. The three panels keep their ids and render functions; showTab('cashflow'|'debt'|'summary') maps here. -->
+  <div class="pnl" id="p-statements">
+    <div class="stmt-head" id="stmtHead"></div>
+    <div class="pnl" id="p-cashflow"></div>
+    <div class="pnl" id="p-debt"></div>
+    <div class="pnl" id="p-summary"></div>
+  </div>
   <div class="pnl" id="p-sensitivity"></div>
-  <div class="pnl" id="p-summary"></div>
   <div class="pnl" id="p-actuals"></div>
   <div class="pnl" id="p-forecast"></div>
   <div class="pnl" id="p-ops"></div>
@@ -1116,7 +1151,7 @@ function icoHydrate(root){(root||document).querySelectorAll('i[data-ico]').forEa
   <div id="reforecastPanel" style="display:none"></div>
 </main>
 <div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span class="ops-drawer-ttl"><span class="ops-drawer-ic"><i class="ic" data-ico="card"></i></span><span class="ops-drawer-name">Payments</span></span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
-<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-21</span></div>
+<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-22</span></div>
 </div><!-- end appMain -->
 
 <script>
@@ -2053,12 +2088,12 @@ function compLabel(comp){
 // =============================================
 // i18n
 // =============================================
-const tabIcons=['settings','calendar','chart','cash','bank','flask','clipboard','check','target','building','receipt','pencil']; // ICONS names → ico()
+const tabIcons=['settings','calendar','chart','cash','bank','flask','clipboard','check','target','building','receipt','pencil','book']; // ICONS names → ico()
 const TX={
   en:{title:'Real Estate Fund Financial Study',sub:'Professional Fund Modeling Platform',calc:'Calculate',dl:'Excel',langB:'العربية',
     projLbl:'Project:',projSave:'Save',projSaveShared:'Save to My Projects',projSaveSharedPrompt:'Save this shared project to your account as:',projSavedShared:'Project "%name%" saved to your account!',projOverwrite:'A project named "%name%" already exists. Overwrite?',projNew:'New',projDel:'Delete',projShare:'Share',pdf:'PDF',
     shareTitle:'Share Projects',shareDesc:'Select one or more projects to share via a unique link. Recipients can view the financial model.',shareProjHead:'Select Projects',shareToggle:'Allow recipient to modify assumptions',shareGenLink:'Generate Link',shareCopyLink:'Copy Link',shareClose:'Close',shareNoProj:'No saved projects to share. Save a project first.',shareCopied:'Link copied!',shareShortening:'Shortening link...',shareViewBadge:'SHARED VIEW',shareViewMsg:'You are viewing shared projects',shareViewMsgRO:' (read-only assumptions)',shareExit:'Exit Shared View',
-    tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast','Control room','Audit','Sketch'],
+    tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast','Control room','Audit','Sketch','Statements'],
     ws:{feasibility:'Feasibility',operations:'Operations'},
     roles:['Fund Manager','Developer','Financer'],
     roleKeys:['fund_manager','developer','financer'],
@@ -2144,7 +2179,7 @@ const TX={
   ar:{title:'الدراسة المالية للصندوق العقاري',sub:'منصة النمذجة المالية للصناديق',calc:'احسب',dl:'إكسل',langB:'English',
     projLbl:'المشروع:',projSave:'حفظ',projSaveShared:'حفظ في مشاريعي',projSaveSharedPrompt:'حفظ المشروع المشارك في حسابك باسم:',projSavedShared:'تم حفظ المشروع "%name%" في حسابك!',projOverwrite:'يوجد مشروع باسم "%name%" بالفعل. هل تريد استبداله؟',projNew:'جديد',projDel:'حذف',projShare:'مشاركة',pdf:'PDF',
     shareTitle:'مشاركة المشاريع',shareDesc:'اختر مشروعًا أو أكثر لمشاركته عبر رابط فريد. يمكن للمستلمين عرض النموذج المالي.',shareProjHead:'اختر المشاريع',shareToggle:'السماح للمستلم بتعديل الافتراضات',shareGenLink:'إنشاء رابط',shareCopyLink:'نسخ الرابط',shareClose:'إغلاق',shareNoProj:'لا توجد مشاريع محفوظة للمشاركة. احفظ مشروعًا أولًا.',shareCopied:'تم نسخ الرابط!',shareShortening:'جارٍ اختصار الرابط...',shareViewBadge:'عرض مشترك',shareViewMsg:'أنت تشاهد مشاريع مشتركة',shareViewMsgRO:' (الافتراضات للقراءة فقط)',shareExit:'خروج من العرض المشترك',
-    tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع','غرفة التحكم','التدقيق','مسودة'],
+    tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع','غرفة التحكم','التدقيق','مسودة','القوائم'],
     ws:{feasibility:'دراسة الجدوى',operations:'التشغيل والمتابعة'},
     roles:['مدير الصندوق','المطور','الممول'],
     roleKeys:['fund_manager','developer','financer'],
@@ -2232,12 +2267,12 @@ const TX={
 // =============================================
 // TAB NAVIGATION
 // =============================================
-const tabKeys=['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','actuals','forecast','ops','audit','sketch']; // SKETCH: 'sketch' entry
+const tabKeys=['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','actuals','forecast','ops','audit','sketch','statements']; // SKETCH: 'sketch' entry · STATEMENTS: 'statements' entry
 // Workspaces: Feasibility (new deal) vs Operations (a launched fund: actuals, reforecast, distributions). One engine, one project — different screens.
-const WORKSPACES={feasibility:['assumptions','schedule','dashboard','cashflow','debt','sensitivity','summary','sketch'],operations:['ops','audit','cashflow','debt','summary','forecast','actuals']}; // SKETCH: 'sketch' in feasibility
+const WORKSPACES={feasibility:['assumptions','schedule','dashboard','statements','sensitivity','sketch'],operations:['ops','audit','statements','forecast','actuals']}; // SKETCH: 'sketch' in feasibility · STATEMENTS: replaces cashflow/debt/summary in both bars (the old keys still resolve via showTab)
 const OPS_HIDDEN_TABS=['forecast','actuals']; // reachable from the control room, not shown in the tab bar
 let workspace='feasibility';
-const RESULT_TABS=['dashboard','cashflow','debt','sensitivity','summary','sketch'];
+const RESULT_TABS=['dashboard','cashflow','debt','sensitivity','summary','sketch','statements'];
 function buildTabs(){
   const t=TX[lang],nav=document.getElementById('tabNav');
   const keys=WORKSPACES[workspace];
@@ -2250,8 +2285,17 @@ function buildTabs(){
 }
 function setWorkspace(w){
   if(!WORKSPACES[w]) return; workspace=w;
-  if(w==='feasibility'&&reforecastMode){reforecastMode=false;R2=null;if(R){renderCashFlow();}}
+  if(w==='feasibility'&&reforecastMode){reforecastMode=false;R2=null;if(R){renderCashFlow();renderDebt();renderSummary();}}
   buildTabs();
+  if(document.getElementById('p-statements').classList.contains('act')) showTab('statements'); // same tab in both workspaces: re-render the sub-view + stamp for the new workspace
+}
+// ═══ STATEMENTS (2026-10-22): Cash flow | Debt | Summary live inside one tab. Sub-view remembered in localStorage.stmtView.
+const STMT_VIEWS=['cashflow','debt','summary'];
+let stmtView=(()=>{try{return STMT_VIEWS.includes(localStorage.stmtView)?localStorage.stmtView:'cashflow';}catch(e){return 'cashflow';}})();
+function renderStmtHead(){
+  const el=document.getElementById('stmtHead'); if(!el) return;
+  const t=TX[lang];
+  el.innerHTML=`<div class="stmt-bar"><span class="stmt-seg" role="tablist">${STMT_VIEWS.map(v=>{const i=tabKeys.indexOf(v);return `<a role="tab" aria-selected="${stmtView===v}" class="${stmtView===v?'on':''}" onclick="showTab('${v}')">${ico(tabIcons[i])}${t.tabs[i]}</a>`;}).join('')}</span></div>${viewStamp()}`;
 }
 function setRole(role){
   currentRole=role;
@@ -2260,10 +2304,12 @@ function setRole(role){
 let _silentCalc=false;
 function showTab(k){
   if(_silentCalc) return;
+  if(STMT_VIEWS.includes(k)){stmtView=k;try{localStorage.stmtView=k;}catch(e){}k='statements';} // STATEMENTS: old keys resolve to the tab + sub-view
   if(!WORKSPACES[workspace].includes(k)){workspace=WORKSPACES.operations.includes(k)?'operations':'feasibility';buildTabs();}
   document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('act'));
   document.getElementById('p-'+k).classList.add('act');
-  document.querySelectorAll('.tab').forEach(t=>{t.classList.toggle('act',t.dataset.tab===k);});
+  if(k==='statements'){k=stmtView;STMT_VIEWS.forEach(v=>document.getElementById('p-'+v).classList.toggle('stmt-on',v===k));renderStmtHead();} // sub-panels use .stmt-on (not .act, which calcFull's tab restore toggles by id); from here on k is the sub-view, so the per-panel logic below is unchanged
+  document.querySelectorAll('.tab').forEach(t=>{t.classList.toggle('act',t.dataset.tab===(STMT_VIEWS.includes(k)?'statements':k));});
   if(k==='actuals') buildActualsTab();
   if(k==='forecast') renderForecastTab();
   if(k==='ops') renderOps();
@@ -3704,7 +3750,7 @@ function renderCashFlow(){
   }
 
   h+=`</tbody></table></div>`;
-  document.getElementById('p-cashflow').innerHTML=viewStamp()+h;
+  document.getElementById('p-cashflow').innerHTML=h; // STATEMENTS: the Baseline|Forecast stamp is rendered once by renderStmtHead()
   cfApplyGroups();
   // Wire up the scroll slider
   const cfSlider=document.getElementById('cfScrollSlider');
@@ -3744,7 +3790,7 @@ function renderDebt(){
   h+=tr(DL.int,r.qInterest);
   h+=tr(DL.bankMgmt,r.qBankMgmt);
   h+=`</tbody></table></div>`;
-  document.getElementById('p-debt').innerHTML=viewStamp()+h;
+  document.getElementById('p-debt').innerHTML=h; // STATEMENTS: stamp in renderStmtHead()
 }
 
 // =============================================
@@ -3885,7 +3931,7 @@ function renderSummary(){
   const numDir='ltr';
 
   const p=document.getElementById('p-summary');
-  let h=viewStamp();
+  let h=''; // STATEMENTS: stamp in renderStmtHead()
   h+=`<div class="sum-bar no-print"><span>${L('Schedule','الجدول')}</span><span class="sum-seg">${[['auto',L('Auto','تلقائي')],['q',L('Quarterly','ربعي')],['h',L('Semi-annual','نصف سنوي')],['y',L('Annual','سنوي')]].map(([v,t])=>`<a class="${sumPeriod===v?'on':''}" onclick="setSumPeriod('${v}')">${t}</a>`).join('')}</span></div>`;
 
   // ═══ PAGE 1: EXECUTIVE SUMMARY ═══
@@ -5351,7 +5397,7 @@ function viewStamp(){
   const r=viewR(); if(!r||workspace!=='operations') return '';
   const ar=lang==='ar', fc=r===R2&&r&&r._isReforecast, q=fc?(r._cutoffQ||0):0;
   const txt=fc?(ar?`التوقع الحالي · حتى نهاية الربع ${q}`:`Current forecast · as of Q${q}`):(ar?'خط الأساس (الجدوى)':'Baseline (feasibility)');
-  return `<div class="view-stamp ${fc?'fc':'bl'}"><span>${txt}</span><span class="vs-sw">${['baseline','forecast'].map(v=>`<a class="${(fc?'forecast':'baseline')===v?'on':''}" onclick="opsView='${v}';renderCashFlow();renderDebt();renderSummary()">${ar?(v==='baseline'?'خط الأساس':'التوقع'):(v==='baseline'?'Baseline':'Forecast')}</a>`).join('')}</span></div>`;
+  return `<div class="view-stamp ${fc?'fc':'bl'}"><span>${txt}</span><span class="vs-sw">${['baseline','forecast'].map(v=>`<a class="${(fc?'forecast':'baseline')===v?'on':''}" onclick="opsView='${v}';renderCashFlow();renderDebt();renderSummary();renderStmtHead()">${ar?(v==='baseline'?'خط الأساس':'التوقع'):(v==='baseline'?'Baseline':'Forecast')}</a>`).join('')}</span></div>`;
 }
 
 // ═══════════════════════════════════════════════
@@ -5424,7 +5470,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-10-21';
+const BUILD='2026-10-22';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -5719,10 +5765,18 @@ function runForecast(){
 // All numbers come from R (baseline run) and R2 (current forecast via runReforecast). The forecast is live:
 // any change in this workspace calls opsRefresh(), which re-runs the forecast and re-renders the open section.
 // ═══════════════════════════════════════════════
-const OPS_SECTIONS=['overview','costs','sales','financing','vat','nav','scenarios','reports'];
+const OPS_SECTIONS=['overview','costs','sales','financing','scenarios']; // 2026-10-22: 8 → 5. financing = Financing · VAT · NAV blocks, scenarios = Scenarios · Reports blocks
+const OPS_SECTION_ALIAS={vat:'financing#vat',nav:'financing#nav',reports:'scenarios#reports'}; // old section keys still land on their block (alerts' Review links, badges)
+function opsResolveSection(s){s=OPS_SECTION_ALIAS[s]||s||'overview';const [sec,blk]=s.split('#');return {sec:OPS_SECTIONS.includes(sec)?sec:'overview',blk:blk||null};}
+function opsBlockOf(s){return opsResolveSection(s).sec;}
+function opsScrollTo(id){const el=document.getElementById('ops-blk-'+id);if(!el)return;const bar=document.querySelector('.ops-period');const cs=bar?getComputedStyle(bar):null;const sticky=cs&&cs.position==='sticky'?bar.getBoundingClientRect().height+(parseFloat(cs.top)||0):0;const y=el.getBoundingClientRect().top+window.scrollY-sticky-12;window.scrollTo({top:Math.max(0,y),behavior:'smooth'});}
+function opsBlocks(blocks){ // [[id,label,renderFn]] → in-section jump bar + sub-headed blocks
+  const jump=`<nav class="ops-jump">${blocks.map(([id,l])=>`<a onclick="opsScrollTo('${id}')">${l}</a>`).join('<i>·</i>')}</nav>`;
+  return jump+blocks.map(([id,l,fn])=>`<section class="ops-blk" id="ops-blk-${id}"><h2 class="ops-blk-t">${l}</h2>${fn()}</section>`).join('');
+}
 let opsSection='overview', opsView='forecast'; // opsView: baseline | forecast | both
 const OPS_T={
-  en:{gTotal:'Total',vat:'VAT',nav:'NAV',vRecorded:'Recorded',vClaimed:'Claimed',vAccepted:'Accepted',vPaid:'paid',vOverdue:'payment overdue',vDue:'payment due',vReceived:'refund received',vLate:'refund late',vClaimed:'claim filed',vUnfiled:'not filed',vOpen:'open',vStrict:'Closed quarters use the actual VAT cash from the log (refunds received, payments to ZATCA); refunds still outstanding are forecast at their expected month.',vLenient:'No VAT-bearing payments yet — plan VAT mechanics apply. Import payments with a VAT column, or add VAT received / VAT paid rows.',vInput:'Input VAT paid',vInputSub:'on cost payments (estimated at the fund rate where not entered)',vOutput:'Output VAT collected',vOutputSub:'on sales, only where entered',vRecv:'Refunds received',vPaidZ:'paid to ZATCA',vRecvbl:'VAT receivable',vRecvblSub:'still to come back from ZATCA',vRett:'RETT refund receivable',vRettSub:'RETT paid',vChart:'Cumulative input VAT vs refunds received',vCal:'Filing calendar & alerts',vRule:'Monthly filer: return and any payment are due by the end of the following month. Refund expected {m} months after the period (fund assumption; change it in Feasibility → VAT refund period). Mark a claim as filed to stop the filing alert.',vTable:'VAT position by month',vMonthly:'monthly',vMonth:'Month',vInCon:'Input VAT — development',vInExp:'Input VAT — fund',vNet:'Net position',vDueDate:'Return due',vFiled:'Filed on / paid',vRefundExp:'Refund expected',vStatus:'Status',vPay:'to pay',vClaim:'refund claim',vEditor:'VAT per payment',vGross:'Gross',vVat:'VAT (edit)',vNetAmt:'Net',vEditorNote:'Leave blank to use the estimate (gross × 15/115 for VAT-able categories; zero for land, RETT, licences, interest). Enter 0 for exempt invoices and the actual VAT for sales invoices that carry VAT.',nBasis:'Cost basis: land, brokerage and RETT at cost; construction in progress at cost; cash, VAT and RETT receivables; less loan and any accruals. Enter a valuer’s mark to override a quarter.',nUnitPrice:'Unit price at inception (SAR)',nNav:'NAV',nNavU:'NAV per unit',nUnits:'units',nAssets:'Total assets',nLoan:'Loan balance',nNavEnd:'NAV at fund end (forecast)',nNavUEnd:'per unit',nChart:'NAV per unit — plan vs actual vs forecast',nUnit:'unit',nBridge:'NAV statement',nLand:'Land (incl. brokerage & RETT)',nCip:'Construction in progress',nCash:'Cash',nVatRec:'VAT receivable',nRettRec:'RETT receivable',nOther:'Other assets / receivables',nAccrFee:'Accrued management fee',nAccrPerf:'Performance fee provision',nPayables:'Payables & accruals',nStatement:'Quarterly NAV statement',nStmtSub:'closed quarters actual · open quarters forecast',nMarkLand:'↳ valuer’s mark — land',nMarkCip:'↳ valuer’s mark — CIP',nPlanU:'Plan NAV per unit',nNote:'A valuer’s mark carries forward to later quarters (plus costs added after it) until the next mark. Units = paid-in equity (cash + in-kind) ÷ unit price. Plan NAV per unit uses the baseline’s book NAV with the same unit price. NAV is before performance fee unless you enter a provision. Valuer’s marks and accruals are saved with the project.',fDrawTbl:'Drawdowns & repayments — plan vs actual',fPlanDraw:'Plan draw',fActDraw:'Actual draw',fPlanRepay:'Plan repay',fActRepay:'Actual repay',fPlanBal:'Plan balance',fBal:'Balance',fPlanInt:'Plan profit',fActInt:'Actual profit',fUndrawn:'Undrawn facility',fDrawnToDate:'Drawn to date',fPlanToDate:'plan to date',fFees:'Bank fees (arrangement + management)',overview:'Overview',costs:'Costs',sales:'Sales',financing:'Financing',scenarios:'Forecast & Scenarios',reports:'Reports',asof:'As of',closed:'closed',toEnd:'months to fund end',baseline:'Baseline',forecast:'Forecast',both:'Both',
+  en:{gTotal:'Total',vat:'VAT',nav:'NAV',vRecorded:'Recorded',vClaimed:'Claimed',vAccepted:'Accepted',vPaid:'paid',vOverdue:'payment overdue',vDue:'payment due',vReceived:'refund received',vLate:'refund late',vClaimed:'claim filed',vUnfiled:'not filed',vOpen:'open',vStrict:'Closed quarters use the actual VAT cash from the log (refunds received, payments to ZATCA); refunds still outstanding are forecast at their expected month.',vLenient:'No VAT-bearing payments yet — plan VAT mechanics apply. Import payments with a VAT column, or add VAT received / VAT paid rows.',vInput:'Input VAT paid',vInputSub:'on cost payments (estimated at the fund rate where not entered)',vOutput:'Output VAT collected',vOutputSub:'on sales, only where entered',vRecv:'Refunds received',vPaidZ:'paid to ZATCA',vRecvbl:'VAT receivable',vRecvblSub:'still to come back from ZATCA',vRett:'RETT refund receivable',vRettSub:'RETT paid',vChart:'Cumulative input VAT vs refunds received',vCal:'Filing calendar & alerts',vRule:'Monthly filer: return and any payment are due by the end of the following month. Refund expected {m} months after the period (fund assumption; change it in Feasibility → VAT refund period). Mark a claim as filed to stop the filing alert.',vTable:'VAT position by month',vMonthly:'monthly',vMonth:'Month',vInCon:'Input VAT — development',vInExp:'Input VAT — fund',vNet:'Net position',vDueDate:'Return due',vFiled:'Filed on / paid',vRefundExp:'Refund expected',vStatus:'Status',vPay:'to pay',vClaim:'refund claim',vEditor:'VAT per payment',vGross:'Gross',vVat:'VAT (edit)',vNetAmt:'Net',vEditorNote:'Leave blank to use the estimate (gross × 15/115 for VAT-able categories; zero for land, RETT, licences, interest). Enter 0 for exempt invoices and the actual VAT for sales invoices that carry VAT.',nBasis:'Cost basis: land, brokerage and RETT at cost; construction in progress at cost; cash, VAT and RETT receivables; less loan and any accruals. Enter a valuer’s mark to override a quarter.',nUnitPrice:'Unit price at inception (SAR)',nNav:'NAV',nNavU:'NAV per unit',nUnits:'units',nAssets:'Total assets',nLoan:'Loan balance',nNavEnd:'NAV at fund end (forecast)',nNavUEnd:'per unit',nChart:'NAV per unit — plan vs actual vs forecast',nUnit:'unit',nBridge:'NAV statement',nLand:'Land (incl. brokerage & RETT)',nCip:'Construction in progress',nCash:'Cash',nVatRec:'VAT receivable',nRettRec:'RETT receivable',nOther:'Other assets / receivables',nAccrFee:'Accrued management fee',nAccrPerf:'Performance fee provision',nPayables:'Payables & accruals',nStatement:'Quarterly NAV statement',nStmtSub:'closed quarters actual · open quarters forecast',nMarkLand:'↳ valuer’s mark — land',nMarkCip:'↳ valuer’s mark — CIP',nPlanU:'Plan NAV per unit',nNote:'A valuer’s mark carries forward to later quarters (plus costs added after it) until the next mark. Units = paid-in equity (cash + in-kind) ÷ unit price. Plan NAV per unit uses the baseline’s book NAV with the same unit price. NAV is before performance fee unless you enter a provision. Valuer’s marks and accruals are saved with the project.',fDrawTbl:'Drawdowns & repayments — plan vs actual',fPlanDraw:'Plan draw',fActDraw:'Actual draw',fPlanRepay:'Plan repay',fActRepay:'Actual repay',fPlanBal:'Plan balance',fBal:'Balance',fPlanInt:'Plan profit',fActInt:'Actual profit',fUndrawn:'Undrawn facility',fDrawnToDate:'Drawn to date',fPlanToDate:'plan to date',fFees:'Bank fees (arrangement + management)',overview:'Overview',costs:'Costs',sales:'Sales',financing:'Financing',scenarios:'Scenarios & reports',reports:'Reports',atComp:'At completion',soldT:'Sold',asof:'As of',closed:'closed',toEnd:'months to fund end',baseline:'Baseline',forecast:'Forecast',both:'Both',
     spend:'Spend to date',plan:'plan',fac:'Forecast at completion',vsBase:'vs baseline',irr:'IRR',sales_:'Sales',sold:'sold',close:'Close',calcFirst:'Calculate the model first (Feasibility) to open Operations.',
     costComplete:'Cost complete',timeElapsed:'time elapsed',committed:'Committed',ofFac:'of forecast at completion',cashLoan:'Cash & loan',atCut:'at cutoff',eqMult:'Equity multiple',dist:'Distributions',
     scurve:'Cumulative cost — plan vs actual vs forecast',ssales:'Cumulative sales — plan vs actual vs forecast',decide:'What needs a decision',items:'items',nothing:'Nothing pending — all closed-quarter variances have a treatment.',
@@ -5736,9 +5790,9 @@ const OPS_T={
     scen:'Scenarios',scenName:'Scenario',mult:'Multiple',peakD:'Peak debt',addScen:'＋ New scenario',scenHint:'A scenario is a set of extra changes on top of the current forecast (e.g. saibor 9.5).',current:'Current forecast',
     packs:'Reporting packs for',investor:'Investor pack',investorD:'Executive summary in teaser style — costs ex recoverable taxes, no internal detail.',ic:'IC pack',icD:'Baseline vs actual vs forecast, variances, IRR bridge, scenarios and commentary.',lender:'Financer pack',lenderD:'Sources & uses, quarterly cash-flow statement with actuals to date, loan schedule and covenant tests.',open:'Open',commentary:'Commentary (draft from the variances — edit before issuing)',
     addPay:'Add payments',closeDrawer:'Done'},
-  ar:{gTotal:'الإجمالي',vat:'الضريبة',nav:'صافي الأصول',vRecorded:'مسجّل',vClaimed:'مُطالَب به',vAccepted:'مقبول',vPaid:'مدفوع',vOverdue:'دفع متأخر',vDue:'دفع مستحق',vReceived:'تم الاسترداد',vLate:'استرداد متأخر',vClaimed:'قُدّم الطلب',vUnfiled:'لم يُقدّم',vOpen:'مفتوح',vStrict:'الأرباع المقفلة تستخدم النقد الضريبي الفعلي من السجل (الاستردادات المستلمة والمدفوع للزكاة والضريبة)؛ الاستردادات المتبقية تُتوقع في شهرها المتوقع.',vLenient:'لا توجد دفعات تحمل ضريبة بعد — تُطبّق آلية الخطة. استورد الدفعات مع عمود الضريبة أو أضف صفوف ضريبة مستردة / ضريبة مدفوعة.',vInput:'ضريبة المدخلات المدفوعة',vInputSub:'على دفعات التكاليف (مقدّرة بنسبة الصندوق حيث لم تُدخل)',vOutput:'ضريبة المخرجات المحصّلة',vOutputSub:'على المبيعات، حيث أُدخلت فقط',vRecv:'الاستردادات المستلمة',vPaidZ:'المدفوع للهيئة',vRecvbl:'ضريبة مستحقة الاسترداد',vRecvblSub:'لم تُسترد بعد من الهيئة',vRett:'استرداد ضريبة التصرفات المستحق',vRettSub:'ضريبة التصرفات المدفوعة',vChart:'ضريبة المدخلات التراكمية مقابل الاستردادات',vCal:'تقويم الإقرارات والتنبيهات',vRule:'إقرار شهري: يُقدّم الإقرار ويُدفع المستحق حتى نهاية الشهر التالي. الاسترداد متوقع بعد {m} أشهر من الفترة (افتراض الصندوق؛ يُعدّل في دراسة الجدوى ← فترة الاسترداد الضريبي). سجّل تقديم الطلب لإيقاف تنبيه التقديم.',vTable:'الموقف الضريبي حسب الشهر',vMonthly:'شهري',vMonth:'الشهر',vInCon:'ضريبة مدخلات — التطوير',vInExp:'ضريبة مدخلات — الصندوق',vNet:'صافي الموقف',vDueDate:'موعد الإقرار',vFiled:'قُدّم في / دُفع',vRefundExp:'الاسترداد المتوقع',vStatus:'الحالة',vPay:'للدفع',vClaim:'طلب استرداد',vEditor:'الضريبة لكل دفعة',vGross:'الإجمالي',vVat:'الضريبة (تعديل)',vNetAmt:'الصافي',vEditorNote:'اتركه فارغاً لاستخدام التقدير (الإجمالي × 15/115 للبنود الخاضعة؛ صفر للأرض وضريبة التصرفات والرخص وتكاليف التمويل). أدخل 0 للفواتير المعفاة والضريبة الفعلية لفواتير المبيعات الخاضعة.',nBasis:'أساس التكلفة: الأرض والسعي وضريبة التصرفات بالتكلفة؛ الأعمال تحت التنفيذ بالتكلفة؛ النقد والضرائب المستحقة الاسترداد؛ ناقص التمويل وأي استحقاقات. أدخل تقييم المقيّم لتجاوز ربع معين.',nUnitPrice:'سعر الوحدة عند التأسيس (ريال)',nNav:'صافي قيمة الأصول',nNavU:'صافي قيمة الوحدة',nUnits:'وحدة',nAssets:'إجمالي الأصول',nLoan:'رصيد التمويل',nNavEnd:'صافي الأصول عند نهاية الصندوق (توقع)',nNavUEnd:'للوحدة',nChart:'صافي قيمة الوحدة — الخطة مقابل الفعلي مقابل التوقع',nUnit:'وحدة',nBridge:'قائمة صافي الأصول',nLand:'الأرض (شاملة السعي وضريبة التصرفات)',nCip:'أعمال تحت التنفيذ',nCash:'النقد',nVatRec:'ضريبة مستحقة الاسترداد',nRettRec:'ضريبة تصرفات مستحقة الاسترداد',nOther:'أصول / ذمم أخرى',nAccrFee:'رسوم إدارة مستحقة',nAccrPerf:'مخصص رسوم الأداء',nPayables:'ذمم دائنة واستحقاقات',nStatement:'قائمة صافي الأصول الربعية',nStmtSub:'الأرباع المقفلة فعلي · المفتوحة توقع',nMarkLand:'↳ تقييم المقيّم — الأرض',nMarkCip:'↳ تقييم المقيّم — الأعمال',nPlanU:'صافي قيمة الوحدة بالخطة',nNote:'تقييم المقيّم يستمر للأرباع اللاحقة (زائد التكاليف المضافة بعده) حتى التقييم التالي. الوحدات = رأس المال المدفوع (نقدي + عيني) ÷ سعر الوحدة. صافي قيمة الوحدة بالخطة يستخدم صافي الأصول الدفتري لخط الأساس بنفس سعر الوحدة. صافي الأصول قبل رسوم الأداء ما لم تُدخل مخصصاً. تُحفظ تقييمات المقيّم والاستحقاقات مع المشروع.',fDrawTbl:'السحوبات والسداد — الخطة مقابل الفعلي',fPlanDraw:'سحب الخطة',fActDraw:'السحب الفعلي',fPlanRepay:'سداد الخطة',fActRepay:'السداد الفعلي',fPlanBal:'رصيد الخطة',fBal:'الرصيد',fPlanInt:'أرباح الخطة',fActInt:'الأرباح الفعلية',fUndrawn:'غير المسحوب من التسهيل',fDrawnToDate:'المسحوب حتى تاريخه',fPlanToDate:'الخطة حتى تاريخه',fFees:'رسوم البنك (ترتيب + إدارة)',overview:'نظرة عامة',costs:'التكاليف',sales:'المبيعات',financing:'التمويل',scenarios:'التوقع والسيناريوهات',reports:'التقارير',asof:'كما في',closed:'مقفل',toEnd:'شهراً حتى نهاية الصندوق',baseline:'خط الأساس',forecast:'التوقع',both:'كلاهما',
+  ar:{gTotal:'الإجمالي',vat:'الضريبة',nav:'صافي الأصول',vRecorded:'مسجّل',vClaimed:'مُطالَب به',vAccepted:'مقبول',vPaid:'مدفوع',vOverdue:'دفع متأخر',vDue:'دفع مستحق',vReceived:'تم الاسترداد',vLate:'استرداد متأخر',vClaimed:'قُدّم الطلب',vUnfiled:'لم يُقدّم',vOpen:'مفتوح',vStrict:'الأرباع المقفلة تستخدم النقد الضريبي الفعلي من السجل (الاستردادات المستلمة والمدفوع للزكاة والضريبة)؛ الاستردادات المتبقية تُتوقع في شهرها المتوقع.',vLenient:'لا توجد دفعات تحمل ضريبة بعد — تُطبّق آلية الخطة. استورد الدفعات مع عمود الضريبة أو أضف صفوف ضريبة مستردة / ضريبة مدفوعة.',vInput:'ضريبة المدخلات المدفوعة',vInputSub:'على دفعات التكاليف (مقدّرة بنسبة الصندوق حيث لم تُدخل)',vOutput:'ضريبة المخرجات المحصّلة',vOutputSub:'على المبيعات، حيث أُدخلت فقط',vRecv:'الاستردادات المستلمة',vPaidZ:'المدفوع للهيئة',vRecvbl:'ضريبة مستحقة الاسترداد',vRecvblSub:'لم تُسترد بعد من الهيئة',vRett:'استرداد ضريبة التصرفات المستحق',vRettSub:'ضريبة التصرفات المدفوعة',vChart:'ضريبة المدخلات التراكمية مقابل الاستردادات',vCal:'تقويم الإقرارات والتنبيهات',vRule:'إقرار شهري: يُقدّم الإقرار ويُدفع المستحق حتى نهاية الشهر التالي. الاسترداد متوقع بعد {m} أشهر من الفترة (افتراض الصندوق؛ يُعدّل في دراسة الجدوى ← فترة الاسترداد الضريبي). سجّل تقديم الطلب لإيقاف تنبيه التقديم.',vTable:'الموقف الضريبي حسب الشهر',vMonthly:'شهري',vMonth:'الشهر',vInCon:'ضريبة مدخلات — التطوير',vInExp:'ضريبة مدخلات — الصندوق',vNet:'صافي الموقف',vDueDate:'موعد الإقرار',vFiled:'قُدّم في / دُفع',vRefundExp:'الاسترداد المتوقع',vStatus:'الحالة',vPay:'للدفع',vClaim:'طلب استرداد',vEditor:'الضريبة لكل دفعة',vGross:'الإجمالي',vVat:'الضريبة (تعديل)',vNetAmt:'الصافي',vEditorNote:'اتركه فارغاً لاستخدام التقدير (الإجمالي × 15/115 للبنود الخاضعة؛ صفر للأرض وضريبة التصرفات والرخص وتكاليف التمويل). أدخل 0 للفواتير المعفاة والضريبة الفعلية لفواتير المبيعات الخاضعة.',nBasis:'أساس التكلفة: الأرض والسعي وضريبة التصرفات بالتكلفة؛ الأعمال تحت التنفيذ بالتكلفة؛ النقد والضرائب المستحقة الاسترداد؛ ناقص التمويل وأي استحقاقات. أدخل تقييم المقيّم لتجاوز ربع معين.',nUnitPrice:'سعر الوحدة عند التأسيس (ريال)',nNav:'صافي قيمة الأصول',nNavU:'صافي قيمة الوحدة',nUnits:'وحدة',nAssets:'إجمالي الأصول',nLoan:'رصيد التمويل',nNavEnd:'صافي الأصول عند نهاية الصندوق (توقع)',nNavUEnd:'للوحدة',nChart:'صافي قيمة الوحدة — الخطة مقابل الفعلي مقابل التوقع',nUnit:'وحدة',nBridge:'قائمة صافي الأصول',nLand:'الأرض (شاملة السعي وضريبة التصرفات)',nCip:'أعمال تحت التنفيذ',nCash:'النقد',nVatRec:'ضريبة مستحقة الاسترداد',nRettRec:'ضريبة تصرفات مستحقة الاسترداد',nOther:'أصول / ذمم أخرى',nAccrFee:'رسوم إدارة مستحقة',nAccrPerf:'مخصص رسوم الأداء',nPayables:'ذمم دائنة واستحقاقات',nStatement:'قائمة صافي الأصول الربعية',nStmtSub:'الأرباع المقفلة فعلي · المفتوحة توقع',nMarkLand:'↳ تقييم المقيّم — الأرض',nMarkCip:'↳ تقييم المقيّم — الأعمال',nPlanU:'صافي قيمة الوحدة بالخطة',nNote:'تقييم المقيّم يستمر للأرباع اللاحقة (زائد التكاليف المضافة بعده) حتى التقييم التالي. الوحدات = رأس المال المدفوع (نقدي + عيني) ÷ سعر الوحدة. صافي قيمة الوحدة بالخطة يستخدم صافي الأصول الدفتري لخط الأساس بنفس سعر الوحدة. صافي الأصول قبل رسوم الأداء ما لم تُدخل مخصصاً. تُحفظ تقييمات المقيّم والاستحقاقات مع المشروع.',fDrawTbl:'السحوبات والسداد — الخطة مقابل الفعلي',fPlanDraw:'سحب الخطة',fActDraw:'السحب الفعلي',fPlanRepay:'سداد الخطة',fActRepay:'السداد الفعلي',fPlanBal:'رصيد الخطة',fBal:'الرصيد',fPlanInt:'أرباح الخطة',fActInt:'الأرباح الفعلية',fUndrawn:'غير المسحوب من التسهيل',fDrawnToDate:'المسحوب حتى تاريخه',fPlanToDate:'الخطة حتى تاريخه',fFees:'رسوم البنك (ترتيب + إدارة)',overview:'نظرة عامة',costs:'التكاليف',sales:'المبيعات',financing:'التمويل',scenarios:'السيناريوهات والتقارير',reports:'التقارير',atComp:'عند الاكتمال',soldT:'المباع',asof:'كما في',closed:'مقفل',toEnd:'شهراً حتى نهاية الصندوق',baseline:'خط الأساس',forecast:'التوقع',both:'كلاهما',
     spend:'المنفق حتى الآن',plan:'الخطة',fac:'التكلفة عند الاكتمال',vsBase:'مقابل خط الأساس',irr:'العائد الداخلي',sales_:'المبيعات',sold:'مباع',close:'إقفال',calcFirst:'احسب النموذج أولاً من دراسة الجدوى لفتح التشغيل.',
-    costComplete:'نسبة إنجاز التكلفة',timeElapsed:'الزمن المنقضي',committed:'الملتزم به',ofFac:'من التكلفة عند الاكتمال',cashLoan:'النقد والتمويل',atCut:'عند الإقفال',eqMult:'مضاعف رأس المال',dist:'التوزيعات',
+    costComplete:'اكتمال التكلفة',timeElapsed:'الزمن المنقضي',committed:'الالتزامات',ofFac:'من التكلفة عند الاكتمال',cashLoan:'النقد والتمويل',atCut:'عند الإقفال',eqMult:'مضاعف رأس المال',dist:'التوزيعات',
     scurve:'التكلفة التراكمية — الخطة مقابل الفعلي مقابل التوقع',ssales:'المبيعات التراكمية — الخطة مقابل الفعلي مقابل التوقع',decide:'ما يحتاج قراراً',items:'بنود',nothing:'لا يوجد معلق — كل انحرافات الأرباع المقفلة لها معالجة.',
     budget:'الميزانية',contractB:'قيمة العقد',cxActual:'المنفق فعلياً',cxBudget:'الميزانية',cxVar:'الفرق',cxVsBudget:'مقابل الميزانية',cxClosedN:'الدفعات في {n} أرباع مقفلة',cxAllPay:'كل الدفعات',cxPlanTo:'الخطة حتى الربع {n}',cxFullPlan:'خطة الصندوق كاملة',cxToDate:'حتى تاريخه',cxAll:'كامل الصندوق',cxLine:'البند',cxVarCol:'الفرق',cxTreatCol:'معالجة غير المنفق',cxTable:'الميزانية مقابل الفعلي حسب نوع المصروف (بدون الضريبة)',vVatShort:'ضريبة',cxTotal:'إجمالي التكاليف',cxNote:'جميع أرقام التكاليف هنا بدون ضريبة القيمة المضافة (تُتابع الضريبة في تبويب الضريبة والتدفقات النقدية). الميزانية = خط الأساس المقفل للفترة (حتى تاريخه = الأرباع المقفلة). بند واحد لكل دفعة ونوع مصروف واحد لكل بند — لا يُحسب شيء مرتين. رسوم إدارة البنك ورسوم الترتيب وتكاليف التمويل تحت البنوك والتمويل في هذا العرض؛ قائمة التدفقات النقدية تُبقي رسوم البنك ضمن مصاريف الصندوق كما يحتسبها المحرك. أحمر = تجاوز جوهري (≥10% و≥1% من إجمالي الميزانية)، أخضر = وفر جوهري. الملتزم به / المعدّل / المعالجة / التوزيع الزمني تحدد التوقع عند الاكتمال.',cxChart:'الفعلي مقابل الميزانية',cxByType:'حسب النوع',cxByCat:'حسب البند',cxTopPayees:'لمن دُفع',cxSearchV:'بحث عن مستفيد…',cxPayees:'مستفيد',cxContract:'عقد',cxContracts:'العقود',cxVendor:'المورّد',cxCat:'البند',cxAnyCat:'أي بند',cxRet:'ضمان %',cxPaid:'المدفوع',cxRetHeld:'الضمان المحتجز',cxAliases:'يُدفع أيضاً باسم',cxAliasPh:'تهجئات أخرى مفصولة بفاصلة',cxAdd:'إضافة عقد',cxUnlink:'فك الربط',cxLinkPay:'ربط دفعة بهذا العقد:',cxNoContracts:'لا توجد عقود بعد. أضف عقداً لكل مورّد (مقاول، استشاري، مدير الصندوق…) — تُربط الدفعات التي يطابق مستفيدها اسم المورّد أو أحد أسمائه البديلة في نفس البند تلقائياً، ويمكنك ربط أي دفعة يدوياً.',cxUnlinkedN:'دفعة تكاليف غير مرتبطة بأي عقد',noFin:'لم يُسجّل أي ضخ رأس مال أو سحب تمويل للأرباع المقفلة — يُفترض تمويل الخطة. أضف ضخ رأس المال والسحوبات إلى سجل المدفوعات لتكون أرصدة النقد والتمويل حقيقية.',finFromLog:'من سجل المدفوعات',finConfirmed:'مؤكد',eqCalled:'رأس المال المدفوع',commitment:'الالتزام',facilityUse:'المسحوب من التسهيل',finMode:'تمويل الأرباع المقفلة',finStrict:'من المدفوعات المسجلة',finLenient:'الخطة (لم يُسجّل شيء بعد)',over:'تجاوز الميزانية المعدلة',unspent:'غير منفق في الأرباع المقفلة — المعالجة الافتراضية ترحيل للأمام',unassigned:'دفعات غير مخصصة لمكوّن',confirmLoan:'رصيد التمويل عند الإقفال غير مؤكد (تم استخدام قيمة التوقع)',review:'مراجعة ←',
     bridge:'جسر العائد الداخلي — من خط الأساس إلى التوقع الحالي',bBase:'عائد خط الأساس',bActual:'الفعلي والميزانيات والتوزيع',bAssum:'تغييرات الافتراضات',bCur:'العائد الحالي',
@@ -5813,18 +5867,21 @@ function renderOps(){
   const planSoldPct=(()=>{const tot=sumA(R.qGrossSales);let s=0;for(let i=0;i<cut;i++)s+=R.qGrossSales[i];return tot?s/tot:0;})();
   const soldPct=(()=>{const tot=sumA(R2.qGrossSales);return tot?actualOf('revenue',0,cut)/tot:0;})();
   const dFac=R2.totalCost-b.totalCost, monthsLeft=Math.max(0,(nq-cut)*3);
-  const chip=(cls,l,v,sub)=>`<div class="ops-chip ${cls}"><small>${l}</small><b>${v} <i>${sub}</i></b></div>`;
+  const {sec,blk}=opsResolveSection(opsSection); opsSection=sec; // old keys (vat/nav/reports) → merged section + scroll to the block
+  const tile=(cls,l,v,sub)=>`<div class="ops-chip ${cls}"><small>${l}</small><b>${v}</b><i>${sub}</i></div>`;
   const sp=actToDate<=planToDate*1.02?'good':actToDate<=planToDate*1.1?'warn':'bad', fc=dFac<=b.totalCost*0.005?'good':dFac<=b.totalCost*0.03?'warn':'bad', ir=R2.irr>=b.irr-0.002?'good':R2.irr>=b.irr-0.02?'warn':'bad', sl=soldPct>=planSoldPct?'good':'warn';
+  const cashAt=cut>0?R2.qCashClose[cut-1]:0, loanAt=cut>0?R2.qLoanClose[cut-1]:0, divB=sumA(R.qDividends), dv=R2.totalDiv>=divB-0.5?'good':'warn';
   let h=`<div class="ops-period">
-    <div class="ops-asof"><span class="lbl">${ot('asof')}</span><select id="opsCut" onchange="reforecastSettings.cutoffQ=Number(this.value);opsRefresh()">${Array.from({length:nq},(_,i)=>`<option value="${i}"${cut===i?' selected':''}>Q${i} · ${fmtDate(qEndDate(i-1))}</option>`).join('')}</select><span class="ops-sub">${cut} / ${nq} ${ot('closed')} · ${monthsLeft} ${ot('toEnd')}</span></div>
-    <div class="ops-view">${['baseline','forecast','both'].map(v=>`<span class="${opsView===v?'on':''}" onclick="opsView='${v}';renderOps()">${ot(v)}</span>`).join('')}</div>
-    <div class="ops-chips">${chip(sp,ot('spend'),M_(actToDate),ot('plan')+' '+M_(planToDate))}${chip(fc,ot('fac'),M_(R2.totalCost),(dFac>=0?'+':'−')+M_(Math.abs(dFac))+' '+ot('vsBase'))}${chip(ir,ot('irr'),fP(b.irr)+(lang==='ar'?' ← ':' → ')+fP(R2.irr),'')}${chip(sl,ot('sales_'),fP(soldPct)+' '+ot('sold'),ot('plan')+' '+fP(planSoldPct))}</div>
-    <button class="ops-close" onclick="reforecastSettings.cutoffQ=Math.min(${nq-1},${cut}+1);opsRefresh()">${ot('close')} Q${cut+1} ${lang==='ar'?'←':'→'}</button>
+    <div class="ops-ctl"><div class="ops-asof"><span class="lbl">${ot('asof')}</span><select id="opsCut" onchange="reforecastSettings.cutoffQ=Number(this.value);opsRefresh()">${Array.from({length:nq},(_,i)=>`<option value="${i}"${cut===i?' selected':''}>Q${i} · ${fmtDate(qEndDate(i-1))}</option>`).join('')}</select><span class="ops-sub">${cut} / ${nq} ${ot('closed')} · ${monthsLeft} ${ot('toEnd')}</span></div>
+    <div class="ops-view">${['baseline','forecast','both'].map(v=>`<span class="${opsView===v?'on':''}" onclick="opsView='${v}';renderOps()">${ot(v)}</span>`).join('')}</div></div>
+    <div class="ops-chips ops-tiles">${tile(sp,ot('spend'),M_(actToDate),ot('plan')+' '+M_(planToDate))}${tile(fc,ot('atComp'),M_(R2.totalCost),(dFac>=0?'+':'−')+M_(Math.abs(dFac))+' '+ot('vsBase'))}${tile(ir,ot('irr'),fP(b.irr)+(lang==='ar'?' ← ':' → ')+fP(R2.irr),ot('mult')+' <bdi>'+R2.eqMult.toFixed(2)+'x</bdi> · '+ot('baseline')+' <bdi>'+b.eqMult.toFixed(2)+'x</bdi>')}${tile(sl,ot('soldT'),fP(soldPct),ot('plan')+' '+fP(planSoldPct))}${tile('',ot('cashLoan'),M_(cashAt)+' / '+M_(loanAt),ot('atCut'))}${tile(dv,ot('dist'),M_(R2.totalDiv),ot('baseline')+' '+M_(divB))}</div>
+    <div class="ops-acts"><button class="ops-close" onclick="reforecastSettings.cutoffQ=Math.min(${nq-1},${cut}+1);opsRefresh()">${ot('close')} Q${cut+1} ${lang==='ar'?'←':'→'}</button><button class="ops-close ops-addpay" onclick="openPaymentsDrawer()">${ico('plus')} ${ot('addPay')}</button></div>
   </div>
   <nav class="ops-nav">${OPS_SECTIONS.map(s=>`<button class="${opsSection===s?'on':''}" onclick="opsSection='${s}';renderOps()">${ot(s)}${opsBadge(s)}</button>`).join('')}</nav>
-  <div class="ops-body">${hint}${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:opsFinancing,vat:opsVat,nav:opsNav,scenarios:opsScenarios,reports:opsReports})[opsSection]()}</div>
+  <div class="ops-body">${hint}${({overview:opsOverview,costs:opsCosts,sales:opsSales,financing:()=>opsBlocks([['financing',ot('financing'),opsFinancing],['vat',ot('vat'),opsVat],['nav',ot('nav'),opsNav]]),scenarios:()=>opsBlocks([['scenarios',ot('scen'),opsScenarios],['reports',ot('reports'),opsReports]])})[opsSection]()}</div>
   <button class="ops-drawer-btn" onclick="openPaymentsDrawer()">${ico('plus')} ${ot('addPay')}</button>`;
   pnl.innerHTML=h;
+  if(blk) opsScrollTo(blk);
 }
 function opsAlerts(){
   const cut=R2._cutoffQ, out=[];
@@ -5841,7 +5898,7 @@ function opsAlerts(){
   try{docAlerts().forEach(a=>out.push(a));}catch(e){}
   return out;
 }
-function opsBadge(s){const n=opsAlerts().filter(a=>a[2]===s).length;return n?`<em>${n}</em>`:'';}
+function opsBadge(s){const n=opsAlerts().filter(a=>opsBlockOf(a[2])===s).length;return n?`<em>${n}</em>`:'';} // merged sections sum their blocks' alerts
 
 // ---- sections ----
 function opsOverview(){
@@ -5850,15 +5907,19 @@ function opsOverview(){
   const actQ=Array.from({length:cut},(_,i)=>costCats.reduce((s,c)=>s+actualNet(c.key,i,i+1),0)); // ex-VAT
   const cp=cumul(planQ),ca=cumul(actQ),cf=cumul(fcQ); const fcLine=cf.map((v,i)=>i>=cut-1?v:null); if(cut>0) fcLine[cut-1]=ca[cut-1];
   const sp=cumul(R.qGrossSales),sa=cumul(Array.from({length:cut},(_,i)=>actualOf('revenue',i,i+1))),sf=cumul(R2.qGrossSales).map((v,i)=>i>=cut-1?v:null); if(cut>0) sf[cut-1]=sa[cut-1];
-  const totalFac=cf[nq-1]||1, committed=sumA(Object.values(reforecastSettings.committed||{})), cashAt=cut>0?R2.qCashClose[cut-1]:0, loanAt=cut>0?R2.qLoanClose[cut-1]:0;
-  const al=opsAlerts();
-  const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
+  const al=opsAlerts(); // 2026-10-22: the five tiles moved into the period strip (renderOps) and the Costs header (opsCostProgress)
   const series=v=>({baseline:[[cp,'#9aa79f']],forecast:[[ca,'#00322d'],[fcLine,'#775a19',1]],both:[[cp,'#9aa79f'],[ca,'#00322d'],[fcLine,'#775a19',1]]})[opsView];
   const sseries=({baseline:[[sp,'#9aa79f']],forecast:[[sa,'#00322d'],[sf,'#775a19',1]],both:[[sp,'#9aa79f'],[sa,'#00322d'],[sf,'#775a19',1]]})[opsView];
-  return `<div class="ops-kpis">${kpi(ot('costComplete'),fP((ca[cut-1]||0)/totalFac),ot('timeElapsed')+' '+fP(cut/nq),(ca[cut-1]||0)/totalFac<cut/nq-0.05?'dn':'')}${kpi(ot('committed'),M_(committed),fP(committed/totalFac)+' '+ot('ofFac'))}${kpi(ot('cashLoan'),M_(cashAt)+' / '+M_(loanAt),ot('atCut'))}${kpi(ot('eqMult'),R2.eqMult.toFixed(2)+'x',ot('baseline')+' '+b.eqMult.toFixed(2)+'x',R2.eqMult<b.eqMult?'dn':'up')}${kpi(ot('dist'),M_(R2.totalDiv),ot('baseline')+' '+M_(sumA(R.qDividends)),R2.totalDiv<sumA(R.qDividends)?'dn':'up')}</div>
-  <div class="ops-grid2"><div class="ops-card"><h3>${ot('scurve')}<span>SAR</span></h3>${svgLines(series(),cut,nq)}</div>
-  <div class="ops-card"><h3>${ot('decide')}<span>${al.length} ${ot('items')}</span></h3><div class="ops-alerts">${al.length?al.map(a=>`<div class="ops-al"><span class="dot ${a[0]}"></span><div>${escH(a[1])}</div><a onclick="${a[2]==='payments'?'openPaymentsDrawer()':`opsSection='${a[2]}';renderOps()`}">${ot('review')}</a></div>`).join(''):`<p class="ops-muted">${ot('nothing')}</p>`}</div></div></div>
+  return `<div class="ops-grid2 ops-ov"><div class="ops-card"><h3>${ot('decide')}<span>${al.length} ${ot('items')}</span></h3><div class="ops-alerts">${al.length?al.map(a=>`<div class="ops-al"><span class="dot ${a[0]}"></span><div>${escH(a[1])}</div><a onclick="${a[2]==='payments'?'openPaymentsDrawer()':`opsSection='${a[2]}';renderOps()`}">${ot('review')}</a></div>`).join(''):`<p class="ops-muted">${ot('nothing')}</p>`}</div></div>
+  <div class="ops-card"><h3>${ot('scurve')}<span>SAR</span></h3>${svgLines(series(),cut,nq)}</div></div>
   <div class="ops-grid2"><div class="ops-card"><h3>${ot('bridge')}</h3>${svgBridge(irrBridge())}</div><div class="ops-card"><h3>${ot('ssales')}<span>SAR</span></h3>${svgLines(sseries,cut,nq)}</div></div>`;
+}
+// Cost complete % and Committed (formerly overview tiles) — shown on the Costs section header line
+function opsCostProgress(){
+  const nq=R2.nq,cut=R2._cutoffQ,costCats=opsCats().filter(c=>c.group==='cost');
+  const cf=cumul(Array.from({length:nq},(_,i)=>costCats.reduce((s,c)=>s+netQ(c,R2,i),0))), ca=cumul(Array.from({length:cut},(_,i)=>costCats.reduce((s,c)=>s+actualNet(c.key,i,i+1),0)));
+  const totalFac=cf[nq-1]||1, committed=sumA(Object.values(reforecastSettings.committed||{})), pct=(ca[cut-1]||0)/totalFac, timePct=cut/nq;
+  return `<div class="ops-sec-head"><span><b>${ot('costComplete')}</b> <em class="${pct<timePct-0.05?'dn':''}">${fP(pct)}</em><i>${ot('timeElapsed')} ${fP(timePct)}</i></span><span><b>${ot('committed')}</b> <em>${M_(committed)}</em><i>${fP(committed/totalFac)} ${ot('ofFac')}</i></span></div>`;
 }
 function setCommitted(key,v){_rfNorm();reforecastSettings.committed=reforecastSettings.committed||{};if(v==='')delete reforecastSettings.committed[key];else reforecastSettings.committed[key]=Number(v);renderOps();}
 // ═══════════════════════════════════════════════
@@ -5940,7 +6001,7 @@ function opsCosts(){
   const tot=k=>rows.reduce((s,r)=>s+r[k],0),TB=tot('bud'),TA=tot('act'),TF=tot('fac'),TO=tot('orig');
   const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
   const dv=TA-TB,vc=_vcls(TB,TA,TB),dF=TF-TO;
-  let h=`<div class="ops-kpis">${kpi(ot('cxActual'),M_(TA),closed?ot('cxClosedN').replace('{n}',cut):ot('cxAllPay'))}${kpi(ot('cxBudget'),M_(TB),closed?ot('cxPlanTo').replace('{n}',cut):ot('cxFullPlan'))}${kpi(ot('cxVar'),(dv>=0?'+':'−')+M_(Math.abs(dv)),TB?(dv>=0?'+':'−')+Math.abs(dv/TB*100).toFixed(1)+'% '+ot('cxVsBudget'):'',vc==='bad'?'dn':vc==='good'?'up':'')}${kpi(ot('fac'),M_(TF),(dF>=0?'+':'−')+M_(Math.abs(dF))+' '+ot('vsBase'),dF>TO*0.005?'dn':'')}</div>`;
+  let h=opsCostProgress()+`<div class="ops-kpis">${kpi(ot('cxActual'),M_(TA),closed?ot('cxClosedN').replace('{n}',cut):ot('cxAllPay'))}${kpi(ot('cxBudget'),M_(TB),closed?ot('cxPlanTo').replace('{n}',cut):ot('cxFullPlan'))}${kpi(ot('cxVar'),(dv>=0?'+':'−')+M_(Math.abs(dv)),TB?(dv>=0?'+':'−')+Math.abs(dv/TB*100).toFixed(1)+'% '+ot('cxVsBudget'):'',vc==='bad'?'dn':vc==='good'?'up':'')}${kpi(ot('fac'),M_(TF),(dF>=0?'+':'−')+M_(Math.abs(dF))+' '+ot('vsBase'),dF>TO*0.005?'dn':'')}</div>`;
   h+=docInvoicesCard();
   // table
   const colHdr=`<tr><th>${ot('cxLine')}</th><th>${ot('budget')}</th><th>${ot('actual')}</th><th>${ot('cxVarCol')}</th><th>${ot('commit')}</th><th>${ot('adj')}</th><th>${ot('facShort')}</th><th>${ot('cxTreatCol')}</th><th></th></tr>`;
