@@ -1151,7 +1151,7 @@ function icoHydrate(root){(root||document).querySelectorAll('i[data-ico]').forEa
   <div id="reforecastPanel" style="display:none"></div>
 </main>
 <div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span class="ops-drawer-ttl"><span class="ops-drawer-ic"><i class="ic" data-ico="card"></i></span><span class="ops-drawer-name">Payments</span></span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
-<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-22b</span></div>
+<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-23</span></div>
 </div><!-- end appMain -->
 
 <script>
@@ -3563,16 +3563,12 @@ function renderDashboard(){
         [lang==='ar'?'الأرض':'Land',lang==='ar'?'التطوير':'Construction',lang==='ar'?'أرباح التمويل':'Debt Profit',lang==='ar'?'مصاريف الصندوق':'Fund Exp'],
         CHART.series);}
       drawPie('c5',[R.capCash,R.capInKind,R.capOffPlan,R.capDebt],[DH.capCash,DH.capInKind,DH.capOffPlan,DH.capDebt],CHART.series);
-      // For Arabic, reverse labels+data so quarters display right-to-left on line charts
-      const _rtlLbl=lang==='ar'?[...qlb].reverse():qlb;
-      const _rtlCash=lang==='ar'?[...R.qCashClose].reverse():R.qCashClose;
-      drawLine('c3',_rtlLbl,_rtlCash,CHART.green);
+      drawLine('c3',qlb,R.qCashClose,CHART.green); // drawLine mirrors itself in Arabic (one rule for every chart: Q1 on the right)
       drawBarChart('c4',qlb,[{d:R.qLoanClose,c:CHART.green},{d:R.drawdowns,c:CHART.gold},{d:R.qInterest,c:CHART.green2}],DH.chLegDebt);
       // Cumulative investor CF
       const cumCF=[];let runCF=0;
       for(let i=0;i<R.nq;i++){runCF+=R.qEquity[i]+R.qIKTotal[i]-R.qDividends[i];cumCF.push(-runCF);}
-      const _rtlCumCF=lang==='ar'?[...cumCF].reverse():cumCF;
-      drawLine('c6',_rtlLbl,_rtlCumCF,CHART.green);
+      drawLine('c6',qlb,cumCF,CHART.green);
       // Revenue vs Cost bar
       drawBarChart('c7',qlb,[{d:R.qGrossSales,c:CHART.green},{d:R.qCon.map(v=>-v),c:CHART.red}],[L('Revenue','إيرادات'),L('Cost','تكاليف')]);
     } else if(currentRole==='developer'){
@@ -3821,10 +3817,12 @@ function _cvLegend(ctx,W,items,y,isRTL){ctx.font='500 11px '+CHART.font();ctx.te
   items.forEach((it,i)=>{if(isRTL){x-=10;ctx.fillStyle=it.c;ctx.fillRect(x,y-5,10,10);ctx.fillStyle=CHART.label;ctx.textAlign='right';ctx.fillText(it.l,x-6,y);x-=widths[i]+4;}
     else{ctx.fillStyle=it.c;ctx.fillRect(x,y-5,10,10);ctx.fillStyle=CHART.label;ctx.textAlign='left';ctx.fillText(it.l,x+16,y);x+=widths[i]+14;}});ctx.textBaseline='alphabetic';}
 function _cvAxes(ctx,W,H,pad,sc,isRTL){const cH=H-pad.t-pad.b,toY=v=>pad.t+cH-(v-sc.lo)/(sc.hi-sc.lo||1)*cH;
-  ctx.font='500 11px '+CHART.font();ctx.textAlign='right';ctx.textBaseline='middle';ctx.lineWidth=1;
-  sc.ticks.forEach(t=>{const y=Math.round(toY(t))+.5;ctx.strokeStyle=t===0&&sc.lo<0?CHART.zero:CHART.grid;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=CHART.label;ctx.fillText(fmtCompact(t),pad.l-8,y);});
+  ctx.font='500 11px '+CHART.font();ctx.textAlign=isRTL?'left':'right';ctx.textBaseline='middle';ctx.lineWidth=1;
+  sc.ticks.forEach(t=>{const y=Math.round(toY(t))+.5;ctx.strokeStyle=t===0&&sc.lo<0?CHART.zero:CHART.grid;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=CHART.label;ctx.fillText(fmtCompact(t),isRTL?W-pad.r+8:pad.l-8,y);});
   ctx.textBaseline='alphabetic';return toY;}
 function _cvPadL(ctx,sc){ctx.font='500 11px '+CHART.font();return Math.ceil(Math.max(...sc.ticks.map(t=>ctx.measureText(fmtCompact(t)).width)))+16;}
+// axis padding: the value axis sits on the right in Arabic, on the left otherwise (time runs right→left in RTL, matching the bars/labels)
+function _cvPad(ctx,sc,isRTL,top){const a=_cvPadL(ctx,sc);return isRTL?{t:top,r:a,b:30,l:10}:{t:top,r:10,b:30,l:a};}
 function _cvXLabels(ctx,labels,pad,W,H,isRTL){const n=labels.length,cW=W-pad.l-pad.r;ctx.fillStyle=CHART.label;ctx.font='500 11px '+CHART.font();ctx.textAlign='center';
   const every=Math.max(1,Math.ceil(n/(cW/44)));labels.forEach((l,i)=>{if(i%every)return;const ci=isRTL?n-1-i:i;ctx.fillText(l,pad.l+cW*(ci+.5)/n,H-pad.b+18);});}
 function roundRect(ctx,x,y,w,h,r){if(h===0)return;ctx.fillRect(x,y,w,h);} // square data-ends by design (r kept for signature)
@@ -3833,7 +3831,7 @@ function drawBarChart(id,labels,datasets,legend){
   const cols=datasets.map((ds,i)=>chartColor(ds.c,i));
   let all=[];datasets.forEach(ds=>ds.d.forEach(v=>all.push(v)));
   const sc=niceScale(Math.min(...all,0),Math.max(...all,0));
-  const pad={t:legend?34:14,r:8,b:30,l:_cvPadL(ctx,sc)};const cW=W-pad.l-pad.r;
+  const pad=_cvPad(ctx,sc,isRTL,legend?34:14);const cW=W-pad.l-pad.r;
   if(legend) _cvLegend(ctx,W,legend.map((l,i)=>({l,c:cols[i]})),12,isRTL);
   const toY=_cvAxes(ctx,W,H,pad,sc,isRTL);
   const n=labels.length,nD=datasets.length,gw=cW/n,inner=gw*(n>16?.76:.68),bW=Math.max(2,(inner-2*(nD-1))/nD),y0=toY(0);
@@ -3844,11 +3842,11 @@ function drawBarChart(id,labels,datasets,legend){
 function drawLine(id,labels,data,color){
   const c=_cvSetup(id,240);if(!c)return;const {ctx,W,H}=c;const isRTL=lang==='ar';const col=chartColor(color,0);
   const sc=niceScale(Math.min(...data,0),Math.max(...data,0));
-  const pad={t:16,r:12,b:30,l:_cvPadL(ctx,sc)};const cW=W-pad.l-pad.r,n=data.length;
-  const toY=_cvAxes(ctx,W,H,pad,sc,isRTL);const X=i=>pad.l+cW*(i+.5)/n;
+  const pad=_cvPad(ctx,sc,isRTL,16);const cW=W-pad.l-pad.r,n=data.length;
+  const toY=_cvAxes(ctx,W,H,pad,sc,isRTL);const X=i=>pad.l+cW*((isRTL?n-1-i:i)+.5)/n; // RTL: Q1 on the right, like the bars and the x labels
   ctx.fillStyle=col+'0f';ctx.beginPath();ctx.moveTo(X(0),toY(0));data.forEach((v,i)=>ctx.lineTo(X(i),toY(v)));ctx.lineTo(X(n-1),toY(0));ctx.closePath();ctx.fill();
   ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();data.forEach((v,i)=>{i?ctx.lineTo(X(i),toY(v)):ctx.moveTo(X(i),toY(v));});ctx.stroke();
-  const li=isRTL?0:n-1;if(n){ctx.beginPath();ctx.arc(X(li),toY(data[li]),4,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.stroke();
+  const li=n-1;if(n){ctx.beginPath();ctx.arc(X(li),toY(data[li]),4,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.stroke(); // the last quarter is marked in both directions
     ctx.fillStyle=CHART.ink;ctx.font='600 11px '+CHART.font();ctx.textAlign=isRTL?'left':'right';ctx.fillText(fmtCompact(data[li]),X(li)+(isRTL?8:-8),toY(data[li])-8);}
   _cvXLabels(ctx,labels,pad,W,H,isRTL);
 }
@@ -5473,7 +5471,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-10-22b';
+const BUILD='2026-10-23';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -5837,20 +5835,20 @@ function irrBridge(){
 
 // ---- charts (SVG, no library) ----
 function svgLines(series,cut,nq,unitCap){
-  const W=640,H=240,M={l:lang==='ar'?84:52,r:14,t:16,b:26},x=i=>M.l+i*(W-M.l-M.r)/Math.max(1,nq-1);
+  const rtl=lang==='ar',W=640,H=240,M={l:rtl?14:52,r:rtl?84:14,t:16,b:26},_st=(W-M.l-M.r)/Math.max(1,nq-1),x=i=>rtl?W-M.r-i*_st:M.l+i*_st; // RTL: Q1 on the right, value axis on the right (same rule as the canvas charts)
   const vals=series.flatMap(s=>s[0]).filter(v=>v!=null); const sc=niceScale(0,Math.max(1,...vals)), y=v=>M.t+(H-M.t-M.b)*(1-(v-sc.lo)/(sc.hi-sc.lo||1));
   let h='';
-  if(cut>0){const cx=x(Math.max(0,cut-1));h+=`<rect x="${M.l}" y="${M.t}" width="${Math.max(0,cx-M.l)}" height="${H-M.t-M.b}" fill="${CHART.closed}"/><line x1="${cx}" x2="${cx}" y1="${M.t}" y2="${H-M.b}" stroke="${CHART.cutoff}" stroke-dasharray="3 3"/><text class="ops-ax" x="${cx-5}" y="${M.t+11}" text-anchor="end">${ot('closed')}</text>`;}
-  sc.ticks.forEach(t=>{h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-8}" y="${y(t)+4}" text-anchor="end">${fmtCompact(t)}</text>`;});
-  const every=Math.ceil(nq/12); for(let i=0;i<nq;i++) if(i%every===0) h+=`<text class="ops-ax" x="${x(i)}" y="${H-7}" text-anchor="middle">Q${i+1}</text>`;
+  if(cut>0){const cx=x(Math.max(0,cut-1));h+=`<rect x="${rtl?cx:M.l}" y="${M.t}" width="${Math.max(0,rtl?W-M.r-cx:cx-M.l)}" height="${H-M.t-M.b}" fill="${CHART.closed}"/><line x1="${cx}" x2="${cx}" y1="${M.t}" y2="${H-M.b}" stroke="${CHART.cutoff}" stroke-dasharray="3 3"/><text class="ops-ax" x="${rtl?cx+5:cx-5}" y="${M.t+11}" text-anchor="${rtl?'start':'end'}">${ot('closed')}</text>`;}
+  sc.ticks.forEach(t=>{h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${rtl?W-M.r+8:M.l-8}" y="${y(t)+4}" text-anchor="${rtl?'start':'end'}">${fmtCompact(t)}</text>`;});
+  const every=Math.ceil(nq/12); for(let i=0;i<nq;i++) if(i%every===0) h+=`<text class="ops-ax" x="${x(i)}" y="${H-7}" text-anchor="middle">${rtl?'ربع '+(i+1):'Q'+(i+1)}</text>`;
   for(const [d,c0,dash] of series){const c=chartColor(c0);const pts=d.map((v,i)=>v==null?null:`${x(i)},${y(v)}`).filter(Boolean);if(!pts.length)continue;h+=`<polyline fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" ${dash?'stroke-dasharray="5 4"':''} points="${pts.join(' ')}"/>`;const li=d.map((v,i)=>v==null?-1:i).filter(i=>i>=0).pop();h+=`<circle cx="${x(li)}" cy="${y(d[li])}" r="3.5" fill="${c}" stroke="#fff" stroke-width="2"/>`;}
   return `<div class="ops-legend"><span><i style="background:${CHART.sand}"></i>${ot('baseline')}</span><span><i style="background:${CHART.green}"></i>${ot('actual')}</span><span><i style="background:${CHART.gold}"></i>${ot('forecast')}</span></div><svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${h}</svg>`;
 }
 function svgBridge(steps){
-  const W=640,H=240,M={l:52,r:14,t:20,b:46};const pts=[];let run=0;steps.forEach(s=>{if(s[2]){run=s[1];pts.push(run);}else{pts.push(run);run+=s[1];pts.push(run);}});
+  const rtl=lang==='ar',W=640,H=240,M={l:rtl?14:52,r:rtl?52:14,t:20,b:46};const pts=[];let run=0;steps.forEach(s=>{if(s[2]){run=s[1];pts.push(run);}else{pts.push(run);run+=s[1];pts.push(run);}});
   const lo=Math.min(...pts)-0.01,hi=Math.max(...pts)+0.01,y=v=>M.t+(H-M.t-M.b)*(1-(v-lo)/(hi-lo||1)),bw=(W-M.l-M.r)/steps.length;let h='';run=0;
-  for(let k=0;k<=4;k++){const t=lo+(hi-lo)*k/4;h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-8}" y="${y(t)+4}" text-anchor="end">${(t*100).toFixed(1)}%</text>`;}
-  steps.forEach((st,i)=>{const w=Math.min(96,bw*0.62),x=M.l+i*bw+(bw-w)/2;let y0,y1,c;if(st[2]){y0=y(st[1]);y1=y(lo);c=CHART.green;run=st[1];}else{const a=run,b=run+st[1];y0=y(Math.max(a,b));y1=y(Math.min(a,b));c=st[1]>=0?CHART.green2:CHART.red;run=b;}
+  for(let k=0;k<=4;k++){const t=lo+(hi-lo)*k/4;h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${rtl?W-M.r+8:M.l-8}" y="${y(t)+4}" text-anchor="${rtl?'start':'end'}">${(t*100).toFixed(1)}%</text>`;}
+  steps.forEach((st,i)=>{const w=Math.min(96,bw*0.62),x=rtl?W-M.r-(i+1)*bw+(bw-w)/2:M.l+i*bw+(bw-w)/2;let y0,y1,c;if(st[2]){y0=y(st[1]);y1=y(lo);c=CHART.green;run=st[1];}else{const a=run,b=run+st[1];y0=y(Math.max(a,b));y1=y(Math.min(a,b));c=st[1]>=0?CHART.green2:CHART.red;run=b;}
     h+=`<rect x="${x}" y="${y0}" width="${w}" height="${Math.max(2,y1-y0)}" fill="${c}"/><text class="ops-ax" x="${x+w/2}" y="${y0-6}" text-anchor="middle" style="font-weight:700;fill:${CHART.ink}">${st[2]?(st[1]*100).toFixed(2)+'%':(st[1]>=0?'+':'')+(st[1]*100).toFixed(2)}</text>`;
     const words=st[0].split(' '),lines=[];words.forEach(wd=>{const L=lines[lines.length-1];if(L&&(L+' '+wd).length<=14)lines[lines.length-1]=L+' '+wd;else lines.push(wd);});
     lines.slice(0,3).forEach((ln,k)=>{h+=`<text class="ops-ax" x="${x+w/2}" y="${H-M.b+14+k*12}" text-anchor="middle">${escH(ln)}</text>`;});});
@@ -5985,10 +5983,10 @@ function _vcls(b,a,tot){if(b<0.5)return a>0.5?'bad':'';const d=a-b;const sig=Mat
 function _vtxt(b,a){if(b<0.5)return a>0.5?'—':'';const d=a-b;return `<span>${(d>=0?'+':'−')+M_(Math.abs(d))}</span><small>${(d>=0?'+':'−')+Math.abs(d/b*100).toFixed(1)}%</small>`;}
 
 function svgGroupBars(groups){ // [{label,color,vals:[budget,actual]}]
-  const W=640,H=240,M={l:lang==='ar'?84:52,r:14,t:16,b:40},n=groups.length||1,gw=(W-M.l-M.r)/n,bw=Math.min(40,gw*0.34);
+  const rtl=lang==='ar',W=640,H=240,M={l:rtl?14:52,r:rtl?84:14,t:16,b:40},n=groups.length||1,gw=(W-M.l-M.r)/n,bw=Math.min(40,gw*0.34);
   const sc=niceScale(0,Math.max(1,...groups.flatMap(g=>g.vals))),y=v=>M.t+(H-M.t-M.b)*(1-(v-sc.lo)/(sc.hi-sc.lo||1));let h='';
-  sc.ticks.forEach(t=>{h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-8}" y="${y(t)+4}" text-anchor="end">${fmtCompact(t)}</text>`;});
-  groups.forEach((g,i)=>{const cx=M.l+i*gw+gw/2;const [b,a]=g.vals;
+  sc.ticks.forEach(t=>{h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${rtl?W-M.r+8:M.l-8}" y="${y(t)+4}" text-anchor="${rtl?'start':'end'}">${fmtCompact(t)}</text>`;});
+  groups.forEach((g,i)=>{const cx=rtl?W-M.r-i*gw-gw/2:M.l+i*gw+gw/2;const [b,a]=g.vals;
     h+=`<rect x="${cx-bw-1}" y="${y(b)}" width="${bw}" height="${Math.max(1,y(0)-y(b))}" fill="${CHART.sand}"/><rect x="${cx+1}" y="${y(a)}" width="${bw}" height="${Math.max(1,y(0)-y(a))}" fill="${chartColor(g.color)||CHART.green}"/>`;
     if(n<=8)h+=`<text class="ops-ax" x="${cx-bw/2-1}" y="${y(b)-5}" text-anchor="middle">${fmtCompact(b)}</text><text class="ops-ax" x="${cx+bw/2+1}" y="${y(a)-5}" text-anchor="middle" style="font-weight:700;fill:${CHART.ink}">${fmtCompact(a)}</text>`;
     String(g.label).split(' ').slice(0,n>8?2:3).forEach((wd,k)=>{h+=`<text class="ops-ax" x="${cx}" y="${H-M.b+14+k*12}" text-anchor="middle" style="${n>8?'font-size:9.5px':''}">${escH(wd)}</text>`;});});
@@ -6218,10 +6216,10 @@ function vatPop(kind,period){
 }
 function svgQuadBars(groups){ // [{label,vals:[recorded,claimed,accepted,received]}]
   const cols=[CHART.sand,CHART.green2,CHART.gold,CHART.green],lab=[ot('vRecorded'),ot('vClaimed'),ot('vAccepted'),ot('vRecv')];
-  const W=640,H=240,M={l:lang==='ar'?84:52,r:14,t:16,b:30},n=groups.length||1,gw=(W-M.l-M.r)/n,bw=Math.min(18,gw/5.5);
+  const rtl=lang==='ar',W=640,H=240,M={l:rtl?14:52,r:rtl?84:14,t:16,b:30},n=groups.length||1,gw=(W-M.l-M.r)/n,bw=Math.min(18,gw/5.5);
   const sc=niceScale(0,Math.max(1,...groups.flatMap(g=>g.vals))),y=v=>M.t+(H-M.t-M.b)*(1-(v-sc.lo)/(sc.hi-sc.lo||1));let h='';
-  sc.ticks.forEach(t=>{h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${M.l-8}" y="${y(t)+4}" text-anchor="end">${fmtCompact(t)}</text>`;});
-  groups.forEach((g,i)=>{const cx=M.l+i*gw+gw/2;g.vals.forEach((v,k)=>{const x=cx-2*bw+k*bw;h+=`<rect x="${x}" y="${y(v)}" width="${bw-2}" height="${Math.max(1,y(0)-y(v))}" fill="${cols[k]}"/>`;});h+=`<text class="ops-ax" x="${cx}" y="${H-9}" text-anchor="middle">${escH(g.label)}</text>`;});
+  sc.ticks.forEach(t=>{h+=`<line class="ops-grd" x1="${M.l}" x2="${W-M.r}" y1="${y(t)}" y2="${y(t)}"/><text class="ops-ax" x="${rtl?W-M.r+8:M.l-8}" y="${y(t)+4}" text-anchor="${rtl?'start':'end'}">${fmtCompact(t)}</text>`;});
+  groups.forEach((g,i)=>{const cx=rtl?W-M.r-i*gw-gw/2:M.l+i*gw+gw/2;g.vals.forEach((v,k)=>{const x=cx-2*bw+k*bw;h+=`<rect x="${x}" y="${y(v)}" width="${bw-2}" height="${Math.max(1,y(0)-y(v))}" fill="${cols[k]}"/>`;});h+=`<text class="ops-ax" x="${cx}" y="${H-9}" text-anchor="middle">${escH(g.label)}</text>`;});
   return `<div class="ops-legend">${lab.map((l,k)=>`<span><i style="background:${cols[k]}"></i>${l}</span>`).join('')}</div><svg viewBox="0 0 ${W} ${H}" class="ops-svg" style="direction:ltr">${h}</svg>`;
 }
 function opsVat(){
