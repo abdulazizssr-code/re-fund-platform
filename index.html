@@ -950,6 +950,10 @@ html[data-theme=gulf] .rfcs-badge{background:var(--g-gold-soft);color:#6d5320;fo
 }
 /* ═══ END THEME ═══ */
 
+
+/* sales timing % cells: input centred under the quarter header, × beside it */
+.sp-cell{white-space:nowrap;text-align:center;vertical-align:middle}.sp-cell input.ops-mini{width:72px;text-align:center;margin:0 auto;display:inline-block;vertical-align:middle}.sp-cell .sp-x{vertical-align:middle;margin-inline-start:4px}
+.sp-tbl th,.sp-tbl td.rfcs-num,.sp-tbl td.sp-cell{text-align:center!important}.sp-tbl th:first-child,.sp-tbl td:first-child{text-align:start!important}
 /* ═══ CF GROUPS ═══ */
 .cf-tools{display:flex;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}
 .cfg-all{display:inline-flex;gap:4px;background:var(--surface-ch);border-radius:999px;padding:3px;margin-inline-start:auto}.cfg-all a{cursor:pointer;padding:5px 12px;border-radius:999px;font-size:.8rem;font-weight:600;color:var(--on-surface-v)}.cfg-all a:hover{background:#fff;color:var(--primary)}
@@ -957,9 +961,9 @@ html[data-theme=gulf] .rfcs-badge{background:var(--g-gold-soft);color:#6d5320;fo
 .dt tr.cfg-h td.rl{background:var(--g-soft,#e4efea)}
 .dt tr.cfg-h:hover td{background:#d9e8e1}
 .cfg-t{display:inline-flex;align-items:center;gap:8px}.cfg-ch{width:1em;height:1em;transform:rotate(90deg);transition:transform .2s}
-.dt.cfg-c-rev tr.cfg-r[data-g=rev],.dt.cfg-c-exp tr.cfg-r[data-g=exp],.dt.cfg-c-dev tr.cfg-r[data-g=dev],.dt.cfg-c-fin tr.cfg-r[data-g=fin]{display:none}
-.dt.cfg-c-rev tr.cfg-h[data-g=rev] .cfg-ch,.dt.cfg-c-exp tr.cfg-h[data-g=exp] .cfg-ch,.dt.cfg-c-dev tr.cfg-h[data-g=dev] .cfg-ch,.dt.cfg-c-fin tr.cfg-h[data-g=fin] .cfg-ch{transform:rotate(0deg)}
-[dir=rtl] .cfg-ch{transform:rotate(90deg)}[dir=rtl] .dt.cfg-c-rev tr.cfg-h[data-g=rev] .cfg-ch,[dir=rtl] .dt.cfg-c-exp tr.cfg-h[data-g=exp] .cfg-ch,[dir=rtl] .dt.cfg-c-dev tr.cfg-h[data-g=dev] .cfg-ch,[dir=rtl] .dt.cfg-c-fin tr.cfg-h[data-g=fin] .cfg-ch{transform:rotate(180deg)}
+.dt.cfg-c-rev tr.cfg-r[data-g=rev],.dt.cfg-c-oth tr.cfg-r[data-g=oth],.dt.cfg-c-exp tr.cfg-r[data-g=exp],.dt.cfg-c-dev tr.cfg-r[data-g=dev],.dt.cfg-c-fin tr.cfg-r[data-g=fin]{display:none}
+.dt.cfg-c-rev tr.cfg-h[data-g=rev] .cfg-ch,.dt.cfg-c-oth tr.cfg-h[data-g=oth] .cfg-ch,.dt.cfg-c-exp tr.cfg-h[data-g=exp] .cfg-ch,.dt.cfg-c-dev tr.cfg-h[data-g=dev] .cfg-ch,.dt.cfg-c-fin tr.cfg-h[data-g=fin] .cfg-ch{transform:rotate(0deg)}
+[dir=rtl] .cfg-ch{transform:rotate(90deg)}[dir=rtl] .dt.cfg-c-rev tr.cfg-h[data-g=rev] .cfg-ch,[dir=rtl] .dt.cfg-c-oth tr.cfg-h[data-g=oth] .cfg-ch,[dir=rtl] .dt.cfg-c-exp tr.cfg-h[data-g=exp] .cfg-ch,[dir=rtl] .dt.cfg-c-dev tr.cfg-h[data-g=dev] .cfg-ch,[dir=rtl] .dt.cfg-c-fin tr.cfg-h[data-g=fin] .cfg-ch{transform:rotate(180deg)}
 .dt tr.cfg-r td.rl{padding-inline-start:28px}
 @media print{.cfg-all{display:none}}
 /* ═══ END CF GROUPS ═══ */
@@ -1151,7 +1155,7 @@ function icoHydrate(root){(root||document).querySelectorAll('i[data-ico]').forEa
   <div id="reforecastPanel" style="display:none"></div>
 </main>
 <div class="ops-drawer" id="opsDrawer"><div class="ops-drawer-head"><span class="ops-drawer-ttl"><span class="ops-drawer-ic"><i class="ic" data-ico="card"></i></span><span class="ops-drawer-name">Payments</span></span><button class="act-btn act-btn-add" onclick="closePaymentsDrawer()">Done</button></div><div class="ops-drawer-body"></div></div>
-<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-10-23</span></div>
+<div class="footer">Built for <span>Real Estate Fund Managers</span> in the Kingdom of Saudi Arabia &middot; All calculations are estimates for planning purposes only <span class="build" data-no-i18n title="build">· build 2026-11-01b</span></div>
 </div><!-- end appMain -->
 
 <script>
@@ -1726,7 +1730,7 @@ function closeShareModal(){
 function stripDefaults(obj,def){const r={};for(const k in obj){if(obj[k]!==def[k]) r[k]=obj[k];}return r;}
 function stripZero(obj){const r={};for(const k in obj){const v=obj[k];if(v===0||v===''||v===null||v===undefined) continue;if(Array.isArray(v)&&v.length===0) continue;r[k]=v;}return r;}
 // Short key maps for D (fund-level) to reduce link size
-const _DK={fund_name:'fn',is_fund:'if',project_location:'pl',project_type:'pt',fund_period_months:'fpm',start_date:'sd',num_projects:'np',custody_annual:'ca',custody_freq:'cf',spv_setup:'ss',fund_setup:'fs',auditor_annual:'aa',auditor_freq:'af',sharia_annual:'sa',sharia_freq:'sf',engineering_annual:'ea',engineering_freq:'ef',board_annual:'ba',board_freq:'bf',fin_advisor:'fa',mgmt_fee_mode:'mfm',mgmt_fee_pct:'mfp',mgmt_fee_fixed:'mff',marketing_cost:'mc',marketing_date:'md',vat_rate:'vr',vat_refund:'vrf',vat_refund_months:'vrm',vat_advisor_pct:'vap',hurdle_rate:'hr',perf_fee_pct:'pfp',bank_mgmt_pct:'bmp',ik_land_pct:'ilp',ik_brok_pct:'ibp',ik_dev_pct:'idp',ik_mkt_pct:'imp',ik_con_pct:'icp',ik_sell_pct:'isp',equity:'eq',gp_commit_cash:'gcc',gp_commit_inkind_pct:'gip',gp_commit_inkind_cap:'gic',saibor:'sb',margin:'mg',arr_fee_pct:'afp',min_cash:'mnc',vat_refund_con:'vrc',rett_pct:'rtp'};
+const _DK={fund_name:'fn',is_fund:'if',project_location:'pl',project_type:'pt',fund_period_months:'fpm',start_date:'sd',num_projects:'np',custody_annual:'ca',custody_freq:'cf',spv_setup:'ss',fund_setup:'fs',auditor_annual:'aa',auditor_freq:'af',sharia_annual:'sa',sharia_freq:'sf',engineering_annual:'ea',engineering_freq:'ef',board_annual:'ba',board_freq:'bf',fin_advisor:'fa',mgmt_fee_mode:'mfm',mgmt_fee_pct:'mfp',mgmt_fee_fixed:'mff',marketing_cost:'mc',marketing_date:'md',vat_rate:'vr',vat_refund:'vrf',vat_refund_months:'vrm',vat_advisor_pct:'vap',hurdle_rate:'hr',perf_fee_pct:'pfp',bank_mgmt_pct:'bmp',ik_land_pct:'ilp',ik_brok_pct:'ibp',ik_dev_pct:'idp',ik_mkt_pct:'imp',ik_con_pct:'icp',ik_sell_pct:'isp',equity:'eq',gp_commit_cash:'gcc',gp_commit_inkind_pct:'gip',gp_commit_inkind_cap:'gic',offplan_cap:'opc',saibor:'sb',margin:'mg',arr_fee_pct:'afp',min_cash:'mnc',vat_refund_con:'vrc',rett_pct:'rtp'};
 const _DKR={};for(const k in _DK) _DKR[_DK[k]]=k;
 function compactD(obj){const r={};for(const k in obj){r[_DK[k]||k]=obj[k];}return r;}
 function expandD(obj){const r={};for(const k in obj){const kk=_DKR[k]||k;if(isUnsafeKey(k)||isUnsafeKey(kk)) continue;r[kk]=obj[k];}return r;}
@@ -1851,7 +1855,7 @@ function expandProject(cp){
 function loadProjectData(proj){
   Object.keys(proj.D).forEach(k=>{if(!isUnsafeKey(k)) D[k]=proj.D[k];});
   if(!('vat_refund' in D)&&'vat_refund_con' in D) D.vat_refund=D.vat_refund_con;
-  if(proj.projects){projects=JSON.parse(JSON.stringify(proj.projects));}
+  if(proj.projects){projects=JSON.parse(JSON.stringify(proj.projects));normalizeCompNames();}
   if(typeof proj.activeProjectIdx==='number') activeProjectIdx=proj.activeProjectIdx;
   actuals=Array.isArray(proj.actuals)?JSON.parse(JSON.stringify(proj.actuals)):[];
   if(proj.reforecastSettings) reforecastSettings=JSON.parse(JSON.stringify(proj.reforecastSettings));
@@ -2021,7 +2025,7 @@ const D={
   vat_rate:15, vat_refund:0, vat_refund_months:6, vat_advisor_pct:3,
   hurdle_rate:15, perf_fee_pct:35, bank_mgmt_pct:1,
   ik_land_pct:60, ik_brok_pct:0, ik_dev_pct:0, ik_mkt_pct:0, ik_con_pct:0, ik_sell_pct:0,
-  equity:17470731, gp_commit_cash:0, gp_commit_inkind_pct:0, gp_commit_inkind_cap:0,
+  equity:17470731, gp_commit_cash:0, gp_commit_inkind_pct:0, gp_commit_inkind_cap:0, offplan_cap:0,
   saibor:6.8, margin:2, arr_fee_pct:1, min_cash:500000,
 };
 
@@ -2074,18 +2078,33 @@ const compNameMap={
   'Villas':'فلل','Apartments':'شقق','Townhouse':'تاون هاوس','Warehouses':'مستودعات','Retail':'تجزئة',
   'Developed Area & Infrastructure':'المساحة المطورة وسعر التطوير بنية تحتية',
   'Infrastructure':'بنية تحتية','Structural Shell':'هيكل إنشائي','Finishing':'تشطيبات','External Works':'أعمال خارجية',
-  'New Component':'مكون جديد','مكون جديد':'New Component'
+  'New Component':'مكون جديد','مكون جديد':'New Component',
+  'Parking':'المواقف','المواقف':'Parking','External Areas':'المساحات الخارجية','المساحات الخارجية':'External Areas','Service Floor':'دور الخدمة','دور الخدمة':'Service Floor',
+  'Developed Area':'المساحة المطورة','المساحة المطورة':'Developed Area','Basement':'القبو','القبو':'Basement','Landscaping':'تنسيق المواقع','تنسيق المواقع':'Landscaping',
+  'Roads & Utilities':'الطرق والمرافق','الطرق والمرافق':'Roads & Utilities','Offices':'مكاتب','مكاتب':'Offices','Shops':'محلات','محلات':'Shops','Hotel':'فندق','فندق':'Hotel',
+  'Villa Type (A)':'فيلا نوع (أ)','فيلا نوع (أ)':'Villa Type (A)','Villa Type (B)':'فيلا نوع (ب)','فيلا نوع (ب)':'Villa Type (B)','Villa Type (C)':'فيلا نوع (ج)','فيلا نوع (ج)':'Villa Type (C)'
 };
+const _isArText=t=>/[\u0600-\u06FF]/.test(String(t||''));
+// Repairs component names saved by the old handler (Arabic typed into nameEn, or the reverse) and fills the other language from the dictionary where known
+function normalizeCompNames(){
+  (projects||[]).forEach(P=>['conComponents','salesComponents'].forEach(k=>(P[k]||[]).forEach(c=>{
+    let n=c.name||'',e=c.nameEn||'';
+    if(_isArText(e)&&(!_isArText(n)||n==='مكون جديد')){const t=(_isArText(n)?'':n);n=e;e=t;} // swapped fields
+    if(!_isArText(n)&&n&&!e){e=n;n='';}                              // Latin text stored as the Arabic name
+    if(!n||n==='مكون جديد'){n=compNameMap[e]||n;}                   // fill Arabic from the dictionary
+    if(!e||e==='New Component'){e=compNameMap[n]||e;}               // fill English from the dictionary
+    c.name=n;c.nameEn=e;})));
+}
 // Component names: inline handlers must not test `lang` (inside an on* attribute it resolves to the element's own lang attribute), so the language check lives here
 function setCompName(kind,pi,i,v){const c=projects[pi][kind][i];if(!c)return;v=String(v);if(lang==='ar'){c.name=v;c.nameEn=compNameMap[v]||c.nameEn||'';}else{c.nameEn=v;c.name=compNameMap[v]||c.name||'';}}
 function setOpexName(pi,idx,v){const o=projects[pi].opexItems[idx];if(!o)return;if(lang==='ar')o.nameAr=String(v);else o.name=String(v);}
 function compLabel(comp){
   if(!comp) return '';
   const isAr=lang==='ar';
-  const n=comp.name||'';
-  const nE=comp.nameEn||'';
-  if(isAr) return n||(compNameMap[nE]||nE);
-  return nE||(compNameMap[n]||n);
+  let n=comp.name||'',nE=comp.nameEn||'';
+  if(_isArText(nE)&&!_isArText(n)){const t=n;n=nE;nE=t;} // tolerate swapped fields on old data
+  if(isAr) return (n&&_isArText(n)?n:'')||compNameMap[nE]||n||nE;
+  return (nE&&!_isArText(nE)?nE:'')||compNameMap[n]||nE||n;
 }
 
 // =============================================
@@ -2164,7 +2183,7 @@ const TX={
       hurdle:'Hurdle Rate % (Annual)',perfFee:'Performance Fee %',
       sellAreaAuto:'Sellable Area (sqm) (Auto)',salePriceAuto:'Sale Price per sqm (SAR) (Auto)',
       wafi:'WAFI %',sellExp:'Commission Fees %',
-      equity:'Investor Equity (SAR)',gpCommitCash:'GP Cash Commitment (SAR)',gpCommitInkind:'GP In-Kind % of Mgmt Fees',gpCommitInkindCap:'GP In-Kind cap (SAR, total; 0 = no cap)',ikLand:'In-Kind Land %',ikBrok:'In-Kind Brokerage %',ikDev:'In-Kind Developer %',
+      equity:'Investor Equity (SAR)',gpCommitCash:'GP Cash Commitment (SAR)',gpCommitInkind:'GP In-Kind % of Mgmt Fees',gpCommitInkindCap:'GP In-Kind cap (SAR, total; 0 = no cap)',offplanCap:'Off-plan proceeds usable for funding — cap (SAR, 0 = no cap)',ikLand:'In-Kind Land %',ikBrok:'In-Kind Brokerage %',ikDev:'In-Kind Developer %',
       ikCon:'In-Kind Contractor %',ikMkt:'In-Kind Marketing %',ikSell:'In-Kind Commission %',
       saibor:'SAIBOR %',margin:'Margin %',arrFee:'Arrangement Fee %',
       bankMgmt:'Bank Mgmt Fee % (One-Time)',minCash:'Min Cash Reserve (SAR)',
@@ -2250,7 +2269,7 @@ const TX={
       hurdle:'معدل العائد المستهدف % (سنوي)',perfFee:'رسوم الأداء %',
       sellAreaAuto:'المساحة القابلة للبيع (م²) (تلقائي)',salePriceAuto:'سعر البيع / م² (ريال) (تلقائي)',
       wafi:'رسوم وافي %',sellExp:'نسبة السعي %',
-      equity:'رأس مال المستثمرين (ريال)',gpCommitCash:'استثمار مدير الصندوق النقدي (ريال)',gpCommitInkind:'% عيني من رسوم الإدارة',gpCommitInkindCap:'سقف المساهمة العينية لمدير الصندوق (ريال، إجمالي؛ 0 = بلا سقف)',ikLand:'حصة عينية أرض %',ikBrok:'حصة عينية سعي %',ikDev:'حصة عينية مطور %',
+      equity:'رأس مال المستثمرين (ريال)',gpCommitCash:'استثمار مدير الصندوق النقدي (ريال)',gpCommitInkind:'% عيني من رسوم الإدارة',gpCommitInkindCap:'سقف المساهمة العينية لمدير الصندوق (ريال، إجمالي؛ 0 = بلا سقف)',offplanCap:'سقف متحصلات البيع على الخارطة المتاحة للتمويل (ريال، 0 = بلا سقف)',ikLand:'حصة عينية أرض %',ikBrok:'حصة عينية سعي %',ikDev:'حصة عينية مطور %',
       ikCon:'حصة عينية مقاول %',ikMkt:'حصة عينية تسويق %',ikSell:'حصة عينية نسبة السعي %',
       saibor:'سايبور %',margin:'الهامش %',arrFee:'رسوم الترتيب %',
       bankMgmt:'رسوم إدارة البنك % (لمرة واحدة)',minCash:'الحد الأدنى للنقد (ريال)',
@@ -2443,6 +2462,7 @@ function buildForm(){
     ${_isFund?`${fld('gp_commit_cash',F.gpCommitCash||'GP Cash Commitment (SAR)',D.gp_commit_cash)}
     ${fld('gp_commit_inkind_pct',F.gpCommitInkind||'GP In-Kind % of Mgmt Fees',D.gp_commit_inkind_pct)}
     ${fld('gp_commit_inkind_cap',F.gpCommitInkindCap||'GP In-Kind cap (SAR, 0 = none)',D.gp_commit_inkind_cap||0)}`:''}
+    ${fld('offplan_cap',F.offplanCap||'Off-plan proceeds usable for funding — cap (SAR, 0 = no cap)',D.offplan_cap||0)}
     ${fld('ik_land_pct',F.ikLand,D.ik_land_pct)}
     ${fld('ik_brok_pct',F.ikBrok,D.ik_brok_pct)}
     ${fld('ik_dev_pct',F.ikDev,D.ik_dev_pct)}
@@ -2769,7 +2789,15 @@ function freqAmount(annual,freq,qi,nq){
   return 0;
 }
 
+// Off-plan proceeds cap (2026-11-01): sales continue per schedule, but cumulative proceeds above A.offplan_cap are held in escrow
+// until construction completes (last quarter with construction spend) and released then. Returned array: −held / +released per quarter,
+// added to qNetOp so the cash balance (and therefore the debt sizing) sees only the usable proceeds. 0 = no cap.
+function _offplanEscrow(A,qGrossSales,qCon,nq){const cap=Number(A.offplan_cap)||0,out=Array(nq).fill(0);if(cap<=0)return out;
+  let done=-1;for(let i=0;i<nq;i++)if((qCon[i]||0)>0.5)done=i;if(done<0)return out;
+  let cum=0,held=0;for(let i=0;i<done;i++){const sold=qGrossSales[i]||0;const usable=Math.max(0,Math.min(sold,cap-cum));cum+=sold;const h=sold-usable;if(h>0){out[i]-=h;held+=h;}}
+  if(held>0)out[done]+=held;return out;}
 function calculate(){
+  if(typeof normalizeCompNames==='function')normalizeCompNames(); // display-only: keeps component names consistent in both languages
   const A={};
   Object.keys(D).forEach(k=>{const el=document.getElementById(k);A[k]=el?(el.type==='number'?parseFloat(el.value)||0:el.tagName==='SELECT'?el.value:el.value):D[k];});
 
@@ -3028,6 +3056,8 @@ function calculate(){
   const qTotalFundExp=Array(nq).fill(0);
   const qNetOp=Array(nq).fill(0),qNetInv=Array(nq).fill(0),qNetFin=Array(nq).fill(0);
 
+  const qEscrow=_offplanEscrow(A,qGrossSales,qCon,nq); // off-plan cap: escrow movements
+  const qEscBal=[];{let _e=0;for(let i=0;i<nq;i++){_e-=qEscrow[i];qEscBal.push(_e);}} // cash held in escrow (still a fund asset for NAV / fee base)
   let cumCon=0;
 
   for(let iter=0;iter<100;iter++){
@@ -3048,7 +3078,7 @@ function calculate(){
       cumCon+=qCon[qi];
       const baseExp=qCustody[qi]+qSPV[qi]+qFundSetup[qi]+qAuditor[qi]+qSharia[qi]+qEngineering[qi]+qBoard[qi]+qFinAdvisor[qi]+qMkt[qi]+qBankMgmt[qi]+qWafi[qi]+qSellExp[qi]+qArrFee[qi]; /* VAT Advisor removed — netted in VAT Schedule */
       const cash=qi>0?qCashClose[qi-1]:0;
-      qTotalAssets[qi]=tLand+cumCon+cash;
+      qTotalAssets[qi]=tLand+cumCon+cash+(qi>0?qEscBal[qi-1]:0);
       qNAV[qi]=qTotalAssets[qi]-qLoanClose[qi];
       if(isFund){
         if(A.mgmt_fee_mode==='nav') qMgmtFee[qi]=qNAV[qi]*pct(A.mgmt_fee_pct)/4*V;
@@ -3079,7 +3109,7 @@ function calculate(){
     for(let qi=0;qi<nq;qi++){
       // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
-      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(qi,{fees:{mgmt_fee:qMgmtFee,custody:qCustody,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard},vat:{mgmt_fee:V,custody:V,auditor:V,sharia:V,engineering:V,board:(Number(A.board_vat)?V:1)},sales:qGrossSales,loan:qLoanClose,draws:drawdowns,nq}):0); // SKETCH hook: one-off items + deferred fees
+      qNetOp[qi]=qGrossSales[qi]+qEscrow[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(qi,{fees:{mgmt_fee:qMgmtFee,custody:qCustody,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard},vat:{mgmt_fee:V,custody:V,auditor:V,sharia:V,engineering:V,board:(Number(A.board_vat)?V:1)},sales:qGrossSales,loan:qLoanClose,draws:drawdowns,nq}):0); // SKETCH hook: one-off items + deferred fees
       qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
       const netBorrow=drawdowns[qi]-qRepay[qi];
       qNetFin[qi]=netBorrow+qEquity[qi]+qIKTotal[qi];
@@ -3144,7 +3174,7 @@ function calculate(){
     cumCon+=qCon[qi];
     const baseExp=qCustody[qi]+qSPV[qi]+qFundSetup[qi]+qAuditor[qi]+qSharia[qi]+qEngineering[qi]+qBoard[qi]+qFinAdvisor[qi]+qMkt[qi]+qBankMgmt[qi]+qWafi[qi]+qSellExp[qi]+qArrFee[qi]; /* VAT Advisor removed — netted in VAT Schedule */
     const cash=qi>0?qCashClose[qi-1]:0;
-    qTotalAssets[qi]=tLand+cumCon+cash;
+    qTotalAssets[qi]=tLand+cumCon+cash+(qi>0?qEscBal[qi-1]:0);
     qNAV[qi]=qTotalAssets[qi]-qLoanClose[qi];
     if(isFund){
       if(A.mgmt_fee_mode==='nav') qMgmtFee[qi]=qNAV[qi]*pct(A.mgmt_fee_pct)/4*V;
@@ -3176,7 +3206,7 @@ function calculate(){
   for(let qi=0;qi<nq;qi++){
     // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
-      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(qi,{fees:{mgmt_fee:qMgmtFee,custody:qCustody,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard},vat:{mgmt_fee:V,custody:V,auditor:V,sharia:V,engineering:V,board:(Number(A.board_vat)?V:1)},sales:qGrossSales,loan:qLoanClose,draws:drawdowns,nq}):0); // SKETCH hook: one-off items + deferred fees
+      qNetOp[qi]=qGrossSales[qi]+qEscrow[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(qi,{fees:{mgmt_fee:qMgmtFee,custody:qCustody,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard},vat:{mgmt_fee:V,custody:V,auditor:V,sharia:V,engineering:V,board:(Number(A.board_vat)?V:1)},sales:qGrossSales,loan:qLoanClose,draws:drawdowns,nq}):0); // SKETCH hook: one-off items + deferred fees
     qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
     const netBorrow=drawdowns[qi]-qRepay[qi];
 
@@ -3250,7 +3280,7 @@ function calculate(){
   const qTermAdj=Array(nq).fill(0);
   for(let qi=0;qi<nq;qi++){
     const openEqNAV=qi===0?0:qEqNAV[qi-1];
-    const naturalNAV=openEqNAV+qEquity[qi]+qIKTotal[qi]+qNetOp[qi]-qDividends[qi];
+    const naturalNAV=openEqNAV+qEquity[qi]+qIKTotal[qi]+qNetOp[qi]-qEscrow[qi]-qDividends[qi]; // escrowed proceeds remain equity NAV
     if(qi===nq-1){
       qTermAdj[qi]=-naturalNAV; // WIP book-value write-off at liquidation
       qEqNAV[qi]=0;
@@ -3310,7 +3340,7 @@ function calculate(){
     aggrSalesComponents.push(...projects[pi].salesComponents);
   }
   R={nq,labels,A,baseLand,tLand,tLandExVAT,tCon,tConExVAT,baseConExVAT,otherConExVAT,tRev,totalCost,totalCostIncVAT,totalCostExVAT,vatInCost,grossProfit,profitMargin,annualROI,totalDebt,totalInt,ltc,totalDiv,totalPerfFee,totalFundExpExPerf,totalVATNet,roiUH,annROIUH,
-    qGrossSales,qSales,qWafi,qSellExp,qCon,qBaseCon,qDevFee,qContingency,qLicensing,qDesignFee,qInsurance,qSupervision,qMkt,qVATNet,qVATAdvisor,qArrFee,
+    qGrossSales,qEscrow,qSales,qWafi,qSellExp,qCon,qBaseCon,qDevFee,qContingency,qLicensing,qDesignFee,qInsurance,qSupervision,qMkt,qVATNet,qVATAdvisor,qArrFee,
     qCustody,qSPV,qFundSetup,qAuditor,qSharia,qEngineering,qBoard,qFinAdvisor,qMgmtFee,qBankMgmt,qPerfFee,qTotalFundExp,
     qInterest,qNetOp,qLandCF,qNetInv,qDSCR,
     drawdowns,qRepay,qEquity,qIKLand,qIKBrok,qIKDev,qIKCon,qIKMkt,qIKSell,qIKTotal,qDividends,qNetFin,
@@ -3620,9 +3650,9 @@ function showPop(title,rows,foot){let el=document.getElementById('bkPop');if(!el
 function cfVatPop(i){const P=window._cfVatParts||[];const L=TX[lang].cf;const rows=P.map(([l,a])=>[l,i<0?a.reduce((x,y)=>x+y,0):a[i]]).filter(r=>Math.abs(r[1])>0.5);const tot=rows.reduce((s,r)=>s+r[1],0);rows.push([L.netRefunds,tot,'tot']);showPop((i<0?(lang==='ar'?'الإجمالي':'Total'):qLabel(i))+' — '+L.netRefunds,rows,lang==='ar'?'استردادات موجبة، رسوم المستشار سالبة':'refunds positive, advisor fee negative');}
 // CF GROUPS (2026-10-21): collapsible groups in the Cash Flow statement. Render-only; remove by deleting gh()/ge() calls, these helpers and the .cfg-* CSS.
 function cfGroupsState(){try{return JSON.parse(localStorage.cfGroups||'{}');}catch(e){return {};}}
-function cfApplyGroups(){const st=cfGroupsState();document.querySelectorAll('#p-cashflow table.dt').forEach(t=>{['rev','exp','dev','fin'].forEach(g=>t.classList.toggle('cfg-c-'+g,!!st[g]));});}
+function cfApplyGroups(){const st=cfGroupsState();document.querySelectorAll('#p-cashflow table.dt').forEach(t=>{['rev','oth','exp','dev','fin'].forEach(g=>t.classList.toggle('cfg-c-'+g,!!st[g]));});}
 function cfToggle(g){const st=cfGroupsState();st[g]=!st[g];try{localStorage.cfGroups=JSON.stringify(st);}catch(e){}cfApplyGroups();}
-function cfAll(collapse){const st={};['rev','exp','dev','fin'].forEach(g=>st[g]=!!collapse);try{localStorage.cfGroups=JSON.stringify(st);}catch(e){}cfApplyGroups();}
+function cfAll(collapse){const st={};['rev','oth','exp','dev','fin'].forEach(g=>st[g]=!!collapse);try{localStorage.cfGroups=JSON.stringify(st);}catch(e){}cfApplyGroups();}
 function renderCashFlow(){
   const r=viewR(); if(!r) return; const nq=r.nq;
   const cutoffQ=r._cutoffQ||0;
@@ -3655,11 +3685,12 @@ function renderCashFlow(){
   </div><span class="cfg-all"><a onclick="cfAll(false)">${lang==='ar'?'توسيع الكل':'Expand all'}</a><a onclick="cfAll(true)">${lang==='ar'?'طيّ الكل':'Collapse all'}</a></span></div>`;
   h+=`<div class="tbl-wrap" id="cfTableWrap"><table class="dt"><thead><tr><th class="rl">${L.hdr}</th>${lb.map((q,i)=>`<th class="${isRF&&i<cutoffQ?'rfcs-hdr-actual':''}">${q}${isRF?(i<cutoffQ?' '+ico('check'):' '+ico('arrow','ic-flip')):''}<small class="qe">${fmtDateS(qEndDate(i))}</small></th>`).join('')}<th>${lang==='ar'?'المجموع':'Total'}</th></tr></thead><tbody>`;
 
-  const G=lang==='ar'?{rev:'الإيرادات',exp:'مصاريف الصندوق وتكلفة التمويل',dev:'تكاليف التطوير (صافي الاستثمار)',fin:'التمويل (صافي)',cash:'النقد'}:{rev:'Revenue',exp:'Fund expenses & financing cost',dev:'Development costs (net investing)',fin:'Financing (net)',cash:'Cash position'};
+  const G=lang==='ar'?{rev:'الإيرادات (المبيعات)',oth:'تدفقات أخرى (استرداد الضرائب ودخل آخر)',exp:'مصاريف الصندوق وتكلفة التمويل',dev:'تكاليف التطوير (صافي الاستثمار)',fin:'التمويل (صافي)',cash:'النقد'}:{rev:'Revenue (sales)',oth:'Other inflows (VAT & RETT refunds, other income)',exp:'Fund expenses & financing cost',dev:'Development costs (net investing)',fin:'Financing (net)',cash:'Cash position'};
   const _qRevX=Array(nq).fill(0);if(typeof actuals!=='undefined'&&actuals.length)for(const p of actuals){if((p.category==='murabaha'||p.category==='other_inc')&&p.quarter>=0&&p.quarter<nq)_qRevX[p.quarter]+=p.amount;}
-  const qRevNet=r.qGrossSales.map((v,i)=>v+r.qVATNet[i]+_qRevX[i]); // = the rows of this group; Revenue − (Fund expenses & financing cost) = Net operating cash flow
-  h+=gh('rev',G.rev,qRevNet);
+  h+=gh('rev',G.rev,r.qGrossSales); // = Total Revenue on the Summary page
   h+=tr(L.grossSales,r.qGrossSales);
+  ge();const _qEsc=r.qEscrow||Array(nq).fill(0);h+=gh('oth',G.oth,r.qVATNet.map((v,i)=>v+_qRevX[i]+_qEsc[i]));
+  if(_qEsc.some(v=>Math.abs(v)>0.5))h+=tr(lang==='ar'?'متحصلات بيع على الخارطة محتجزة في الضمان (السقف)':'Off-plan proceeds held in escrow (cap)',_qEsc); // refunds and other income are inflows, not revenue; Revenue + Other inflows − Expenses = Net operating cash flow
   // Murabaha & Other Income from actuals
   if(typeof actuals!=='undefined' && actuals.length){
     const nqArr=Array(nq).fill(0);
@@ -3675,7 +3706,7 @@ function renderCashFlow(){
   {const parts=[[L.vatRefCon,r.qVATRefundCon],[L.vatRefExp,r.qVATRefundExp],[L.vatRefBrok,r.qBrokVATRefund],[L.rettRef,r.qRETTRefund],[L.vatAdvisor,r.qVATAdvisor.map(v=>-v)]];
     window._cfVatParts=parts.map(x=>[x[0],x[1].slice()]);
     const tot=r.qVATNet.reduce((a,b)=>a+b,0);
-    h+=`<tr class="sub cfg-r" data-g="rev"><td class="rl">${L.netRefunds} <i class="cf-i">ⓘ</i></td>${r.qVATNet.map((v,i)=>`<td class="${v<0?'neg':''}${isRF&&i<cutoffQ?' rfcs-actual':''} cf-click" onclick="cfVatPop(${i})" title="${lang==='ar'?'انقر للتفاصيل':'click for breakdown'}">${fN(v)}</td>`).join('')}<td class="${tot<0?'neg':''} cf-click" onclick="cfVatPop(-1)">${fN(tot)}</td></tr>`;}
+    h+=`<tr class="sub cfg-r" data-g="oth"><td class="rl">${L.netRefunds} <i class="cf-i">ⓘ</i></td>${r.qVATNet.map((v,i)=>`<td class="${v<0?'neg':''}${isRF&&i<cutoffQ?' rfcs-actual':''} cf-click" onclick="cfVatPop(${i})" title="${lang==='ar'?'انقر للتفاصيل':'click for breakdown'}">${fN(v)}</td>`).join('')}<td class="${tot<0?'neg':''} cf-click" onclick="cfVatPop(-1)">${fN(tot)}</td></tr>`;}
   ge();h+=sep();
   h+=gh('exp',G.exp,r.qTotalFundExp.map((v,i)=>-v-r.qInterest[i]));
   h+=tr(L.wafi,r.qWafi.map(v=>-v)); // WAFI + selling commission are part of qTotalFundExp in the engine, so they sit in this group
@@ -5231,8 +5262,9 @@ function runReforecast(){
       R2.qLoanClose[i]=bal-R2.qRepay[i];
     }
     // Rebuild qNetOp with updated interest (matches calculate())
+    R2.qEscrow=_offplanEscrow(R2.A,R2.qGrossSales,R2.qCon,nq); // off-plan cap on the forecast sales
     for(let i=0;i<nq;i++){
-      R2.qNetOp[i]=R2.qGrossSales[i]+(R2.qVATNet[i]||0)-(R2.qTotalFundExp[i]||0)-R2.qInterest[i]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(i,{fees:{mgmt_fee:R2.qMgmtFee,custody:R2.qCustody,auditor:R2.qAuditor,sharia:R2.qSharia,engineering:R2.qEngineering,board:R2.qBoard},vat:(v=>({mgmt_fee:v,custody:v,auditor:v,sharia:v,engineering:v,board:(Number(R2.A.board_vat)?v:1)}))(1+(Number(R2.A.vat_rate)||0)/100),sales:R2.qGrossSales,loan:R2.qLoanClose,draws:R2.drawdowns,nq}):0); // SKETCH hook
+      R2.qNetOp[i]=R2.qGrossSales[i]+(R2.qEscrow[i]||0)+(R2.qVATNet[i]||0)-(R2.qTotalFundExp[i]||0)-R2.qInterest[i]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(i,{fees:{mgmt_fee:R2.qMgmtFee,custody:R2.qCustody,auditor:R2.qAuditor,sharia:R2.qSharia,engineering:R2.qEngineering,board:R2.qBoard},vat:(v=>({mgmt_fee:v,custody:v,auditor:v,sharia:v,engineering:v,board:(Number(R2.A.board_vat)?v:1)}))(1+(Number(R2.A.vat_rate)||0)/100),sales:R2.qGrossSales,loan:R2.qLoanClose,draws:R2.drawdowns,nq}):0); // SKETCH hook
     }
     // FIX 5: size forecast drawdowns so cash close never falls below min_cash
     const newDD=R2.drawdowns.slice();
@@ -5471,7 +5503,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-10-23';
+const BUILD='2026-11-01b';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -5656,7 +5688,7 @@ function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings
 
 // Forward parameters that may change during the life of the fund (key, label en, label ar, kind)
 const OPS_FIELDS=[['fund_period_months','Fund term (months)','مدة الصندوق (أشهر)'],['saibor','SAIBOR %','سايبور %'],['margin','Bank margin %','هامش البنك %'],['min_cash','Minimum cash balance','الحد الأدنى للرصيد النقدي'],
-  ['mgmt_fee_fixed','Management fee (fixed, annual)','رسوم الإدارة (ثابت سنوي)'],['gp_commit_inkind_cap','GP in-kind cap (SAR)','سقف المساهمة العينية للمدير'],['mgmt_fee_pct','Management fee %','رسوم الإدارة %'],['hurdle_rate','Hurdle rate %','العائد المطلوب %'],['perf_fee_pct','Performance fee %','رسوم الأداء %'],
+  ['mgmt_fee_fixed','Management fee (fixed, annual)','رسوم الإدارة (ثابت سنوي)'],['gp_commit_inkind_cap','GP in-kind cap (SAR)','سقف المساهمة العينية للمدير'],['offplan_cap','Off-plan proceeds cap (SAR)','سقف متحصلات البيع على الخارطة'],['mgmt_fee_pct','Management fee %','رسوم الإدارة %'],['hurdle_rate','Hurdle rate %','العائد المطلوب %'],['perf_fee_pct','Performance fee %','رسوم الأداء %'],
   ['vat_refund_months','VAT refund period (months)','فترة الاسترداد الضريبي (أشهر)'],['custody_annual','Custody (annual)','رسوم الحفظ (سنوي)'],['auditor_annual','Auditor (annual)','المحاسب القانوني (سنوي)'],['engineering_annual','Engineering consultant (annual)','الاستشاري الهندسي (سنوي)'],
   ['board_annual','Board compensation (annual)','مكافآت مجلس الإدارة (سنوي)'],['marketing_cost','Marketing (total)','التسويق (إجمالي)'],['equity','Cash equity (top-up allowed)','رأس المال النقدي']];
 
@@ -5822,7 +5854,15 @@ function fmtDate(d){return d.toLocaleDateString(lang==='ar'?'ar-SA-u-nu-latn':'e
 function opsCats(){const isFund=Number(R.A.is_fund);return ACT_CATS.filter(c=>!c.fundOnly||isFund).filter(c=>!c.actualOnly&&!c.fin);}
 function actualOf(key,q0,q1,comp){return actuals.filter(p=>p.category===key&&p.quarter>=q0&&p.quarter<q1&&(comp===undefined||p.component===comp)).reduce((s,p)=>s+p.amount,0);}
 function ensureForecast(){ if(!R) return false; _rfNorm(); if(!R2||!reforecastMode){reforecastMode=true; runReforecast();} return !!R2; }
-function opsRefresh(){ if(!R) return; reforecastMode=true; runReforecast(); const sy=window.scrollY; renderOps(); window.scrollTo(0,sy); requestAnimationFrame(()=>window.scrollTo(0,sy)); }
+function opsRefresh(){ if(!R) return; reforecastMode=true; runReforecast(); const sy=window.scrollY;
+  // keep the user's place: horizontal scroll of each table wrapper and the focused control (by id or by position in the section)
+  const wraps=[...document.querySelectorAll('#p-ops .cx-wrap')].map(w=>w.scrollLeft);
+  const ae=document.activeElement,focusId=(window._opsRefocus||(ae&&ae.id?ae.id:null));window._opsRefocus=null;const focusIdx=ae&&ae.tagName==='INPUT'?[...document.querySelectorAll('#p-ops input')].indexOf(ae):-1;
+  renderOps();
+  [...document.querySelectorAll('#p-ops .cx-wrap')].forEach((w,i)=>{if(wraps[i])w.scrollLeft=wraps[i];});
+  const nf=focusId?document.getElementById(focusId):(focusIdx>=0?document.querySelectorAll('#p-ops input')[focusIdx]:null);
+  if(nf&&nf.focus){try{nf.focus({preventScroll:true});}catch(e){nf.focus();}}
+  window.scrollTo(0,sy); requestAnimationFrame(()=>{window.scrollTo(0,sy);[...document.querySelectorAll('#p-ops .cx-wrap')].forEach((w,i)=>{if(wraps[i])w.scrollLeft=wraps[i];});}); }
 function baselineMetrics(){ const b=reforecastSettings.baseline; return (b&&b.irr!==undefined)?b:_baselineMetrics(); }
 
 // ---- IRR bridge: baseline → (actuals, budgets, phasing with baseline assumptions) → (assumption changes) → current ----
@@ -6082,9 +6122,9 @@ function salesTimingCard(cut,nq){const ar=lang==='ar',g=R2._fundingGap||Array(nq
   const pins=reforecastSettings.salesPins||{},anyPin=Object.keys(pins).some(k=>+k>=cut);const wSum=sumA(sp.pct);
   const cap=_salesCapNote;const totCls=sp.unplaced>0.5?'warn':(cap?'bad':'');
   const totNote=sp.unplaced>0.5?(ar?'غير موزّع ':'unplaced ')+(100-sp.pinSum).toFixed(1)+'% / '+M_(sp.unplaced):cap?(ar?'تم تحديد ':'capped at ')+cap.capped.toFixed(1)+'% ('+(ar?'طلبت ':'asked ')+cap.asked.toFixed(1)+'%)':'';
-  const pctRow=`<div class="cx-wrap" style="margin-bottom:10px"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${rows.map(r=>`<th>${qLabel(r.i).split(' ')[0]}</th>`).join('')}<th>${ar?'المجموع':'Total'}</th></tr></thead><tbody>
+  const pctRow=`<div class="cx-wrap" style="margin-bottom:10px"><table class="rfcs-tbl cx-tbl sp-tbl"><thead><tr><th></th>${rows.map(r=>`<th>${qLabel(r.i).split(' ')[0]}</th>`).join('')}<th>${ar?'المجموع':'Total'}</th></tr></thead><tbody>
     <tr><td>${ar?'الخطة %':'Baseline %'}</td>${rows.map(r=>`<td class="rfcs-num">${(r.p/totP*100).toFixed(1)}</td>`).join('')}<td class="rfcs-num">100.0</td></tr>
-    <tr><td>${ar?'التوقع % من المتبقي':'Forecast % of remaining'}<small class="ops-muted" style="display:block">${anyPin?(ar?'الغامق = ما كتبته (× لإلغائه)؛ الرمادي يُحسب تلقائياً':'bold = typed by you (× clears it); grey is computed'):(manual&&manual.some(v=>v)?(ar?'من روافع المبيعات':'from the sales levers'):(ar?'مؤجَّل تلقائياً':'auto-slipped'))}${anyPin?` · <a class="ops-link" onclick="salesResetPins()">${ar?'إلغاء كل التثبيت':'reset to auto'}</a>`:''}</small></td>${rows.map(r=>{if(r.i<cut)return `<td class="rfcs-num ops-muted">${ar?'مقفل':'closed'}</td>`;const j=r.i-cut,pinned=pins[r.i]!=null;return `<td style="white-space:nowrap"><input type="number" class="ops-mini sp-${pinned?'typed':'auto'}" step="0.1" value="${(sp.pct[j]||0).toFixed(1)}" onchange="salesSetPct(${r.i},this.value)">${pinned?`<a class="ops-link sp-x" title="${ar?'إلغاء ما كتبته':'clear what you typed'}" onclick="salesUnpin(${r.i})">×</a>`:''}</td>`;}).join('')}<td class="rfcs-num ${totCls?'cx-var '+totCls:''}"><span>${wSum.toFixed(1)}${totNote?'<small style="display:block">'+totNote+'</small>':''}</span></td></tr>
+    <tr><td>${ar?'التوقع % من المتبقي':'Forecast % of remaining'}<small class="ops-muted" style="display:block">${anyPin?(ar?'الغامق = ما كتبته (× لإلغائه)؛ الرمادي يُحسب تلقائياً':'bold = typed by you (× clears it); grey is computed'):(manual&&manual.some(v=>v)?(ar?'من روافع المبيعات':'from the sales levers'):(ar?'مؤجَّل تلقائياً':'auto-slipped'))}${anyPin?` · <a class="ops-link" onclick="salesResetPins()">${ar?'إلغاء كل التثبيت':'reset to auto'}</a>`:''}</small></td>${rows.map(r=>{if(r.i<cut)return `<td class="rfcs-num ops-muted">${ar?'مقفل':'closed'}</td>`;const j=r.i-cut,pinned=pins[r.i]!=null;return `<td class="sp-cell"><input type="number" id="spin_${r.i}" class="ops-mini sp-${pinned?'typed':'auto'}" step="0.1" value="${(sp.pct[j]||0).toFixed(1)}" onchange="salesSetPct(${r.i},this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();window._opsRefocus=this.id;this.blur();}">${pinned?`<a class="ops-link sp-x" title="${ar?'إلغاء ما كتبته':'clear what you typed'}" onclick="salesUnpin(${r.i})">×</a>`:''}</td>`;}).join('')}<td class="rfcs-num ${totCls?'cx-var '+totCls:''}"><span>${wSum.toFixed(1)}${totNote?'<small style="display:block">'+totNote+'</small>':''}</span></td></tr>
     <tr><td>${ar?'التوقع (ريال)':'Forecast (SAR)'}<small class="ops-muted" style="display:block">${ar?'المتبقي ':'remaining '}${M_(sp.remaining)}</small></td>${rows.map(r=>`<td class="rfcs-num">${fN(r.f)}</td>`).join('')}<td class="rfcs-num"><b>${fN(sumA(R2.qGrossSales))}</b>${sp.unplaced>0.5?'<small class="ops-muted" style="display:block">'+(ar?'من ':'of ')+fN(sold+sp.remaining)+'</small>':''}</td></tr></tbody></table></div>`;
   return `<div class="ops-card" style="margin-top:16px"><h3>${ar?'توقيت المبيعات والحاجة التمويلية':'Sales timing & funding need'}<span>${ar?'التسهيل ':'facility '}${isFinite(fac)?M_(fac):'—'} <input type="number" class="ops-mini" style="width:130px" value="${reforecastSettings.facilityLimit?Math.round(reforecastSettings.facilityLimit):''}" placeholder="${isFinite(fac)?Math.round(fac):''}" onchange="reforecastSettings.facilityLimit=this.value===''?null:Number(this.value);opsRefresh()"></span></h3>
   <p class="ops-muted" style="margin:0 0 8px;font-size:.78rem">${ar?'التوقع: ':'Forecast: '}${how}. ${totGap>0.5?'<b class="cx-var bad"><span>'+(ar?'فجوة تمويل ':'Funding gap ')+M_(totGap)+'</span></b> — '+(ar?'السحب يتوقف عند سقف التسهيل؛ العمود الأخير = ما يلزم بيعه (أو تمويله) بحلول كل ربع.':'drawdowns stop at the facility ceiling; the last column is what must be sold (or funded) by each quarter.'):(ar?'لا فجوة تمويل: التوقع ضمن سقف التسهيل.':'No funding gap: the forecast stays within the facility.')}</p>
@@ -7282,6 +7322,7 @@ function dlExcel(){
   rows.push('<row>'+secHdr('GP COMMITMENT')+'</row>');                               // 78
   rows.push('<row>'+lbl('GP Cash Commitment (SAR)',0)+blueNum(A.gp_commit_cash||0)+'</row>'); // 79
   rows.push('<row>'+lbl('GP In-Kind % of Mgmt Fees',1)+bluePct((A.gp_commit_inkind_pct||0)/100)+(Number(A.gp_commit_inkind_cap)>0?tx('capped at SAR '+Math.round(A.gp_commit_inkind_cap).toLocaleString('en-US')+' in total',S.lblA):'')+'</row>'); // 80
+  if(Number(A.offplan_cap)>0) rows.push('<row>'+lbl('Off-plan proceeds usable for funding — cap (SAR)',1)+blueNum(Number(A.offplan_cap))+tx('proceeds above the cap are held in escrow until construction completes')+'</row>');
   // forecast overrides (Operations → Forecast & Scenarios): what the Reforecast CF sheet was run with
   {const ov=(reforecastSettings&&reforecastSettings.assumptionOverrides)||{};const keys=Object.keys(ov);
     if(keys.length&&R2&&R2._isReforecast){rows.push('<row/>');rows.push('<row>'+secHdr('FORECAST OVERRIDES (Operations)')+tx('Baseline',S.secHdr)+tx('Forecast',S.secHdr)+'</row>');
@@ -8615,6 +8656,8 @@ function calcWith(overrides){
   const qCashOpen=Array(nq).fill(0),qCashClose=Array(nq).fill(0);
   const qDividends=Array(nq).fill(0),qTotalFundExp=Array(nq).fill(0);
   const qNetOp=Array(nq).fill(0),qNetInv=Array(nq).fill(0),qNetFin=Array(nq).fill(0);
+  const qEscrow=_offplanEscrow(A,qGrossSales,qCon,nq); // off-plan cap: escrow movements
+  const qEscBal=[];{let _e=0;for(let i=0;i<nq;i++){_e-=qEscrow[i];qEscBal.push(_e);}} // cash held in escrow (still a fund asset for NAV / fee base)
   let cumCon=0;
 
   for(let iter=0;iter<100;iter++){
@@ -8634,7 +8677,7 @@ function calcWith(overrides){
       cumCon+=qCon[qi];
       const baseExp=qCustody[qi]+qSPV[qi]+qFundSetup[qi]+qAuditor[qi]+qSharia[qi]+qEngineering[qi]+qBoard[qi]+qFinAdvisor[qi]+qMkt[qi]+qBankMgmt[qi]+qWafi[qi]+qSellExp[qi]+qArrFee[qi]; /* VAT Advisor removed — netted in VAT Schedule */
       const cash=qi>0?qCashClose[qi-1]:0;
-      qTotalAssets[qi]=tLand+cumCon+cash;
+      qTotalAssets[qi]=tLand+cumCon+cash+(qi>0?qEscBal[qi-1]:0);
       qNAV[qi]=qTotalAssets[qi]-qLoanClose[qi];
       if(isFund){
         if(A.mgmt_fee_mode==='nav') qMgmtFee[qi]=qNAV[qi]*pct(A.mgmt_fee_pct)/4*V;
@@ -8660,7 +8703,7 @@ function calcWith(overrides){
     for(let qi=0;qi<nq;qi++){
       // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
-      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(qi,{fees:{mgmt_fee:qMgmtFee,custody:qCustody,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard},vat:{mgmt_fee:V,custody:V,auditor:V,sharia:V,engineering:V,board:(Number(A.board_vat)?V:1)},sales:qGrossSales,loan:qLoanClose,draws:drawdowns,nq}):0); // SKETCH hook: one-off items + deferred fees
+      qNetOp[qi]=qGrossSales[qi]+qEscrow[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(qi,{fees:{mgmt_fee:qMgmtFee,custody:qCustody,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard},vat:{mgmt_fee:V,custody:V,auditor:V,sharia:V,engineering:V,board:(Number(A.board_vat)?V:1)},sales:qGrossSales,loan:qLoanClose,draws:drawdowns,nq}):0); // SKETCH hook: one-off items + deferred fees
       qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
       const netBorrow=drawdowns[qi]-qRepay[qi];
       qNetFin[qi]=netBorrow+qEquity[qi]+qIKTotal[qi];
@@ -8718,7 +8761,7 @@ function calcWith(overrides){
     cumCon+=qCon[qi];
     const baseExp=qCustody[qi]+qSPV[qi]+qFundSetup[qi]+qAuditor[qi]+qSharia[qi]+qEngineering[qi]+qBoard[qi]+qFinAdvisor[qi]+qMkt[qi]+qBankMgmt[qi]+qWafi[qi]+qSellExp[qi]+qArrFee[qi]; /* VAT Advisor removed — netted in VAT Schedule */
     const cash=qi>0?qCashClose[qi-1]:0;
-    qTotalAssets[qi]=tLand+cumCon+cash;
+    qTotalAssets[qi]=tLand+cumCon+cash+(qi>0?qEscBal[qi-1]:0);
     qNAV[qi]=qTotalAssets[qi]-qLoanClose[qi];
     if(isFund){
       if(A.mgmt_fee_mode==='nav') qMgmtFee[qi]=qNAV[qi]*pct(A.mgmt_fee_pct)/4*V;
@@ -8747,7 +8790,7 @@ function calcWith(overrides){
   for(let qi=0;qi<nq;qi++){
     // debt chain for this quarter from the previous close (which a cash sweep may have reduced)
       qLoanOpen[qi]=qi===0?0:qLoanClose[qi-1]; qInterest[qi]=qLoanOpen[qi]*rate*qIntFactor[qi]; {const _b=qLoanOpen[qi]+drawdowns[qi]; qRepay[qi]=(qi===nq-1)?_b:0; qLoanClose[qi]=_b-qRepay[qi];}
-      qNetOp[qi]=qGrossSales[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(qi,{fees:{mgmt_fee:qMgmtFee,custody:qCustody,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard},vat:{mgmt_fee:V,custody:V,auditor:V,sharia:V,engineering:V,board:(Number(A.board_vat)?V:1)},sales:qGrossSales,loan:qLoanClose,draws:drawdowns,nq}):0); // SKETCH hook: one-off items + deferred fees
+      qNetOp[qi]=qGrossSales[qi]+qEscrow[qi]+qVATNet[qi]-qTotalFundExp[qi]-qInterest[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skCash(qi,{fees:{mgmt_fee:qMgmtFee,custody:qCustody,auditor:qAuditor,sharia:qSharia,engineering:qEngineering,board:qBoard},vat:{mgmt_fee:V,custody:V,auditor:V,sharia:V,engineering:V,board:(Number(A.board_vat)?V:1)},sales:qGrossSales,loan:qLoanClose,draws:drawdowns,nq}):0); // SKETCH hook: one-off items + deferred fees
     qNetInv[qi]=qLandCF[qi]+(-qCon[qi]);
     const netBorrow=drawdowns[qi]-qRepay[qi];
     qCashOpen[qi]=qi===0?0:qCashClose[qi-1];
