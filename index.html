@@ -5509,7 +5509,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-11-01e';
+const BUILD='2026-11-01f';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -6182,6 +6182,20 @@ function _addMonths(iso,n){const d=new Date(iso);d.setUTCMonth(d.getUTCMonth()+n
 function _refundMonths(){return Math.max(1,Number(D.vat_refund_months)||3);}
 
 // One claim per quarter. q → {recorded, est, out, sub, submitted, rejected, accepted, confirmed, received, expected, status, months, invoices, payments}
+// Input VAT owed by a quarter before refunds: accepted amount of its claim when submitted, otherwise the claimable VAT recorded.
+function _vatOwed(q){const inv=invoices().filter(i=>i.date&&dateToQuarterIdx(i.date,D.start_date)===q);
+  const pays=actuals.filter(p=>p.include!==false&&p.quarter===q&&!p.invoiceId&&!_VAT_SKIP.includes(p.category)&&!FIN_KEYS.includes(p.category)&&typeof p.vat==='number');
+  const recorded=inv.reduce((s,i)=>s+(i.vat||0),0)+pays.reduce((s,p)=>s+payVAT(p),0),out=actuals.filter(p=>p.include!==false&&p.quarter===q).reduce((s,p)=>s+payVATOut(p),0);
+  const sub=submissions().find(s=>s.q===q)||null;if(!sub)return Math.max(0,recorded-out);
+  const submitted=sub.submitted||sub.summaryVat||0,accepted=submitted-(sub.rejectedVat||0);return Math.max(0,sub.acceptance?sub.acceptance.accepted:accepted);}
+// Refund receipts recorded without a claim (vat_received with no submissionQ) are matched first-in-first-out against the oldest
+// quarters still owed, so a refund entered in the payments drawer is never forecast again. Returns {q: amount matched}.
+function _vatAutoRecv(){const nq=R?R.nq:8,need=[];
+  for(let q=0;q<nq;q++){const tagged=actuals.filter(p=>p.include!==false&&p.category==='vat_received'&&p.submissionQ===q).reduce((s,p)=>s+p.amount,0);need.push(Math.max(0,_vatOwed(q)-tagged));}
+  const pool=actuals.filter(p=>p.include!==false&&p.category==='vat_received'&&(p.submissionQ===undefined||p.submissionQ===null)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const out={};for(const p of pool){let rem=p.amount;for(let q=0;q<nq&&rem>0.005;q++){const take=Math.min(rem,need[q]);if(take>0){out[q]=(out[q]||0)+take;need[q]-=take;rem-=take;}}
+    if(rem>0.005){const q=Math.max(0,Math.min(nq-1,Number(p.quarter)||0));out[q]=(out[q]||0)+rem;}}
+  return out;}
 function vatQuarter(q){
   const today=new Date().toISOString().slice(0,10),qe=qEndDate(q).toISOString().slice(0,10);
   const inv=invoices().filter(i=>i.date&&dateToQuarterIdx(i.date,D.start_date)===q);
@@ -6194,10 +6208,11 @@ function vatQuarter(q){
   const recorded=recInv+recPay,claimable=Math.max(0,recorded-out);
   const submitted=sub?(sub.submitted||sub.summaryVat||0):0,rejected=sub?(sub.rejectedVat||0):0,accepted=sub?submitted-rejected:0,confirmed=sub&&sub.acceptance?sub.acceptance.accepted:null;
   const due=confirmed!=null?confirmed:accepted;
-  const received=actuals.filter(p=>p.include!==false&&p.category==='vat_received'&&p.submissionQ===q).reduce((s,p)=>s+p.amount,0);
+  const autoRecv=_vatAutoRecv()[q]||0;
+  const received=actuals.filter(p=>p.include!==false&&p.category==='vat_received'&&p.submissionQ===q).reduce((s,p)=>s+p.amount,0)+autoRecv;
   const expected=sub?_addMonths(sub.date||qe,_refundMonths()):_addMonths(qe,_refundMonths());
   let status,step;
-  if(!sub){status=today<=qe?'recording':'to_submit';step=1;}
+  if(!sub){if(claimable>0&&received>=claimable-1){status='refunded';step=5;}else{status=today<=qe?'recording':'to_submit';step=1;}}
   else if(sub.status==='rejected')status='rejected',step=4;
   else if(received>=due-1&&due>0)status='refunded',step=5;
   else if(sub.acceptance)status='accepted',step=4;
@@ -6208,15 +6223,15 @@ function vatQuarter(q){
   inv.forEach(i=>addM(i.date.slice(0,7),'inv',i.vat||0));docPays.forEach(p=>addM(_mkey(p),'pay',payVAT(p)));estPays.forEach(p=>addM(_mkey(p),'est',payVATEst(p)));
   actuals.filter(p=>p.include!==false&&p.quarter===q&&payVATOut(p)>0).forEach(p=>addM(_mkey(p),'out',payVATOut(p)));
   const missing=sub?inv.filter(i=>!(sub.rows||[]).some(r=>r.invoiceId===i.id)):[],extra=sub?(sub.rows||[]).filter(r=>!r.invoiceId):[];
-  return {q,qe,inv,docPays,estPays,recInv,recPay,recorded,est,out,paidZ,claimable,sub,submitted,rejected,accepted,confirmed,due,received,outstanding:Math.max(0,due-received),expected,status,step,months:Object.values(months).sort((a,b)=>a.key.localeCompare(b.key)),missing,extra,late:sub&&due>received+1&&today>expected};
+  return {q,qe,inv,docPays,estPays,recInv,recPay,recorded,est,out,paidZ,claimable,sub,submitted,rejected,accepted,confirmed,due,received,outstanding:Math.max(0,(sub?due:claimable)-received),autoRecv,expected,status,step,months:Object.values(months).sort((a,b)=>a.key.localeCompare(b.key)),missing,extra,late:sub&&due>received+1&&today>expected};
 }
 function vatQuarters(){const cut=R2?R2._cutoffQ:0,nq=R?R.nq:8;const last=Math.min(nq-1,Math.max(cut,0));const out=[];for(let q=0;q<=last;q++)out.push(vatQuarter(q));return out;}
 function vatTotals(){const qs=vatQuarters();const T={recorded:sumA(qs.map(x=>x.recorded)),est:sumA(qs.map(x=>x.est)),submitted:sumA(qs.map(x=>x.submitted)),rejected:sumA(qs.map(x=>x.rejected)),accepted:sumA(qs.map(x=>x.accepted)),received:sumA(qs.map(x=>x.received)),outstanding:sumA(qs.map(x=>x.outstanding))};
-  T.unclaimed=sumA(qs.filter(x=>!x.sub).map(x=>x.claimable));const rettPaid=actuals.filter(p=>p.include!==false&&p.category==='rett').reduce((s,p)=>s+p.amount,0),rettRecv=actuals.filter(p=>p.include!==false&&p.category==='rett_received').reduce((s,p)=>s+p.amount,0);T.rettReceivable=Math.max(0,(projects.some(p=>Number(p.rett_refund))?rettPaid:0)-rettRecv);T.rettPaid=rettPaid;return {qs,T};}
+  T.unclaimed=sumA(qs.filter(x=>!x.sub).map(x=>Math.max(0,x.claimable-x.received)));const rettPaid=actuals.filter(p=>p.include!==false&&p.category==='rett').reduce((s,p)=>s+p.amount,0),rettRecv=actuals.filter(p=>p.include!==false&&p.category==='rett_received').reduce((s,p)=>s+p.amount,0);T.rettReceivable=Math.max(0,(projects.some(p=>Number(p.rett_refund))?rettPaid:0)-rettRecv);T.rettPaid=rettPaid;return {qs,T};}
 function vatAlerts(){
   if(!R2)return[];const ar=lang==='ar',today=new Date().toISOString().slice(0,10),out=[];
   for(const x of vatQuarters()){
-    if(!x.sub&&x.claimable>0.5&&today>_addMonths(x.qe,1))out.push(['warn',(ar?'طلب استرداد ':'Refund claim for ')+qLabel(x.q)+(ar?' لم يُقدَّم بعد — ':' not submitted yet — ')+M_(x.claimable),'vat']);
+    if(!x.sub&&x.claimable-x.received>0.5&&today>_addMonths(x.qe,1))out.push(['warn',(ar?'طلب استرداد ':'Refund claim for ')+qLabel(x.q)+(ar?' لم يُقدَّم بعد — ':' not submitted yet — ')+M_(x.claimable-x.received),'vat']);
     if(x.late)out.push(['bad',(ar?'استرداد ':'Refund for ')+qLabel(x.q)+' — '+M_(x.outstanding)+(ar?' متأخر عن الموعد المتوقع ':' overdue vs expected ')+x.expected,'vat']);
     if(x.out-x.recorded>0.5&&x.paidZ<x.out-x.recorded-1)out.push(['warn',qLabel(x.q)+(ar?': ضريبة مخرجات مستحقة الدفع ':': output VAT payable ')+M_(x.out-x.recorded-x.paidZ),'vat']);
   }
@@ -6243,7 +6258,7 @@ function _rfApplyActualVAT(cutoffQ){
   R2.qVATRefundCon=con;R2.qVATRefundExp=exp;R2.qBrokVATRefund=Array(nq).fill(0);R2.qRETTRefund=Array(nq).fill(0);
   for(const p of actuals){if(p.include===false||p.quarter>=cutoffQ)continue;if(p.category==='vat_received')R2.qVATRefundExp[p.quarter]+=p.amount;else if(p.category==='vat_paid')R2.qVATRefundExp[p.quarter]-=p.amount;else if(p.category==='rett_received')R2.qRETTRefund[p.quarter]+=p.amount;}
   R2._vatOutstanding=[];
-  for(const x of vatQuarters()){if(x.q>=cutoffQ)continue;const amt=x.sub?x.outstanding:x.claimable;if(amt<=0.5)continue;const t=Math.max(cutoffQ,Math.min(lastQ,dateToQuarterIdx(x.expected,D.start_date)));R2.qVATRefundCon[t]+=amt;R2._vatOutstanding.push({q:x.q,amt,t,expected:x.expected});}
+  for(const x of vatQuarters()){if(x.q>=cutoffQ)continue;const amt=x.outstanding;if(amt<=0.5)continue;const t=Math.max(cutoffQ,Math.min(lastQ,dateToQuarterIdx(x.expected,D.start_date)));R2.qVATRefundCon[t]+=amt;R2._vatOutstanding.push({q:x.q,amt,t,expected:x.expected});}
   const T=vatTotals().T;if(T.rettReceivable>0.5){const t=Math.max(cutoffQ,Math.min(lastQ,delayQ));R2.qRETTRefund[t]+=T.rettReceivable;}
   R2.qVATAdvisor=Array(nq).fill(0);R2.qVATNet=Array(nq).fill(0);
   for(let i=0;i<nq;i++){const tot=R2.qVATRefundCon[i]+R2.qVATRefundExp[i]+R2.qBrokVATRefund[i]+R2.qRETTRefund[i];R2.qVATAdvisor[i]=i<cutoffQ?0:Math.max(0,tot)*((Number(R2.A.vat_advisor_pct)||0)/100);R2.qVATNet[i]=tot-R2.qVATAdvisor[i];}
