@@ -2789,13 +2789,17 @@ function freqAmount(annual,freq,qi,nq){
   return 0;
 }
 
-// Off-plan proceeds cap (2026-11-01): sales continue per schedule, but cumulative proceeds above A.offplan_cap are held in escrow
-// until construction completes (last quarter with construction spend) and released then. Returned array: −held / +released per quarter,
-// added to qNetOp so the cash balance (and therefore the debt sizing) sees only the usable proceeds. 0 = no cap.
-function _offplanEscrow(A,qGrossSales,qCon,nq){const cap=Number(A.offplan_cap)||0,out=Array(nq).fill(0);if(cap<=0)return out;
-  let done=-1;for(let i=0;i<nq;i++)if((qCon[i]||0)>0.5)done=i;if(done<0)return out;
-  let cum=0,held=0;for(let i=0;i<done;i++){const sold=qGrossSales[i]||0;const usable=Math.max(0,Math.min(sold,cap-cum));cum+=sold;const h=sold-usable;if(h>0){out[i]-=h;held+=h;}}
-  if(held>0)out[done]+=held;return out;}
+// Off-plan proceeds cap (2026-11-01, funding ceiling): sales continue per schedule, but only the first A.offplan_cap of cumulative
+// gross proceeds (in order of receipt, over the whole fund) may fund the project. Everything above goes to the sales account (escrow)
+// in the quarter received and is released in the final quarter, where it repays the facility / is distributed with the settlement.
+// Returned array: −held / +released per quarter, added to qNetOp so the cash balance (and therefore the min-cash debt sizing) sees only
+// the usable proceeds — costs beyond the cap are financed by drawdowns until the end of the fund. 0 = no cap. (qCon kept for signature.)
+function _offplanEscrow(A,qGrossSales,qCon,nq){const cap=Number(A.offplan_cap)||0,out=Array(nq).fill(0);if(cap<=0||nq<2)return out;
+  let cum=0,held=0;for(let i=0;i<nq;i++){const sold=qGrossSales[i]||0;const usable=Math.max(0,Math.min(sold,cap-cum));cum+=sold;const h=sold-usable;if(h>0){out[i]-=h;held+=h;}}
+  if(held>0)out[nq-1]+=held;return out;} // final quarter: its own excess is held and released in the same quarter (net = release of earlier holds)
+// Total proceeds held over the fund (= gross release in the final quarter); subtracted from the final quarter's cash to size the
+// final-quarter draw before the release settles the facility.
+function _escrowHeldTotal(A,qGrossSales){const cap=Number(A.offplan_cap)||0;if(cap<=0)return 0;return Math.max(0,qGrossSales.reduce((a,b)=>a+(b||0),0)-cap);}
 function calculate(){
   if(typeof normalizeCompNames==='function')normalizeCompNames(); // display-only: keeps component names consistent in both languages
   const A={};
@@ -3147,6 +3151,7 @@ function calculate(){
       const netNoBorrow=qNetOp[qi]+qNetInv[qi]+qEquity[qi]+qIKTotal[qi]-(qi===nq-1?qRepay[qi]:0);
       const raw=open+netNoBorrow;
       if(raw<A.min_cash && qi<nq-1) newDD[qi]=A.min_cash-raw;
+      else if(qi===nq-1&&qEscrow[qi]>0.5){const pre=raw+qRepay[qi]-_escrowHeldTotal(A,qGrossSales);if(pre<A.min_cash)newDD[qi]=A.min_cash-pre;} // off-plan cap: final-quarter costs are drawn before the escrow release settles the facility
       if((typeof _SKETCH!=='undefined'&&_SKETCH)&&newDD[qi]>0){const o=_skFund(qi,{shortfall:newDD[qi],cash:open,minCash:A.min_cash,loanOpen:qi?qLoanClose[qi-1]:0,cumDrawn:newDD.slice(0,qi).reduce((a,b)=>a+b,0),sales:qGrossSales,cumSales:qGrossSales.slice(0,qi+1).reduce((a,b)=>a+b,0),equity:qEquity,nq});newDD[qi]=o.debt;qEquity[qi]+=o.equity;}
       tempCash[qi]=raw+newDD[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skEqExtraAt(qi):0);
     }
@@ -3330,7 +3335,8 @@ function calculate(){
   const capCash=A.equity+gpCash;
   const capInKind=totalIK;
   const capDebt=totalDebt;
-  const capOffPlan=Math.max(0, totalCost - capCash - capInKind - capDebt);
+  const _opCap=Number(A.offplan_cap)||0; // funding ceiling: proceeds used = min(cap, leftover after equity/in-kind/debt)
+  const capOffPlan=Math.min(Math.max(0, totalCost - capCash - capInKind - capDebt), _opCap>0?_opCap:Infinity);
   const capTotal=capCash+capInKind+capOffPlan+capDebt;
   const labels=Array.from({length:nq},(_,i)=>'Q'+(i+1));
   // Aggregate all components from all projects for display
@@ -5280,6 +5286,7 @@ function runReforecast(){
         const netNoBorrow=R2.qNetOp[i]+R2.qNetInv[i]+(R2.qEquity[i]||0)+(R2.qIKTotal[i]||0)-(i===nq-1?(R2.qRepay[i]||0):0);
         const raw=open+netNoBorrow;
         newDD[i]=(raw<_minCash&&i<nq-1)?_minCash-raw:0;
+        if(i===nq-1&&(R2.qEscrow[i]||0)>0.5){const pre=raw+(R2.qRepay[i]||0)-_escrowHeldTotal(R2.A,R2.qGrossSales);if(pre<_minCash)newDD[i]=_minCash-pre;} // off-plan cap: final-quarter draw before the escrow release
         // the facility is the ceiling: cumulative draws cannot exceed it — what is left is a funding gap, not more debt
         {const drawnBefore=newDD.slice(0,i).reduce((a,b)=>a+b,0);const room=Math.max(0,_facility-drawnBefore);if(newDD[i]>room){gap[i]=newDD[i]-room;newDD[i]=room;}else gap[i]=0;}
         if((typeof _SKETCH!=='undefined'&&_SKETCH)&&(newDD[i]>0||gap[i]>0)){const o=_skFund(i,{shortfall:newDD[i]+gap[i],cash:open,minCash:_minCash,loanOpen:i?R2.qLoanClose[i-1]:0,cumDrawn:newDD.slice(0,i).reduce((a,b)=>a+b,0),sales:R2.qGrossSales,cumSales:R2.qGrossSales.slice(0,i+1).reduce((a,b)=>a+b,0),equity:R2.qEquity,nq,facility:_facility});const room2=Math.max(0,_facility-newDD.slice(0,i).reduce((a,b)=>a+b,0));newDD[i]=Math.min(o.debt,room2);gap[i]=Math.max(0,o.debt-room2);R2.qEquity[i]+=o.equity;} // SKETCH lab
@@ -5411,7 +5418,7 @@ function _rfTotals(RX){
   RX.totalDiv=sum(RX.qDividends);
   const gpCash=Number(A.gp_commit_cash)||0, totalIK=sum(RX.qIKTotal);
   RX.capCash=(Number(A.equity)||0)+gpCash; RX.capInKind=totalIK; RX.capDebt=RX.totalDebt;
-  RX.capOffPlan=Math.max(0,RX.totalCost-RX.capCash-RX.capInKind-RX.capDebt);
+  {const _c=Number(A.offplan_cap)||0; RX.capOffPlan=Math.min(Math.max(0,RX.totalCost-RX.capCash-RX.capInKind-RX.capDebt),_c>0?_c:Infinity);}
   RX.capTotal=RX.capCash+RX.capInKind+RX.capOffPlan+RX.capDebt;
   return RX;
 }
@@ -5503,7 +5510,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-11-01b';
+const BUILD='2026-11-01c';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -8736,6 +8743,7 @@ function calcWith(overrides){
       const netNoBorrow=qNetOp[qi]+qNetInv[qi]+qEquity[qi]+qIKTotal[qi]-(qi===nq-1?qRepay[qi]:0);
       const raw=open+netNoBorrow;
       if(raw<A.min_cash&&qi<nq-1) newDD[qi]=A.min_cash-raw;
+      else if(qi===nq-1&&qEscrow[qi]>0.5){const pre=raw+qRepay[qi]-_escrowHeldTotal(A,qGrossSales);if(pre<A.min_cash)newDD[qi]=A.min_cash-pre;} // off-plan cap: final-quarter draw before the escrow release settles the facility
       if((typeof _SKETCH!=='undefined'&&_SKETCH)&&newDD[qi]>0){const o=_skFund(qi,{shortfall:newDD[qi],cash:open,minCash:A.min_cash,loanOpen:qi?qLoanClose[qi-1]:0,cumDrawn:newDD.slice(0,qi).reduce((a,b)=>a+b,0),sales:qGrossSales,cumSales:qGrossSales.slice(0,qi+1).reduce((a,b)=>a+b,0),equity:qEquity,nq});newDD[qi]=o.debt;qEquity[qi]+=o.equity;}
       tempCash[qi]=raw+newDD[qi]+((typeof _SKETCH!=='undefined'&&_SKETCH)?_skEqExtraAt(qi):0);
     }
