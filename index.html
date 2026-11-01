@@ -4113,7 +4113,8 @@ function renderSummary(){
   [[L('Equity (Cash)','نقد المستثمرين'),fU(fmt(RS.capCash),cur),_fP(capPcts.cash)],
    [L('In-Kind','حصص عينية'),fU(fmt(RS.capInKind),cur),_fP(capPcts.ik)],
    [L('Off-Plan Sales','مبيعات على الخارطة'),fU(fmt(RS.capOffPlan),cur),_fP(capPcts.op)],
-   [L('Bank Debt','تمويل بنكي'),fU(fmt(RS.capDebt),cur),_fP(capPcts.debt)]
+   [L('Bank Debt','تمويل بنكي'),fU(fmt(RS.capDebt),cur),_fP(capPcts.debt)],
+   ...(()=>{const diff=RS.totalCost-RS.capTotal;if(diff<=1e3)return [];const ug=Math.min(diff,(RS._fundingGap||[]).reduce((x,y)=>x+y,0));const rows=[];if(ug>1e3)rows.push([L('Funding gap (unfunded)','فجوة تمويل (غير ممولة)'),fU(fmt(ug),cur),'']);if(diff-ug>1e3)rows.push([L('Other sources (refunds / income)','مصادر أخرى (مستردات / إيرادات)'),fU(fmt(diff-ug),cur),'']);return rows;})()
   ].forEach(([l,v,pc])=>{
     if(isAr) h+=`<tr><td class="es-lbl">${l}</td><td class="es-pct" dir="${numDir}">${pc}</td><td class="es-val" dir="${numDir}">${v}</td></tr>`;
     else h+=`<tr><td class="es-lbl">${l}</td><td class="es-val" dir="${numDir}">${v}</td><td class="es-pct" dir="${numDir}">${pc}</td></tr>`;
@@ -4995,6 +4996,10 @@ function runReforecast(){
   // Current assumptions = baseline + overrides (forward parameters). Rc drives the open quarters; R stays the baseline.
   const _ov=reforecastSettings.assumptionOverrides||{};
   const Rc=(Object.keys(_ov).length||_SKETCH)?(calcFull(_ov)||R):R; // SKETCH: a running sketch forces a fresh engine run
+  // Off-plan cap in the forecast: capping sales is an explicit decision that debt replaces the held proceeds, so the DEFAULT facility
+  // ceiling (baseline drawdowns) is lifted; an explicit limit (reforecastSettings.facilityLimit or the recorded bank facility) still binds.
+  const _capOv=_ov.offplan_cap!==undefined&&Number(_ov.offplan_cap)!==Number(R.A.offplan_cap||0);
+  window._rfCapFacility=_capOv?Infinity:null;
   const nq=Rc.nq;
   const cutoffQ=getCutoffQ(Rc);   // 0 = nothing closed yet: the forecast simply equals the current-assumption plan
 
@@ -5510,7 +5515,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-11-01c';
+const BUILD='2026-11-01d';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -5686,7 +5691,7 @@ function renderSketch(){const pnl=document.getElementById('p-sketch');if(!pnl)re
 function skEvalScenario(sc){const sk=sketches().find(x=>x.id===sc.sketch);if(!sk)return evalScenario(sc.ov);const r=sketchRunOps(sk);return r?{irr:r.irr,eq:r.eqMult,peak:r.peakDebt,div:r.totalDiv,cost:r.totalCost}:null;}
 // ═══ END SKETCH ═══
 // Facility ceiling for the forecast: user-set limit, else the loan schedule's facility, else the baseline total drawdowns
-function facilityLimit(){_rfNorm();const u=Number(reforecastSettings.facilityLimit);if(u>0)return u;const b=reforecastSettings.bank;if(b&&b.facility&&Number(b.facility.facility)>0)return Number(b.facility.facility);return R?sumA(R.drawdowns):Infinity;}
+function facilityLimit(){_rfNorm();const u=Number(reforecastSettings.facilityLimit);if(u>0)return u;const b=reforecastSettings.bank;if(b&&b.facility&&Number(b.facility.facility)>0)return Number(b.facility.facility);if(window._rfCapFacility>0)return window._rfCapFacility;return R?sumA(R.drawdowns):Infinity;}
 function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings.cutoffQ;
   if(c!==null&&c!==undefined) return Math.max(0,Math.min(nq-1,Number(c)));
   const lastPaid=actuals.length?Math.max(...actuals.map(p=>Number(p.quarter)||0))+1:0;   // quarters that have payments count as closed
