@@ -3309,11 +3309,15 @@ function calculate(){
   // Total cost: inc-VAT when no refund, ex-VAT when refund is ON
   // VAT Advisor fee added as an economic cost (settled via refund netting, but still a real expense)
   const _vr=Number(A.vat_refund);
-  const totalCostIncVAT=tLand-rettRecoverable+tCon+totalFundExpExPerf+totalIntAmt+totalAdvisorFee;
-  const totalCostExVAT=tLandExVAT+tConExVAT+totalFundExpExPerf/V+totalIntAmt+totalAdvisorFee;
+  // Selling costs (WAFI + commissions, incl. lease OpEx) are paid out of sale proceeds: deductions from revenue, not project cost (2026-11-01)
+  const totalSelling=qWafi.reduce((a,b)=>a+b,0)+qSellExp.reduce((a,b)=>a+b,0);
+  const totalFundExpExSell=totalFundExpExPerf-totalSelling;
+  const tRevNet=tRev-(_vr?totalSelling/V:totalSelling);
+  const totalCostIncVAT=tLand-rettRecoverable+tCon+totalFundExpExSell+totalIntAmt+totalAdvisorFee;
+  const totalCostExVAT=tLandExVAT+tConExVAT+totalFundExpExSell/V+totalIntAmt+totalAdvisorFee;
   const totalCost=_vr?totalCostExVAT:totalCostIncVAT;
   const vatInCost=totalCostIncVAT-totalCostExVAT;
-  const grossProfit=tRev-totalCost;
+  const grossProfit=tRevNet-totalCost;
   const profitMargin=totalCost?grossProfit/totalCost:0;
   const annualROI=A.fund_period_months?profitMargin/(A.fund_period_months/12):0;
   const totalDebt=drawdowns.reduce((a,b)=>a+b,0);
@@ -3340,7 +3344,7 @@ function calculate(){
     aggrConComponents.push(...projects[pi].conComponents);
     aggrSalesComponents.push(...projects[pi].salesComponents);
   }
-  R={nq,labels,A,baseLand,tLand,tLandExVAT,tCon,tConExVAT,baseConExVAT,otherConExVAT,tRev,totalCost,totalCostIncVAT,totalCostExVAT,vatInCost,grossProfit,profitMargin,annualROI,totalDebt,totalInt,ltc,totalDiv,totalPerfFee,totalFundExpExPerf,totalVATNet,roiUH,annROIUH,
+  R={nq,labels,A,baseLand,tLand,tLandExVAT,tCon,tConExVAT,baseConExVAT,otherConExVAT,tRev,tRevNet,totalSelling,totalFundExpExSell,totalCost,totalCostIncVAT,totalCostExVAT,vatInCost,grossProfit,profitMargin,annualROI,totalDebt,totalInt,ltc,totalDiv,totalPerfFee,totalFundExpExPerf,totalVATNet,roiUH,annROIUH,
     qGrossSales,qEscrow,qSales,qWafi,qSellExp,qCon,qBaseCon,qDevFee,qContingency,qLicensing,qDesignFee,qInsurance,qSupervision,qMkt,qVATNet,qVATAdvisor,qArrFee,
     qCustody,qSPV,qFundSetup,qAuditor,qSharia,qEngineering,qBoard,qFinAdvisor,qMgmtFee,qBankMgmt,qPerfFee,qTotalFundExp,
     qInterest,qNetOp,qLandCF,qNetInv,qDSCR,
@@ -3414,7 +3418,7 @@ function renderDashboard(){
       (lang==='ar'?'إجمالي التكاليف (شامل الضريبة)':'Total Cost (Inclusive of VAT)');
     const kG=[
       {title:DH.revCost,items:[
-        [DH.totalRev,fN(R.tRev)+' '+cur],[vatLabel,fN(R.totalCost)+' '+cur],[DH.grossProfit,fN(R.grossProfit)+' '+cur],[DH.profitMargin,fP(R.profitMargin)]]},
+        [DH.totalRev,fN(R.tRev)+' '+cur],[lang==='ar'?'صافي الإيرادات (بعد رسوم البيع)':'Net Revenue (after selling costs)',fN(R.tRevNet)+' '+cur],[vatLabel,fN(R.totalCost)+' '+cur],[DH.grossProfit,fN(R.grossProfit)+' '+cur],[DH.profitMargin,fP(R.profitMargin)]]},
       {title:DH.invRet,items:[
         [DH.irr,fP(irr)],[DH.eqMult,eqMult.toFixed(2)+'x'],[DH.totalDiv,fN(R.totalDiv)+' '+cur],[DH.perfFee,fN(perfFee)+' '+cur]]},
       {title:DH.debtFin,items:R.hasLeaseProjects?
@@ -3589,7 +3593,7 @@ function renderDashboard(){
       {const _vr=Number(R.A.vat_refund);
       // Include VAT Advisor fee in Fund Exp slice so Cost Breakdown total = Capital Structure total
       const _advTotal=R.qVATAdvisor.reduce((a,b)=>a+b,0);
-      const _fundExpSlice=(_vr?R.totalFundExpExPerf/V:R.totalFundExpExPerf)+_advTotal;
+      const _fundExpSlice=(_vr?R.totalFundExpExSell/V:R.totalFundExpExSell)+_advTotal;
       drawPie('c2',[_vr?R.tLandExVAT:R.tLand, _vr?R.tConExVAT:R.tCon, R.totalInt, _fundExpSlice],
         [lang==='ar'?'الأرض':'Land',lang==='ar'?'التطوير':'Construction',lang==='ar'?'أرباح التمويل':'Debt Profit',lang==='ar'?'مصاريف الصندوق':'Fund Exp'],
         CHART.series);}
@@ -3606,7 +3610,7 @@ function renderDashboard(){
       drawBarChart('c1',qlb,[{d:R.qNetOp,c:CHART.green},{d:R.qNetInv,c:CHART.red},{d:R.qNetFin,c:CHART.gold}],DH.chLegCF);
       {const _vr=Number(R.A.vat_refund);
       const _advTotal=R.qVATAdvisor.reduce((a,b)=>a+b,0);
-      const _fundExpSlice=(_vr?R.totalFundExpExPerf/V:R.totalFundExpExPerf)+_advTotal;
+      const _fundExpSlice=(_vr?R.totalFundExpExSell/V:R.totalFundExpExSell)+_advTotal;
       drawPie('c2',[_vr?R.tLandExVAT:R.tLand, _vr?R.tConExVAT:R.tCon, R.totalInt, _fundExpSlice],
         [lang==='ar'?'الأرض':'Land',lang==='ar'?'التطوير':'Construction',lang==='ar'?'أرباح التمويل':'Debt Profit',lang==='ar'?'مصاريف الصندوق':'Fund Exp'],CHART.series);}
     } else if(currentRole==='financer'){
@@ -3686,10 +3690,12 @@ function renderCashFlow(){
   </div><span class="cfg-all"><a onclick="cfAll(false)">${lang==='ar'?'توسيع الكل':'Expand all'}</a><a onclick="cfAll(true)">${lang==='ar'?'طيّ الكل':'Collapse all'}</a></span></div>`;
   h+=`<div class="tbl-wrap" id="cfTableWrap"><table class="dt"><thead><tr><th class="rl">${L.hdr}</th>${lb.map((q,i)=>`<th class="${isRF&&i<cutoffQ?'rfcs-hdr-actual':''}">${q}${isRF?(i<cutoffQ?' '+ico('check'):' '+ico('arrow','ic-flip')):''}<small class="qe">${fmtDateS(qEndDate(i))}</small></th>`).join('')}<th>${lang==='ar'?'المجموع':'Total'}</th></tr></thead><tbody>`;
 
-  const G=lang==='ar'?{rev:'الإيرادات (المبيعات)',oth:'تدفقات أخرى (استرداد الضرائب ودخل آخر)',exp:'مصاريف الصندوق وتكلفة التمويل',dev:'تكاليف التطوير (صافي الاستثمار)',fin:'التمويل (صافي)',cash:'النقد'}:{rev:'Revenue (sales)',oth:'Other inflows (VAT & RETT refunds, other income)',exp:'Fund expenses & financing cost',dev:'Development costs (net investing)',fin:'Financing (net)',cash:'Cash position'};
+  const G=lang==='ar'?{rev:'صافي الإيرادات (المبيعات بعد رسوم البيع)',oth:'تدفقات أخرى (استرداد الضرائب ودخل آخر)',exp:'مصاريف الصندوق وتكلفة التمويل',dev:'تكاليف التطوير (صافي الاستثمار)',fin:'التمويل (صافي)',cash:'النقد'}:{rev:'Net revenue (sales after selling costs)',oth:'Other inflows (VAT & RETT refunds, other income)',exp:'Fund expenses & financing cost',dev:'Development costs (net investing)',fin:'Financing (net)',cash:'Cash position'};
   const _qRevX=Array(nq).fill(0);if(typeof actuals!=='undefined'&&actuals.length)for(const p of actuals){if((p.category==='murabaha'||p.category==='other_inc')&&p.quarter>=0&&p.quarter<nq)_qRevX[p.quarter]+=p.amount;}
-  h+=gh('rev',G.rev,r.qGrossSales); // = Total Revenue on the Summary page
+  h+=gh('rev',G.rev,r.qGrossSales.map((v,i)=>v-r.qWafi[i]-r.qSellExp[i])); // = Net revenue on the Summary page (gross sales less WAFI and commissions)
   h+=tr(L.grossSales,r.qGrossSales);
+  h+=tr(L.wafi,r.qWafi.map(v=>-v)); // selling costs are deductions from revenue (2026-11-01)
+  h+=tr(L.sellExp,r.qSellExp.map(v=>-v));
   ge();const _qEsc=r.qEscrow||Array(nq).fill(0);h+=gh('oth',G.oth,r.qVATNet.map((v,i)=>v+_qRevX[i]+_qEsc[i]));
   if(_qEsc.some(v=>Math.abs(v)>0.5))h+=tr(lang==='ar'?'متحصلات بيع على الخارطة محتجزة في الضمان (السقف)':'Off-plan proceeds held in escrow (cap)',_qEsc); // refunds and other income are inflows, not revenue; Revenue + Other inflows − Expenses = Net operating cash flow
   // Murabaha & Other Income from actuals
@@ -3709,9 +3715,7 @@ function renderCashFlow(){
     const tot=r.qVATNet.reduce((a,b)=>a+b,0);
     h+=`<tr class="sub cfg-r" data-g="oth"><td class="rl">${L.netRefunds} <i class="cf-i">ⓘ</i></td>${r.qVATNet.map((v,i)=>`<td class="${v<0?'neg':''}${isRF&&i<cutoffQ?' rfcs-actual':''} cf-click" onclick="cfVatPop(${i})" title="${lang==='ar'?'انقر للتفاصيل':'click for breakdown'}">${fN(v)}</td>`).join('')}<td class="${tot<0?'neg':''} cf-click" onclick="cfVatPop(-1)">${fN(tot)}</td></tr>`;}
   ge();h+=sep();
-  h+=gh('exp',G.exp,r.qTotalFundExp.map((v,i)=>-v-r.qInterest[i]));
-  h+=tr(L.wafi,r.qWafi.map(v=>-v)); // WAFI + selling commission are part of qTotalFundExp in the engine, so they sit in this group
-  h+=tr(L.sellExp,r.qSellExp.map(v=>-v));
+  h+=gh('exp',G.exp,r.qTotalFundExp.map((v,i)=>-v-r.qInterest[i]+r.qWafi[i]+r.qSellExp[i])); // engine's qTotalFundExp includes selling costs; they are shown under revenue
   h+=tr(L.custody,r.qCustody.map(v=>-v));
   h+=tr(L.spv,r.qSPV.map(v=>-v));
   h+=tr(L.fundSetup,r.qFundSetup.map(v=>-v));
@@ -4031,7 +4035,8 @@ function renderSummary(){
   const _totalTitle=_vr?L('TOTAL COSTS (ex-VAT)','إجمالي التكاليف (بدون ضريبة)'):L('TOTAL COSTS (Inclusive of VAT)','إجمالي التكاليف (شامل الضريبة)');
   h+=`<div class="es-sec"><div class="es-sec-title">${_costTitle}</div></div>`;
   const mgmtTotal=RS.qMgmtFee.reduce((a,b)=>a+b,0)/(_vr?V:1);
-  const otherExp=totalFundExpExPerf/(_vr?V:1)-mgmtTotal;
+  const advisorTotal0=RS.qVATAdvisor.reduce((a,b)=>a+b,0);
+  const otherExp=(RS.totalFundExpExSell!==undefined?RS.totalFundExpExSell:totalFundExpExPerf)/(_vr?V:1)-mgmtTotal+advisorTotal0; // selling costs are deductions from revenue; VAT advisor shown inside other expenses
   const dsFeeExVAT=RS.totalDesignFee+RS.totalSupervisionFee+(RS.totalLicensingFee||0);
   const contInsExVAT=contingency+insurance;
   const brokerageExVAT=RS.brokerageIncVAT/V;
@@ -4045,8 +4050,7 @@ function renderSummary(){
     [tipLabel(L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),[[L('Design','التصميم'),RS.totalDesignFee],[L('Supervision','الإشراف'),RS.totalSupervisionFee],[L('Licensing','الرخص'),(RS.totalLicensingFee||0)]]),dsFeeExVAT],
     [tipLabel(L('Contingency & Insurance','الاحتياطي والتأمين'),[[L('Contingency','الاحتياطي'),contingency],[L('Insurance','التأمين'),insurance]]),contInsExVAT],
     [L('Fund Mgmt Fee','رسوم الإدارة'),mgmtTotal],
-    [tipLabel(L('Other Fund Expenses','مصاريف أخرى'),otherExpBreakdown(R)),otherExp],
-    [L('VAT Advisor','مستشار ضريبي'),advisorTotal],
+    [tipLabel(L('Other Fund Expenses','مصاريف أخرى'),otherExpBreakdown(RS)),otherExp],
     [L('Financing Cost','تكلفة التمويل'),RS.totalInt]
   ]:[
     [L('Land Cost','تكلفة الأرض'),RS.baseLand],
@@ -4057,8 +4061,7 @@ function renderSummary(){
     [tipLabel(L('Design, Supervision & Licensing','التصميم والإشراف والرخص'),[[L('Design','التصميم'),RS.totalDesignFee*V],[L('Supervision','الإشراف'),RS.totalSupervisionFee*V],[L('Licensing','الرخص'),(RS.totalLicensingFee||0)*V]]),dsFeeExVAT*V],
     [tipLabel(L('Contingency & Insurance','الاحتياطي والتأمين'),[[L('Contingency','الاحتياطي'),contingency*V],[L('Insurance','التأمين'),insurance*V]]),contInsExVAT*V],
     [L('Fund Mgmt Fee','رسوم الإدارة'),mgmtTotal],
-    [tipLabel(L('Other Fund Expenses','مصاريف أخرى'),otherExpBreakdown(R)),otherExp],
-    [L('VAT Advisor','مستشار ضريبي'),advisorTotal],
+    [tipLabel(L('Other Fund Expenses','مصاريف أخرى'),otherExpBreakdown(RS)),otherExp],
     [L('Financing Cost','تكلفة التمويل'),RS.totalInt]
   ];
   h+=`<table class="es-tbl es-tbl3" dir="${tblDir}">`;
@@ -4077,8 +4080,9 @@ function renderSummary(){
   // ─── RIGHT COLUMN: Revenue + Capital ───
   h+=`<div>`;
   h+=`<div class="es-sec"><div class="es-sec-title">${L('Revenue & Profitability','الإيرادات والربحية')}</div></div>`;
+  const _vrR=Number(RS.A.vat_refund);
   h+=`<table class="es-tbl" dir="${tblDir}">`;
-  [[L('Total Revenue','إجمالي الإيرادات'),fU(fmt(RS.tRev),cur),true],[L('Net Profit','صافي الربح'),fU(fmt(RS.grossProfit),cur),true],
+  [[L('Gross Sales','إجمالي المبيعات'),fU(fmt(RS.tRev),cur),false],[L('Less: WAFI Fee','ناقص: رسوم وافي'),fU(fmt(-RS.qWafi.reduce((a,b)=>a+b,0)/(_vrR?V:1)),cur),false],[L('Less: Selling Commission','ناقص: عمولات البيع'),fU(fmt(-RS.qSellExp.reduce((a,b)=>a+b,0)/(_vrR?V:1)),cur),false],[L('Net Revenue','صافي الإيرادات'),fU(fmt(RS.tRevNet!==undefined?RS.tRevNet:RS.tRev),cur),true],[L('Net Profit','صافي الربح'),fU(fmt(RS.grossProfit),cur),true],
    [L('Return on Project','عائد المشروع'),_fP(RS.profitMargin),false],[L('ROE','عائد حملة الوحدات'),_fP(RS.roiUH),false],
    [L('IRR','العائد الداخلي'),_fP(irr),true],[L('Equity Multiple','مضاعف رأس المال'),eqMult.toFixed(2)+'x',false],
    [L('Annual Return','العائد السنوي'),_fP(RS.annualROI),false]
@@ -4293,7 +4297,7 @@ const ACT_CATS=[
   {key:'insurance',   en:'Insurance',           ar:'التأمين',            group:'cost', getQ:(R,i)=>R.qInsurance[i]},
   {key:'supervision', en:'Supervision',         ar:'رسوم الإشراف',       group:'cost', getQ:(R,i)=>R.qSupervision[i]},
   {key:'marketing',   en:'Marketing',           ar:'التسويق',            group:'cost', getQ:(R,i)=>R.qMkt[i]},
-  {key:'selling',     en:'Selling / Commission',ar:'عمولات البيع',       group:'cost', getQ:(R,i)=>(R.qSellExp[i]||0)+(R.qWafi[i]||0)},
+  {key:'selling',     en:'Selling / Commission',ar:'عمولات البيع',       group:'selling', derived:true, getQ:(R,i)=>(R.qSellExp[i]||0)+(R.qWafi[i]||0)}, // deduction from revenue, computed from sales in the forecast (2026-11-01)
   {key:'fund_setup',  en:'Fund Setup',           ar:'تأسيس الصندوق',      group:'cost', getQ:(R,i)=>(R.qFundSetup||[])[i]||0, fundOnly:true},
   {key:'mgmt_fee',    en:'Management Fee',       ar:'رسوم الإدارة',        group:'cost', getQ:(R,i)=>(R.qMgmtFee||[])[i]||0, fundOnly:true},
   {key:'custody',     en:'Custody',              ar:'رسوم الحفظ',          group:'cost', getQ:(R,i)=>(R.qCustody||[])[i]||0, fundOnly:true},
@@ -4999,7 +5003,7 @@ function runReforecast(){
   const cutoffQ=getCutoffQ(Rc);   // 0 = nothing closed yet: the forecast simply equals the current-assumption plan
 
   const isFund=Number(R.A.is_fund);
-  const cats=ACT_CATS.filter(c=>!c.fundOnly||isFund).filter(c=>!c.actualOnly&&!c.fin);
+  const cats=ACT_CATS.filter(c=>!c.fundOnly||isFund).filter(c=>!c.actualOnly&&!c.fin&&!c.derived);
   const redistMode=reforecastSettings.redistMode||'proportional';
 
   // Phase 1: Build actual quarterly arrays for each category (Q0..cutoffQ-1)
@@ -5087,8 +5091,6 @@ function runReforecast(){
     catArrays[c.key]=arr;
   }
 
-  // selling expenses follow the revenue phasing in the open quarters
-  if(catArrays.revenue&&catArrays.selling){const rv=catArrays.revenue,sl=catArrays.selling;const rT=rv.slice(cutoffQ).reduce((a,b)=>a+b,0),sT=sl.slice(cutoffQ).reduce((a,b)=>a+b,0);if(rT>0&&sT>0)for(let i=cutoffQ;i<nq;i++)sl[i]=sT*rv[i]/rT;}
   // Also handle actual-only categories (murabaha, other_inc, other_exp)
   const actualOnlyCats=ACT_CATS.filter(c=>c.actualOnly);
   for(const c of actualOnlyCats){
@@ -5126,27 +5128,17 @@ function runReforecast(){
   if(catArrays.supervision) R2.qSupervision=catArrays.supervision;
   if(catArrays.marketing) R2.qMkt=catArrays.marketing;
 
-  // Selling — split back into qSellExp (commission) + qWafi
-  if(catArrays.selling){
-    // Original ratio of sellExp vs wafi in each quarter
-    for(let i=0;i<nq;i++){
-      const origSell=(Rc.qSellExp[i]||0)+(Rc.qWafi[i]||0);
-      if(origSell>0){
-        const sellRatio=Rc.qSellExp[i]/origSell;
-        R2.qSellExp[i]=catArrays.selling[i]*sellRatio;
-        R2.qWafi[i]=catArrays.selling[i]*(1-sellRatio);
-      }else if(catArrays.selling[i]>0){
-        R2.qSellExp[i]=catArrays.selling[i];
-        R2.qWafi[i]=0;
-      }else{
-        R2.qSellExp[i]=0;
-        R2.qWafi[i]=0;
-      }
-    }
-  }
-
+  // Selling costs (2026-11-01): WAFI and commission follow the FORECAST sales — open quarters = rate × forecast gross sales × (1+VAT)
+  // (rates blended from the current-assumption run: exact per-project rates for a single project); closed quarters = recorded
+  // 'selling' payments, split between WAFI and commission in the same proportion. Computed after revenue below.
   // Revenue
   if(catArrays.revenue) R2.qGrossSales=catArrays.revenue;
+  {const _gs=sumA(Rc.qGrossSales),_rw=_gs>0?sumA(Rc.qWafi)/_gs:0,_rs=_gs>0?sumA(Rc.qSellExp)/_gs:0,_tot=_rw+_rs;
+   R2.qWafi=Array(nq).fill(0);R2.qSellExp=Array(nq).fill(0);
+   for(let i=0;i<nq;i++){
+     if(i<cutoffQ){const a=actuals.filter(p=>p.include!==false&&p.category==='selling'&&p.quarter===i).reduce((x,p)=>x+p.amount,0);R2.qWafi[i]=_tot>0?a*_rw/_tot:0;R2.qSellExp[i]=_tot>0?a*_rs/_tot:a;}
+     else{R2.qWafi[i]=(R2.qGrossSales[i]||0)*_rw;R2.qSellExp[i]=(R2.qGrossSales[i]||0)*_rs;}
+   }}
   // Recalculate qSales = qGrossSales - qWafi
   R2.qSales=R2.qGrossSales.map((v,i)=>v-R2.qWafi[i]);
   R2.tRev=R2.qGrossSales.reduce((a,b)=>a+b,0);
@@ -5406,11 +5398,13 @@ function _rfTotals(RX){
   const brokExVAT=(RX.brokerageIncVAT||0)/V;
   RX.tLandExVAT=(RX.baseLand||0)+brokExVAT+(RX.rettAmount||0)-RX.rettRecoverable;
   RX.tConExVAT=sum((RX.qCon||[]).map(c=>c/V));
-  RX.totalCostIncVAT=RX.tLand-RX.rettRecoverable+RX.tCon+RX.totalFundExpExPerf+totalIntAmt+totalAdvisorFee;
-  RX.totalCostExVAT=RX.tLandExVAT+RX.tConExVAT+RX.totalFundExpExPerf/V+totalIntAmt+totalAdvisorFee;
+  RX.totalSelling=sum(RX.qWafi)+sum(RX.qSellExp); RX.totalFundExpExSell=RX.totalFundExpExPerf-RX.totalSelling;
+  RX.tRevNet=RX.tRev-(Number(A.vat_refund)?RX.totalSelling/V:RX.totalSelling);
+  RX.totalCostIncVAT=RX.tLand-RX.rettRecoverable+RX.tCon+RX.totalFundExpExSell+totalIntAmt+totalAdvisorFee;
+  RX.totalCostExVAT=RX.tLandExVAT+RX.tConExVAT+RX.totalFundExpExSell/V+totalIntAmt+totalAdvisorFee;
   RX.totalCost=Number(A.vat_refund)?RX.totalCostExVAT:RX.totalCostIncVAT;
   RX.vatInCost=RX.totalCostIncVAT-RX.totalCostExVAT;
-  RX.grossProfit=RX.tRev-RX.totalCost;
+  RX.grossProfit=RX.tRevNet-RX.totalCost;
   RX.profitMargin=RX.totalCost?RX.grossProfit/RX.totalCost:0;
   RX.annualROI=A.fund_period_months?RX.profitMargin/(A.fund_period_months/12):0;
   RX.totalDebt=sum(RX.drawdowns); RX.ltc=RX.totalCost?RX.totalDebt/RX.totalCost:0;
@@ -5496,7 +5490,7 @@ function otherExpBreakdown(RX){
   const V=1+(Number(RX.A.vat_rate)||0)/100, d=Number(RX.A.vat_refund)?V:1, S=a=>(a||[]).reduce((x,y)=>x+y,0)/d, ar=lang==='ar';
   return [[ar?'تأسيس الصندوق':'Fund setup',S(RX.qFundSetup)],[ar?'تأسيس الشركة ذات الغرض الخاص':'SPV setup',S(RX.qSPV)],[ar?'رسوم الحفظ':'Custody',S(RX.qCustody)],[ar?'المحاسب القانوني':'Auditor',S(RX.qAuditor)],
     [ar?'اللجنة الشرعية':'Shariah committee',S(RX.qSharia)],[ar?'الاستشاري الهندسي':'Engineering consultant',S(RX.qEngineering)],[ar?'مكافآت مجلس الإدارة':'Board compensation',S(RX.qBoard)],[ar?'المستشار المالي':'Financial advisor',S(RX.qFinAdvisor)],
-    [ar?'التسويق':'Marketing',S(RX.qMkt)],[ar?'رسوم الإدارة البنكية':'Bank management fee',S(RX.qBankMgmt)],[ar?'رسوم الترتيب':'Arrangement fee',S(RX.qArrFee)],[ar?'رسوم وافي':'WAFI fees',S(RX.qWafi)],[ar?'عمولات البيع':'Selling commissions',S(RX.qSellExp)]];
+    [ar?'التسويق':'Marketing',S(RX.qMkt)],[ar?'رسوم الإدارة البنكية':'Bank management fee',S(RX.qBankMgmt)],[ar?'رسوم الترتيب':'Arrangement fee',S(RX.qArrFee)],[ar?'مستشار ضريبي':'VAT advisor',(RX.qVATAdvisor||[]).reduce((x,y)=>x+y,0)]];
 }
 function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},salesPins:{},sketches:[],cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[],invoices:[],submissions:[]};}
 function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k]===undefined) reforecastSettings[k]=JSON.parse(JSON.stringify(d[k]));}
@@ -5509,7 +5503,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-11-01f';
+const BUILD='2026-11-01g';
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
 function sketches(){_rfNorm();reforecastSettings.sketches=reforecastSettings.sketches||[];return reforecastSettings.sketches;}
@@ -6155,6 +6149,12 @@ function opsSales(){
       <div class="ops-bar"><div class="trk"><i class="a" style="width:${area?sold/area*100:0}%"></i><i class="r" style="width:${area?(area-sold)/area*100:100}%"></i></div><div class="lbls"><span>${lang==='ar'?'مباع':'Sold'} ${fN(sold)}</span><span>${ot('unsold')} ${fN(area-sold)}</span></div></div>
       <div class="ops-stat"><small>${ot('fcRev')}</small><b>${M_(fcRev)}</b></div><span class="ops-pill ${d>=0?'good':'warn'}">${d>=0?'+':'−'}${M_(Math.abs(d))} ${ot('vsBase')}</span></div>
       <div class="detail"><div class="ops-fields">${[['soldArea',ot('soldArea'),''],['achPrice',ot('achPrice'),c.price],['unsoldPrice',ot('unsoldPrice'),c.price],['pace',ot('pace'),''],['startQ',ot('startQ'),cut+1]].map(([f,l,ph])=>`<label>${l}<input type="number" class="ops-mini" placeholder="${ph}" value="${s[f]??''}" onchange="setSales('${cp.key}','${f}',this.value)"></label>`).join('')}</div></div></div>`;}
+  {const ar=lang==='ar',w=sumA(R2.qWafi||[]),c=sumA(R2.qSellExp||[]),paid=actualOf('selling',0,cut),bw=sumA(R.qWafi||[]),bc=sumA(R.qSellExp||[]);
+   h+=`<div class="ops-card" style="margin-top:16px"><h3>${ar?'رسوم البيع (تُخصم من الإيرادات)':'Selling costs (deducted from revenue)'}</h3>
+     <table class="rfcs-tbl"><thead><tr><th></th><th>${ot('baseline')}</th><th>${ot('forecast')}</th><th>${ar?'المسجّل حتى الآن':'Recorded to date'}</th></tr></thead><tbody>
+     <tr><td>${ar?'رسوم وافي':'WAFI fee'}</td><td class="rfcs-num">${M_(bw)}</td><td class="rfcs-num">${M_(w)}</td><td class="rfcs-num" rowspan="2">${M_(paid)}</td></tr>
+     <tr><td>${ar?'عمولات البيع':'Selling commission'}</td><td class="rfcs-num">${M_(bc)}</td><td class="rfcs-num">${M_(c)}</td></tr></tbody></table>
+     <p class="ops-muted" style="margin:8px 0 0;font-size:.78rem">${ar?'الأرباع المفتوحة: النسبة × مبيعات التوقع × (1+الضريبة). الأرباع المغلقة: الدفعات المسجّلة بفئة «عمولات البيع».':'Open quarters: rate × forecast sales × (1+VAT). Closed quarters: payments recorded under “Selling / Commission”.'}</p></div>`;}
   h+=salesTimingCard(cut,nq);
   return h;
 }
@@ -7498,9 +7498,9 @@ function dlExcel(){
    c+=fc('SUM(B17:'+lc+'17)',S.rdN);
    rows.push('<row>'+c+'</row>');}
 
-  // Row 18: TOTAL (excludes row 13 VAT Advisor — already netted in VAT Schedule)
-  {let c=lbl('TOTAL FUND EXPENSES',false);
-   for(let i=0;i<nq;i++) c+=boldNum('SUM('+cl(i)+'3:'+cl(i)+'12)+SUM('+cl(i)+'14:'+cl(i)+'17)');
+  // Row 18: TOTAL (excludes row 13 VAT Advisor — netted in VAT Schedule — and rows 14–15 WAFI/commission, which are deducted from revenue)
+  {let c=lbl('TOTAL FUND EXPENSES (ex selling costs)',false);
+   for(let i=0;i<nq;i++) c+=boldNum('SUM('+cl(i)+'3:'+cl(i)+'12)+SUM('+cl(i)+'16:'+cl(i)+'17)');
    c+=boldNum('SUM(B18:'+lc+'18)');
    rows.push('<row>'+c+'</row>');}
 
@@ -7717,8 +7717,8 @@ function dlExcel(){
 
   rows.push('<row>'+secHdr('OPERATING ACTIVITIES')+'</row>');
 
-  {let c=lbl('Gross Sales Revenue',false);
-   for(let i=0;i<nq;i++) c+=greenNum('Revenue!'+cl(i)+'3');
+  {let c=lbl('Net Sales Revenue (after WAFI & commission)',false);
+   for(let i=0;i<nq;i++) c+=greenNum('Revenue!'+cl(i)+'6');
    c+=greenNum('SUM(B4:'+lc+'4)');
    rows.push('<row>'+c+'</row>');}
 
@@ -8015,8 +8015,9 @@ function dlExcel(){
   rows.push('<row/>');
 
   rows.push('<row>'+secHdr('REVENUE & PROFITABILITY')+'</row>');
+  rows.push('<row>'+lbl('Gross Sales Revenue',false)+greenNum('Assumptions!B34')+'</row>');
   rTotalRev=rn();
-  rows.push('<row>'+lbl('Total Revenue',false)+greenNum('Assumptions!B34')+'</row>');
+  rows.push('<row>'+lbl('Net Revenue (after WAFI & commission)',true)+greenNum("IF(Assumptions!B49=1,Assumptions!B34-('Fund Expenses'!"+tc+"14+'Fund Expenses'!"+tc+"15)/Assumptions!B12,Assumptions!B34-'Fund Expenses'!"+tc+"14-'Fund Expenses'!"+tc+"15)",true)+'</row>');
   rNetProfit=rn();
   rows.push('<row>'+lbl('Net Profit',true)+blackNum('__NET_PROFIT__',true)+'</row>');
   rReturnOnProj=rn();
@@ -8352,13 +8353,14 @@ function dlExcel(){
       const bm=(typeof baselineMetrics==='function')?baselineMetrics():B;
       [['IRR',r.irr,bm.irr,'p1'],['Equity multiple (x)',r.eqMult,bm.eqMult],['Total cost',r.totalCost,B.totalCost],['Total revenue',r.tRev,B.tRev],['Net profit',r.grossProfit,B.grossProfit],['Peak debt',Math.max(0,...(r.qLoanClose||[0])),Math.max(0,...(B.qLoanClose||[0]))],['Total distributions',sum(r.qDividends),sum(B.qDividends)],['Total interest',sum(r.qInterest),sum(B.qInterest)]].forEach((x,i)=>{const [l,a,b,t]=x;let c=lbl(l,i%2);if(t==='p1'){c+=vc(a||0,S.bkP)+vc(b||0,S.bkP);}else{c+=vc(a||0,S.bkN)+vc(b||0,S.bkN);}rows.push('<row>'+c+'</row>');});
       sheets.push({name:'Assumptions',rows,cols:'<cols><col min="1" max="1" width="34" customWidth="1"/><col min="2" max="3" width="18" customWidth="1"/><col min="4" max="4" width="22" customWidth="1"/></cols>'});}
+    const _exSell=X=>arr(X.qTotalFundExp).map((v,i)=>v-((X.qWafi||[])[i]||0)-((X.qSellExp||[])[i]||0)); // selling costs are shown under revenue
     sheet('Revenue','REVENUE — FORECAST',[{rows:[['Gross sales',r.qGrossSales],['Less: WAFI fee',arr(r.qWafi).map(v=>-v)],['Less: commission',arr(r.qSellExp).map(v=>-v)],['Net sales revenue',arr(r.qGrossSales).map((v,i)=>v-(r.qWafi[i]||0)-(r.qSellExp[i]||0)),1]]},{sec:'BASELINE (for comparison)',rows:[['Gross sales — baseline',B.qGrossSales],['Variance vs baseline',arr(r.qGrossSales).map((v,i)=>v-(B.qGrossSales[i]||0))]]}]);
     sheet('Construction Cost','CONSTRUCTION & LAND — FORECAST',[{sec:'LAND',rows:[['Land, brokerage & RETT (cash out)',arr(r.qLandCF).map(v=>-v)]]},{sec:'CONSTRUCTION (inc. VAT)',rows:[['Base construction',r.qBaseCon],['Developer fees',r.qDevFee],['Contingency',r.qContingency],['Insurance',r.qInsurance],['Design fee',r.qDesignFee],['Supervision fee',r.qSupervision],['Licensing fee',r.qLicensing],['Total construction',r.qCon,1]]},{sec:'BASELINE',rows:[['Total construction — baseline',B.qCon],['Variance vs baseline',arr(r.qCon).map((v,i)=>v-(B.qCon[i]||0))]]}]);
-    sheet('Fund Expenses','FUND EXPENSES — FORECAST (inc. VAT where applicable)',[{rows:[['Custody',r.qCustody],['SPV setup',r.qSPV],['Fund setup',r.qFundSetup],['Auditor',r.qAuditor],['Sharia committee',r.qSharia],['Engineering consultant',r.qEngineering],['Board compensation',r.qBoard],['Financial advisor',r.qFinAdvisor],['Management fees',r.qMgmtFee],['Marketing',r.qMkt],['Bank management fees',r.qBankMgmt],['Arrangement fee',r.qArrFee],['Performance fee',r.qPerfFee],['Total fund expenses',r.qTotalFundExp,1]]},{sec:'BASELINE',rows:[['Total fund expenses — baseline',B.qTotalFundExp]]}]);
+    sheet('Fund Expenses','FUND EXPENSES — FORECAST (inc. VAT where applicable)',[{rows:[['Custody',r.qCustody],['SPV setup',r.qSPV],['Fund setup',r.qFundSetup],['Auditor',r.qAuditor],['Sharia committee',r.qSharia],['Engineering consultant',r.qEngineering],['Board compensation',r.qBoard],['Financial advisor',r.qFinAdvisor],['Management fees',r.qMgmtFee],['Marketing',r.qMkt],['Bank management fees',r.qBankMgmt],['Arrangement fee',r.qArrFee],['Performance fee',r.qPerfFee],['Total fund expenses (ex selling costs)',_exSell(r),1]]},{sec:'BASELINE',rows:[['Total fund expenses — baseline (ex selling costs)',_exSell(B)]]}]);
     sheet('Debt Schedule','DEBT SCHEDULE — FORECAST',[{rows:[['Opening balance',r.qLoanOpen],['Drawdowns',r.drawdowns],['Repayments',arr(r.qRepay).map(v=>-v)],['Closing balance',r.qLoanClose,1],['Profit / interest',r.qInterest],['Funding gap (beyond facility)',r._fundingGap||[]]]},{sec:'BASELINE',rows:[['Closing balance — baseline',B.qLoanClose],['Interest — baseline',B.qInterest]]}]);
     sheet('VAT Schedule','VAT — FORECAST',[{rows:[['VAT on fund expenses (paid)',r.qExpVAT],['VAT refund — construction',r.qVATRefundCon],['VAT refund — expenses',r.qVATRefundExp],['VAT refund — brokerage',r.qBrokVATRefund],['RETT refund',r.qRETTRefund],['VAT advisor',arr(r.qVATAdvisor).map(v=>-v)],['Net refunds',r.qVATNet,1]]}]);
     sheet('In-Kind','IN-KIND PARTICIPATION — FORECAST',[{rows:[['In-kind — land',r.qIKLand],['In-kind — brokerage',r.qIKBrok],['In-kind — development',r.qIKDev],['In-kind — construction',r.qIKCon],['In-kind — marketing',r.qIKMkt],['In-kind — selling',r.qIKSell],['In-kind — management fee (GP share)',r.qIKGp||Array(r.nq).fill(0)],['In-kind — catch-up for closed quarters',r.qIKCatch||Array(r.nq).fill(0)],['In-kind — booked, source not tagged',r.qIKOther||Array(r.nq).fill(0)],['Total in-kind',r.qIKTotal,1]]}]);
-    sheet('Cash Flow','CASH FLOW — FORECAST',[{sec:'OPERATING',rows:[['Gross sales revenue',r.qGrossSales],['WAFI fee',arr(r.qWafi).map(v=>-v)],['Commission fees',arr(r.qSellExp).map(v=>-v)],['Net VAT / RETT refunds',r.qVATNet],['Total fund expenses',arr(r.qTotalFundExp).map(v=>-v)],['Interest / debt profit',arr(r.qInterest).map(v=>-v)],['Net operating cash flow',r.qNetOp,1]]},{sec:'INVESTING',rows:[['Land acquisition',r.qLandCF],['Construction',arr(r.qCon).map(v=>-v)],['Net investing cash flow',r.qNetInv,1]]},{sec:'FINANCING',rows:[['Drawdowns',r.drawdowns],['Repayments',arr(r.qRepay).map(v=>-v)],['Investor equity',r.qEquity],['In-kind participation',r.qIKTotal],['Dividends paid',arr(r.qDividends).map(v=>-v)],['Net financing cash flow',r.qNetFin,1]]},{sec:'CASH',rows:[['Opening cash',r.qCashOpen],['Net cash flow',arr(r.qCashClose).map((v,i)=>v-(r.qCashOpen[i]||0))],['Closing cash',r.qCashClose,1]]},{sec:'BASELINE',rows:[['Closing cash — baseline',B.qCashClose],['Dividends — baseline',B.qDividends]]}],32);
+    sheet('Cash Flow','CASH FLOW — FORECAST',[{sec:'OPERATING',rows:[['Gross sales revenue',r.qGrossSales],['WAFI fee',arr(r.qWafi).map(v=>-v)],['Commission fees',arr(r.qSellExp).map(v=>-v)],['Net VAT / RETT refunds',r.qVATNet],['Total fund expenses (ex selling costs)',_exSell(r).map(v=>-v)],['Interest / debt profit',arr(r.qInterest).map(v=>-v)],['Net operating cash flow',r.qNetOp,1]]},{sec:'INVESTING',rows:[['Land acquisition',r.qLandCF],['Construction',arr(r.qCon).map(v=>-v)],['Net investing cash flow',r.qNetInv,1]]},{sec:'FINANCING',rows:[['Drawdowns',r.drawdowns],['Repayments',arr(r.qRepay).map(v=>-v)],['Investor equity',r.qEquity],['In-kind participation',r.qIKTotal],['Dividends paid',arr(r.qDividends).map(v=>-v)],['Net financing cash flow',r.qNetFin,1]]},{sec:'CASH',rows:[['Opening cash',r.qCashOpen],['Net cash flow',arr(r.qCashClose).map((v,i)=>v-(r.qCashOpen[i]||0))],['Closing cash',r.qCashClose,1]]},{sec:'BASELINE',rows:[['Closing cash — baseline',B.qCashClose],['Dividends — baseline',B.qDividends]]}],32);
     {const nm=(typeof navModel==='function')?(()=>{try{return navModel();}catch(e){return null;}})():null;const g=[{rows:[['Total assets',r.qTotalAssets],['Loan balance',arr(r.qLoanClose).map(v=>-v)],['NAV (plan mechanics)',r.qNAV,1]]}];
       if(nm&&nm.rows)g.push({sec:'NAV — OPERATIONS BASIS (cost + marks − loan − accruals)',rows:[['NAV',nm.rows.map(x=>x.nav)],['NAV per unit',nm.rows.map(x=>x.navU)]]});
       g.push({sec:'BASELINE',rows:[['NAV — baseline',B.qNAV]]});sheet('NAV Schedule','NAV — FORECAST',g);}
@@ -8889,10 +8891,13 @@ function calcWith(overrides){
   // Conditional totalCost: inc-VAT when no refund, ex-VAT when refund (matches calculate())
   // VAT Advisor fee added as an economic cost (settled via refund netting)
   const _vr=Number(A.vat_refund);
-  const totalCostIncVAT=tLand-rettRecoverable+tConIncVAT+totalFundExpExPerfS+totalIntS+totalAdvisorFeeS;
-  const totalCostExVAT=tLandExVATS+tConExVAT+totalFundExpExPerfS/V+totalIntS+totalAdvisorFeeS;
+  const totalSelling=qWafi.reduce((a,b)=>a+b,0)+qSellExp.reduce((a,b)=>a+b,0); // deductions from revenue, not cost
+  const totalFundExpExSell=totalFundExpExPerfS-totalSelling;
+  const tRevNet=tRev-(_vr?totalSelling/V:totalSelling);
+  const totalCostIncVAT=tLand-rettRecoverable+tConIncVAT+totalFundExpExSell+totalIntS+totalAdvisorFeeS;
+  const totalCostExVAT=tLandExVATS+tConExVAT+totalFundExpExSell/V+totalIntS+totalAdvisorFeeS;
   const totalCost=_vr?totalCostExVAT:totalCostIncVAT;
-  const grossProfit=tRev-totalCost;
+  const grossProfit=tRevNet-totalCost;
   const totalDiv=qDividends.reduce((a,b)=>a+b,0);
   const totalIK=qIKTotal.reduce((a,b)=>a+b,0);
   const totalUH=A.equity+gpCash+totalIK;
