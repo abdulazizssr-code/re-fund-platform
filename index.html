@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<title>RE Fund Financial Study</title>
+<title>Mizan</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=DM+Serif+Display&family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;500;600&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@emran-alhaddad/saudi-riyal-font/index.css" rel="stylesheet">
 <!-- Firebase SDK (compat mode for single-file apps) -->
@@ -226,6 +226,7 @@ body{font-family:'Manrope',system-ui,-apple-system,sans-serif;background:var(--s
 .role-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 /* ── MAIN ── */
 .main{padding:32px 40px;max-width:1560px;margin:0 auto}
+.main:has(#p-statements.act #p-cashflow.stmt-on){max-width:none} /* the Cash Flow uses the full screen width */
 .pnl{display:none;animation:fadeIn .35s ease}.pnl.act{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
@@ -1115,7 +1116,7 @@ function icoHydrate(root){(root||document).querySelectorAll('i[data-ico]').forEa
   <div class="hdr-left">
     <div class="hdr-logo"><img id="hdrLogo" src="" alt="Musharaka Capital"></div>
     <div>
-      <h1 id="appTitle">RE Fund Financial Study</h1>
+      <h1 id="appTitle">Mizan</h1>
       <div class="hdr-sub" id="appSub">منصة الدراسة المالية للمشاريع العقارية</div>
     </div>
   </div>
@@ -2112,7 +2113,7 @@ function compLabel(comp){
 // =============================================
 const tabIcons=['settings','calendar','chart','cash','bank','flask','clipboard','check','target','building','receipt','pencil','book']; // ICONS names → ico()
 const TX={
-  en:{title:'Real Estate Fund Financial Study',sub:'Professional Fund Modeling Platform',calc:'Calculate',dl:'Excel',langB:'العربية',
+  en:{title:'Mizan',sub:'Professional Fund Modeling Platform',calc:'Calculate',dl:'Excel',langB:'العربية',
     projLbl:'Project:',projSave:'Save',projSaveShared:'Save to My Projects',projSaveSharedPrompt:'Save this shared project to your account as:',projSavedShared:'Project "%name%" saved to your account!',projOverwrite:'A project named "%name%" already exists. Overwrite?',projNew:'New',projDel:'Delete',projShare:'Share',pdf:'PDF',
     shareTitle:'Share Projects',shareDesc:'Select one or more projects to share via a unique link. Recipients can view the financial model.',shareProjHead:'Select Projects',shareToggle:'Allow recipient to modify assumptions',shareGenLink:'Generate Link',shareCopyLink:'Copy Link',shareClose:'Close',shareNoProj:'No saved projects to share. Save a project first.',shareCopied:'Link copied!',shareShortening:'Shortening link...',shareViewBadge:'SHARED VIEW',shareViewMsg:'You are viewing shared projects',shareViewMsgRO:' (read-only assumptions)',shareExit:'Exit Shared View',
     tabs:['Assumptions','Schedule','Dashboard','Cash Flow','Debt','Sensitivity','Summary','Actuals','Forecast','Control room','Audit','Sketch','Statements'],
@@ -2198,7 +2199,7 @@ const TX={
       opexSection:'Operating & Capex Expenses', addOpexItem:'Add Expense',
       quarterly:'Quarterly',semiannual:'Semi-Annual',annual:'Annual'},
   },
-  ar:{title:'الدراسة المالية للصندوق العقاري',sub:'منصة النمذجة المالية للصناديق',calc:'احسب',dl:'إكسل',langB:'English',
+  ar:{title:'ميزان',sub:'منصة النمذجة المالية للصناديق',calc:'احسب',dl:'إكسل',langB:'English',
     projLbl:'المشروع:',projSave:'حفظ',projSaveShared:'حفظ في مشاريعي',projSaveSharedPrompt:'حفظ المشروع المشارك في حسابك باسم:',projSavedShared:'تم حفظ المشروع "%name%" في حسابك!',projOverwrite:'يوجد مشروع باسم "%name%" بالفعل. هل تريد استبداله؟',projNew:'جديد',projDel:'حذف',projShare:'مشاركة',pdf:'PDF',
     shareTitle:'مشاركة المشاريع',shareDesc:'اختر مشروعًا أو أكثر لمشاركته عبر رابط فريد. يمكن للمستلمين عرض النموذج المالي.',shareProjHead:'اختر المشاريع',shareToggle:'السماح للمستلم بتعديل الافتراضات',shareGenLink:'إنشاء رابط',shareCopyLink:'نسخ الرابط',shareClose:'إغلاق',shareNoProj:'لا توجد مشاريع محفوظة للمشاركة. احفظ مشروعًا أولًا.',shareCopied:'تم نسخ الرابط!',shareShortening:'جارٍ اختصار الرابط...',shareViewBadge:'عرض مشترك',shareViewMsg:'أنت تشاهد مشاريع مشتركة',shareViewMsgRO:' (الافتراضات للقراءة فقط)',shareExit:'خروج من العرض المشترك',
     tabs:['الافتراضات','الجدول الزمني','لوحة المعلومات','التدفقات النقدية','هيكلة الدين','تحليل الحساسية','الملخص التنفيذي','الفعلي','التوقع','غرفة التحكم','التدقيق','مسودة','القوائم'],
@@ -3400,6 +3401,9 @@ function renderDashboard(){
   const perfFee=R.qPerfFee.reduce((a,b)=>a+b,0);
   const DH=TX[lang].dash, cur=lang==='ar'?'ريال':'SAR';
   const qlb=lang==='ar'?R.labels.map(q=>q.replace('Q','ربع ')):R.labels;
+  // dashboard money tiles: millions with one decimal (the exact figure stays on hover); amounts under one million print in full
+  const kM=v=>Math.abs(v)>=1e6?'<span title="'+fN(v)+' '+cur+'">'+(v/1e6).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+(lang==='ar'?' مليون ':' M ')+cur+'</span>':fN(v)+' '+cur;
+  const _cum=a=>{let t=0;return a.map(v=>t+=v);};
   const p=document.getElementById('p-dashboard');
   let html='';
 
@@ -3413,25 +3417,26 @@ function renderDashboard(){
     const irr=base?base.irr:0;
     const eqMult=base?base.eqMult:0;
     const maxLP=calcMaxLandPrice();
+    const _hr=pct(R.A.hurdle_rate), _hurNote=Number(R.A.hurdle_rate)>0?'<span class="kpi-pct">'+(irr<_hr?(lang==='ar'?'أقل من حد العائد ':'below the hurdle of '):(lang==='ar'?'يحقق حد العائد ':'meets the hurdle of '))+fP(_hr)+'</span>':'';
     const vatLabel=Number(R.A.vat_refund)?
       (lang==='ar'?'إجمالي التكاليف (بدون ضريبة)':'Total Cost (ex-VAT)'):
       (lang==='ar'?'إجمالي التكاليف (شامل الضريبة)':'Total Cost (Inclusive of VAT)');
     const kG=[
       {title:DH.revCost,items:[
-        [DH.totalRev,fN(R.tRev)+' '+cur],[lang==='ar'?'صافي الإيرادات (بعد رسوم البيع)':'Net Revenue (after selling costs)',fN(R.tRevNet)+' '+cur],[vatLabel,fN(R.totalCost)+' '+cur],[DH.grossProfit,fN(R.grossProfit)+' '+cur],[DH.profitMargin,fP(R.profitMargin)]]},
+        [DH.totalRev,kM(R.tRev)],[lang==='ar'?'صافي الإيرادات (بعد رسوم البيع)':'Net Revenue (after selling costs)',kM(R.tRevNet)],[vatLabel,kM(R.totalCost)],[DH.grossProfit,kM(R.grossProfit)],[DH.profitMargin,fP(R.profitMargin)]]},
       {title:DH.invRet,items:[
-        [DH.irr,fP(irr)],[DH.eqMult,eqMult.toFixed(2)+'x'],[DH.totalDiv,fN(R.totalDiv)+' '+cur],[DH.perfFee,fN(perfFee)+' '+cur]]},
+        [DH.irr,fP(irr)+_hurNote],[DH.eqMult,eqMult.toFixed(2)+'x'],[DH.annROI,fP(R.annualROI)],[DH.totalDiv,kM(R.totalDiv)],[DH.perfFee,kM(perfFee)]]},
       {title:DH.debtFin,items:R.hasLeaseProjects?
-        [[DH.totalDebt,fN(R.totalDebt)+' '+cur],[DH.annROI,fP(R.annualROI)],[DH.ltcRatio,fP(R.ltc)],[DH.dcr,fP(dcr)]]:
-        [[DH.totalDebt,fN(R.totalDebt)+' '+cur],[DH.annROI,fP(R.annualROI)],[DH.ltcRatio,fP(R.ltc)]]},
-      {title:DH.capStruct+' ('+fN(R.capTotal)+' '+cur+')',items:[
-        [DH.capCash,fN(R.capCash)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capCash/R.capTotal:0)+'</span>'],
-        [DH.capInKind,fN(R.capInKind)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capInKind/R.capTotal:0)+'</span>'],
-        [DH.capOffPlan,fN(R.capOffPlan)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capOffPlan/R.capTotal:0)+'</span>'],
-        [DH.capDebt,fN(R.capDebt)+' '+cur+'<span class="kpi-pct">'+fP(R.capTotal?R.capDebt/R.capTotal:0)+'</span>'],
+        [[DH.totalDebt,kM(R.totalDebt)],[DH.ltcRatio,fP(R.ltc)],[DH.dcr,fP(dcr)]]:
+        [[DH.totalDebt,kM(R.totalDebt)],[DH.ltcRatio,fP(R.ltc)]]},
+      {title:DH.capStruct+' ('+kM(R.capTotal)+')',items:[
+        [DH.capCash,kM(R.capCash)+'<span class="kpi-pct">'+fP(R.capTotal?R.capCash/R.capTotal:0)+'</span>'],
+        [DH.capInKind,kM(R.capInKind)+'<span class="kpi-pct">'+fP(R.capTotal?R.capInKind/R.capTotal:0)+'</span>'],
+        [DH.capOffPlan,kM(R.capOffPlan)+'<span class="kpi-pct">'+fP(R.capTotal?R.capOffPlan/R.capTotal:0)+'</span>'],
+        [DH.capDebt,kM(R.capDebt)+'<span class="kpi-pct">'+fP(R.capTotal?R.capDebt/R.capTotal:0)+'</span>'],
         ...(((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))>0.5?
           [[tipLabel(lang==='ar'?'ضرائب قابلة للاسترداد (تمويل مؤقت)':'Recoverable taxes (bridge)',[[lang==='ar'?'ضريبة التصرفات العقارية':'RETT',R.rettRecoverable||0],[lang==='ar'?'ضريبة القيمة المضافة':'VAT',Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0]]),
-            fN((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))+' '+cur+'<span class="kpi-pct">'+(lang==='ar'?'تُسترد خلال مدة الصندوق':'recovered within the fund term')+'</span>']]:[])]},
+            kM((R.rettRecoverable||0)+(Number(R.A.vat_refund)?R.qVATRefundCon.reduce((a,b)=>a+b,0)+R.qVATRefundExp.reduce((a,b)=>a+b,0)+R.qBrokVATRefund.reduce((a,b)=>a+b,0):0))+'<span class="kpi-pct">'+(lang==='ar'?'تُسترد خلال مدة الصندوق':'recovered within the fund term')+'</span>']]:[])]},
     ];
     let kH='';
     kG.forEach(g=>{
@@ -3490,13 +3495,13 @@ function renderDashboard(){
       kH+=revH;
     }
     html+=kH+`<div class="ch-grid">
-      <div class="ch-card"><h3>${DH.cfTime}<span class="ch-unit">SAR</span></h3><canvas id="c1"></canvas></div>
+      <div class="ch-card"><h3>${DH.cfTime}${L(' (cumulative)',' (تراكمي)')}<span class="ch-unit">SAR</span></h3><canvas id="c1"></canvas></div>
       <div class="ch-card"><h3>${DH.costBreak}<span class="ch-unit">SAR</span></h3><canvas id="c2"></canvas></div>
       <div class="ch-card"><h3>${DH.capStruct}<span class="ch-unit">SAR</span></h3><canvas id="c5"></canvas></div>
       <div class="ch-card"><h3>${DH.closingCash}<span class="ch-unit">SAR</span></h3><canvas id="c3"></canvas></div>
       <div class="ch-card"><h3>${DH.debtSch}<span class="ch-unit">SAR</span></h3><canvas id="c4"></canvas></div>
       <div class="ch-card"><h3>${L('Cumulative Investor CF','التدفق النقدي التراكمي')}<span class="ch-unit">SAR</span></h3><canvas id="c6"></canvas></div>
-      <div class="ch-card"><h3>${L('Revenue vs Cost','الإيرادات مقابل التكاليف')}<span class="ch-unit">SAR</span></h3><canvas id="c7"></canvas></div>
+      <div class="ch-card"><h3>${L('Revenue vs Cost (cumulative)','الإيرادات مقابل التكاليف (تراكمي)')}<span class="ch-unit">SAR</span></h3><canvas id="c7"></canvas></div>
     </div>`;
     // GP/LP Waterfall Distribution — starts with cash BEFORE perf fee deduction
     const _vr=Number(R.A.vat_refund);
@@ -3518,7 +3523,7 @@ function renderDashboard(){
       </tr></thead><tbody>
         <tr><td class="rl">${L('Total Cash Available','إجمالي النقد المتاح')}</td><td style="text-align:right;font-weight:600">${fN(wfTotalCash)}</td></tr>
         <tr><td class="rl">${L('1. Return of Capital','١. استرداد رأس المال')}</td><td style="text-align:right">${fN(-wfReturnOfCap)}</td></tr>
-        <tr><td class="rl">${L('2. Preferred Return ('+R.A.hurdle_rate+'%)','٢. العائد المفضل ('+R.A.hurdle_rate+'%)')}</td><td style="text-align:right">${fN(-wfPrefPaid)}</td></tr>
+        <tr><td class="rl">${L('2. Preferred Return ('+R.A.hurdle_rate+'%)','٢. العائد المفضل ('+R.A.hurdle_rate+'%)')}${wfPrefPaid<wfPrefReturn-0.5?' <small style="font-weight:400;color:var(--on-surface-vl)">'+L('— '+fN(wfPrefPaid)+' paid of '+fN(wfPrefReturn)+' due at the hurdle','— المدفوع '+fN(wfPrefPaid)+' من '+fN(wfPrefReturn)+' مستحق عند حد العائد')+'</small>':''}</td><td style="text-align:right">${fN(-wfPrefPaid)}</td></tr>
         <tr><td class="rl">${gpLabel}</td><td style="text-align:right">${fN(-wfGPFee)}</td></tr>
         <tr class="bld"><td class="rl">${L('4. Residual to LPs','٤. المتبقي للمستثمرين')}</td><td style="text-align:right">${fN(wfResidualLP)}</td></tr>
       </tbody></table></div>`;
@@ -3567,7 +3572,7 @@ function renderDashboard(){
     const complianceColor=(dscr)=>dscr>=1.2?'#1a6b3c':dscr>=1.0?'#775a19':'#ba1a1a';
     const finItems=R.hasLeaseProjects?
       [[DH.dscr,avgDSCR.toFixed(2)+'x'],[DH.ltcRatio,fP(R.ltc)],[DH.ltvRatio,fP(ltvRatio)],[DH.totalDebt,fN(R.totalDebt)+' '+cur]]:
-      [[DH.ltcRatio,fP(R.ltc)],[DH.ltvRatio,fP(ltvRatio)],[DH.totalDebt,fN(R.totalDebt)+' '+cur]];
+      [[DH.ltcRatio,fP(R.ltc)],[DH.ltvRatio,fP(ltvRatio)],[DH.totalDebt,kM(R.totalDebt)]];
     const kG=[{title:DH.debtFin,items:finItems}];
     let kH='';
     kG.forEach(g=>{
@@ -3589,7 +3594,7 @@ function renderDashboard(){
 
   setTimeout(()=>{
     if(currentRole==='fund_manager'){
-      drawBarChart('c1',qlb,[{d:R.qNetOp,c:CHART.green},{d:R.qNetInv,c:CHART.red},{d:R.qNetFin,c:CHART.gold}],DH.chLegCF);
+      drawLines('c1',qlb,[{d:_cum(R.qNetOp),c:CHART.green},{d:_cum(R.qNetInv),c:CHART.red},{d:_cum(R.qNetFin),c:CHART.gold}],DH.chLegCF); // cumulative: the land quarter and the final sale no longer flatten the quarters between
       {const _vr=Number(R.A.vat_refund);
       // Include VAT Advisor fee in Fund Exp slice so Cost Breakdown total = Capital Structure total
       const _advTotal=R.qVATAdvisor.reduce((a,b)=>a+b,0);
@@ -3605,7 +3610,7 @@ function renderDashboard(){
       for(let i=0;i<R.nq;i++){runCF+=R.qEquity[i]+R.qIKTotal[i]-R.qDividends[i];cumCF.push(-runCF);}
       drawLine('c6',qlb,cumCF,CHART.green);
       // Revenue vs Cost bar
-      drawBarChart('c7',qlb,[{d:R.qGrossSales,c:CHART.green},{d:R.qCon.map(v=>-v),c:CHART.red}],[L('Revenue','إيرادات'),L('Cost','تكاليف')]);
+      drawLines('c7',qlb,[{d:_cum(R.qGrossSales),c:CHART.green},{d:_cum(R.qCon),c:CHART.red}],[L('Revenue','إيرادات'),L('Cost','تكاليف')]);
     } else if(currentRole==='developer'){
       drawBarChart('c1',qlb,[{d:R.qNetOp,c:CHART.green},{d:R.qNetInv,c:CHART.red},{d:R.qNetFin,c:CHART.gold}],DH.chLegCF);
       {const _vr=Number(R.A.vat_refund);
@@ -3658,24 +3663,30 @@ function cfGroupsState(){try{return JSON.parse(localStorage.cfGroups||'{}');}cat
 function cfApplyGroups(){const st=cfGroupsState();document.querySelectorAll('#p-cashflow table.dt').forEach(t=>{['rev','oth','exp','dev','fin'].forEach(g=>t.classList.toggle('cfg-c-'+g,!!st[g]));});}
 function cfToggle(g){const st=cfGroupsState();st[g]=!st[g];try{localStorage.cfGroups=JSON.stringify(st);}catch(e){}cfApplyGroups();}
 function cfAll(collapse){const st={};['rev','oth','exp','dev','fin'].forEach(g=>st[g]=!!collapse);try{localStorage.cfGroups=JSON.stringify(st);}catch(e){}cfApplyGroups();}
+let cfPeriod=(()=>{try{return ['q','h','y'].includes(localStorage.cfPeriod)?localStorage.cfPeriod:'q';}catch(e){return 'q';}})(); // Cash Flow columns: quarterly | semi-annual | annual
+function setCfPeriod(v){cfPeriod=v;try{localStorage.cfPeriod=v;}catch(e){}renderCashFlow();}
 function renderCashFlow(){
   const r=viewR(); if(!r) return; const nq=r.nq;
   const cutoffQ=r._cutoffQ||0;
   const isRF=r===R2&&!!r._isReforecast;
+  // columns: flows are summed over the period; the opening balance takes the period's first quarter and the closing balance its last
+  const _bk=sumBuckets(nq,cfPeriod,lang==='ar'), nC=_bk.length, _last=b=>b.idx[b.idx.length-1];
+  const _agg=(d,bal)=>cfPeriod==='q'?d:_bk.map(b=>bal==='open'?(d[b.idx[0]]||0):bal==='close'?(d[_last(b)]||0):b.idx.reduce((a,i)=>a+(d[i]||0),0));
+  const _closed=ci=>isRF&&_last(_bk[ci])<cutoffQ;
   const lb=lang==='ar'?r.labels.map(q=>q.replace('Q','ربع ')):r.labels;
   let _cfG=''; // CF GROUPS: current group key; rows rendered while set belong to that collapsible group
-  function tr(label,data,cls){
+  function tr(label,data,cls,bal){
     const tot=data.reduce((a,b)=>a+b,0);
     const neg=v=>v<0?'neg':'';
-    return `<tr class="${cls||''}${_cfG?' cfg-r':''}"${_cfG?` data-g="${_cfG}"`:''}><td class="rl">${label}</td>${data.map((v,i)=>`<td class="${neg(v)}${isRF&&i<cutoffQ?' rfcs-actual':''}">${fN(v)}</td>`).join('')}<td class="${neg(tot)}">${fN(tot)}</td></tr>`;
+    return `<tr class="${cls||''}${_cfG?' cfg-r':''}"${_cfG?` data-g="${_cfG}"`:''}><td class="rl">${label}</td>${_agg(data,bal).map((v,i)=>`<td class="${neg(v)}${_closed(i)?' rfcs-actual':''}">${fN(v)}</td>`).join('')}<td class="${neg(tot)}">${fN(tot)}</td></tr>`;
   }
   // CF GROUPS: a group header row carries the group's net total; clicking it folds the detail rows below (state in localStorage.cfGroups)
   function gh(key,label,data){
     _cfG=key;const tot=data.reduce((a,b)=>a+b,0),neg=v=>v<0?'neg':'';
-    return `<tr class="cfg-h" data-g="${key}" onclick="cfToggle('${key}')"><td class="rl"><span class="cfg-t">${ico('arrow','cfg-ch')}${label}</span></td>${data.map((v,i)=>`<td class="${neg(v)}${isRF&&i<cutoffQ?' rfcs-actual':''}">${fN(v)}</td>`).join('')}<td class="${neg(tot)}">${fN(tot)}</td></tr>`;
+    return `<tr class="cfg-h" data-g="${key}" onclick="cfToggle('${key}')"><td class="rl"><span class="cfg-t">${ico('arrow','cfg-ch')}${label}</span></td>${_agg(data).map((v,i)=>`<td class="${neg(v)}${_closed(i)?' rfcs-actual':''}">${fN(v)}</td>`).join('')}<td class="${neg(tot)}">${fN(tot)}</td></tr>`;
   }
   function ge(){_cfG='';}
-  function sep(){return `<tr class="sep"><td colspan="${nq+2}"></td></tr>`;}
+  function sep(){return `<tr class="sep"><td colspan="${nC+2}"></td></tr>`;}
   function sub(label,data){return tr(label,data,'sub');}
 
   const L=TX[lang].cf;
@@ -3686,9 +3697,9 @@ function renderCashFlow(){
   }
   h+=`<div class="cf-tools"><div class="sld-group" style="margin-bottom:0;max-width:500px;flex:1">
     <label><span>${sliderLabel}</span> <b id="cfScrollVal">Q1</b></label>
-    <input type="range" id="cfScrollSlider" min="1" max="${nq}" value="1" step="1">
-  </div><span class="cfg-all"><a onclick="cfAll(false)">${lang==='ar'?'توسيع الكل':'Expand all'}</a><a onclick="cfAll(true)">${lang==='ar'?'طيّ الكل':'Collapse all'}</a></span></div>`;
-  h+=`<div class="tbl-wrap" id="cfTableWrap"><table class="dt"><thead><tr><th class="rl">${L.hdr}</th>${lb.map((q,i)=>`<th class="${isRF&&i<cutoffQ?'rfcs-hdr-actual':''}">${q}${isRF?(i<cutoffQ?' '+ico('check'):' '+ico('arrow','ic-flip')):''}<small class="qe">${fmtDateS(qEndDate(i))}</small></th>`).join('')}<th>${lang==='ar'?'المجموع':'Total'}</th></tr></thead><tbody>`;
+    <input type="range" id="cfScrollSlider" min="1" max="${nC}" value="1" step="1">
+  </div><span class="sum-seg no-print">${[['q',lang==='ar'?'ربعي':'Quarterly'],['h',lang==='ar'?'نصف سنوي':'Semi-annual'],['y',lang==='ar'?'سنوي':'Annual']].map(([v,t])=>`<a class="${cfPeriod===v?'on':''}" onclick="setCfPeriod('${v}')">${t}</a>`).join('')}</span><span class="cfg-all"><a onclick="cfAll(false)">${lang==='ar'?'توسيع الكل':'Expand all'}</a><a onclick="cfAll(true)">${lang==='ar'?'طيّ الكل':'Collapse all'}</a></span></div>`;
+  h+=`<div class="tbl-wrap" id="cfTableWrap"><table class="dt"><thead><tr><th class="rl">${L.hdr}</th>${_bk.map((b,i)=>`<th class="${_closed(i)?'rfcs-hdr-actual':''}">${cfPeriod==='q'?lb[i]:b.lbl}${isRF?(_closed(i)?' '+ico('check'):' '+ico('arrow','ic-flip')):''}<small class="qe">${fmtDateS(qEndDate(_last(b)))}</small></th>`).join('')}<th>${lang==='ar'?'المجموع':'Total'}</th></tr></thead><tbody>`;
 
   const G=lang==='ar'?{rev:'صافي الإيرادات (المبيعات بعد رسوم البيع)',oth:'تدفقات أخرى (استرداد الضرائب ودخل آخر)',exp:'مصاريف الصندوق وتكلفة التمويل',dev:'تكاليف التطوير (صافي الاستثمار)',fin:'التمويل (صافي)',cash:'النقد'}:{rev:'Net revenue (sales after selling costs)',oth:'Other inflows (VAT & RETT refunds, other income)',exp:'Fund expenses & financing cost',dev:'Development costs (net investing)',fin:'Financing (net)',cash:'Cash position'};
   const _qRevX=Array(nq).fill(0);if(typeof actuals!=='undefined'&&actuals.length)for(const p of actuals){if((p.category==='murabaha'||p.category==='other_inc')&&p.quarter>=0&&p.quarter<nq)_qRevX[p.quarter]+=p.amount;}
@@ -3713,7 +3724,7 @@ function renderCashFlow(){
   {const parts=[[L.vatRefCon,r.qVATRefundCon],[L.vatRefExp,r.qVATRefundExp],[L.vatRefBrok,r.qBrokVATRefund],[L.rettRef,r.qRETTRefund],[L.vatAdvisor,r.qVATAdvisor.map(v=>-v)]];
     window._cfVatParts=parts.map(x=>[x[0],x[1].slice()]);
     const tot=r.qVATNet.reduce((a,b)=>a+b,0);
-    h+=`<tr class="sub cfg-r" data-g="oth"><td class="rl">${L.netRefunds} <i class="cf-i">ⓘ</i></td>${r.qVATNet.map((v,i)=>`<td class="${v<0?'neg':''}${isRF&&i<cutoffQ?' rfcs-actual':''} cf-click" onclick="cfVatPop(${i})" title="${lang==='ar'?'انقر للتفاصيل':'click for breakdown'}">${fN(v)}</td>`).join('')}<td class="${tot<0?'neg':''} cf-click" onclick="cfVatPop(-1)">${fN(tot)}</td></tr>`;}
+    h+=`<tr class="sub cfg-r" data-g="oth"><td class="rl">${L.netRefunds} <i class="cf-i">ⓘ</i></td>${_agg(r.qVATNet).map((v,i)=>`<td class="${v<0?'neg':''}${_closed(i)?' rfcs-actual':''}${cfPeriod==='q'?' cf-click':''}" ${cfPeriod==='q'?`onclick="cfVatPop(${i})"`:''} title="${cfPeriod==='q'?(lang==='ar'?'انقر للتفاصيل':'click for breakdown'):''}">${fN(v)}</td>`).join('')}<td class="${tot<0?'neg':''} cf-click" onclick="cfVatPop(-1)">${fN(tot)}</td></tr>`;}
   ge();h+=sep();
   h+=gh('exp',G.exp,r.qTotalFundExp.map((v,i)=>-v-r.qInterest[i]+r.qWafi[i]+r.qSellExp[i])); // engine's qTotalFundExp includes selling costs; they are shown under revenue
   h+=tr(L.custody,r.qCustody.map(v=>-v));
@@ -3768,10 +3779,10 @@ function renderCashFlow(){
   ge();
 
   h+=sep();
-  h+=tr(L.openCash,r.qCashOpen,'bld');
+  h+=tr(L.openCash,r.qCashOpen,'bld','open');
   const qChange=Array.from({length:nq},(_,i)=>r.qCashClose[i]-r.qCashOpen[i]);
   h+=tr(L.changeCash,qChange);
-  h+=tr(L.closeCash,r.qCashClose,'bld');
+  h+=tr(L.closeCash,r.qCashClose,'bld','close');
 
   // In reforecast mode, show actual-only income/expense lines if they have data
   if(isRF){
@@ -3794,7 +3805,7 @@ function renderCashFlow(){
   if(cfSlider&&cfWrap){
     cfSlider.oninput=function(){
       const q=parseInt(this.value);
-      if(cfVal) cfVal.textContent=(lang==='ar'?'ربع ':'Q')+q;
+      if(cfVal) cfVal.textContent=cfPeriod==='q'?(lang==='ar'?'ربع ':'Q')+q:_bk[q-1].lbl;
       const cols=cfWrap.querySelectorAll('th');
       if(cols.length>q){
         cols[q].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
@@ -3884,6 +3895,18 @@ function drawLine(id,labels,data,color){
   ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();data.forEach((v,i)=>{i?ctx.lineTo(X(i),toY(v)):ctx.moveTo(X(i),toY(v));});ctx.stroke();
   const li=n-1;if(n){ctx.beginPath();ctx.arc(X(li),toY(data[li]),4,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.stroke(); // the last quarter is marked in both directions
     ctx.fillStyle=CHART.ink;ctx.font='600 11px '+CHART.font();ctx.textAlign=isRTL?'left':'right';ctx.fillText(fmtCompact(data[li]),X(li)+(isRTL?8:-8),toY(data[li])-8);}
+  _cvXLabels(ctx,labels,pad,W,H,isRTL);
+}
+// several series as lines on one scale (same axes, legend and RTL rule as drawBarChart / drawLine)
+function drawLines(id,labels,datasets,legend){
+  const c=_cvSetup(id,240);if(!c)return;const {ctx,W,H}=c;const isRTL=lang==='ar';
+  const cols=datasets.map((ds,i)=>chartColor(ds.c,i));let all=[];datasets.forEach(ds=>ds.d.forEach(v=>all.push(v)));
+  const sc=niceScale(Math.min(...all,0),Math.max(...all,0));
+  const pad=_cvPad(ctx,sc,isRTL,legend?34:14);const cW=W-pad.l-pad.r,n=labels.length;
+  if(legend) _cvLegend(ctx,W,legend.map((l,i)=>({l,c:cols[i]})),12,isRTL);
+  const toY=_cvAxes(ctx,W,H,pad,sc,isRTL);const X=i=>pad.l+cW*((isRTL?n-1-i:i)+.5)/n;
+  datasets.forEach((ds,di)=>{ctx.strokeStyle=cols[di];ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();ds.d.forEach((v,i)=>{i?ctx.lineTo(X(i),toY(v)):ctx.moveTo(X(i),toY(v));});ctx.stroke();
+    const li=n-1;if(n){ctx.beginPath();ctx.arc(X(li),toY(ds.d[li]),3.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.stroke();}});
   _cvXLabels(ctx,labels,pad,W,H,isRTL);
 }
 // composition: a 100% stacked bar with a value / share list (replaces the former donut; name kept for the call sites)
@@ -4124,7 +4147,7 @@ function renderSummary(){
   h+=`</div></div>`;
 
   // Footer
-  h+=`<div class="es-footer"><span>${L('CONFIDENTIAL — For authorized recipients only.','سري — للمخولين فقط')}</span><span>${L('RE Fund Financial Study','الدراسة المالية للصندوق العقاري')}  |  ${L('Page','صفحة')} 1/2</span></div></div>`;
+  h+=`<div class="es-footer"><span>${L('CONFIDENTIAL — For authorized recipients only.','سري — للمخولين فقط')}</span><span>${L('Mizan','ميزان')}  |  ${L('Page','صفحة')} 1/2</span></div></div>`;
 
   // ═══ PAGE 2: CASH FLOW & SALES ═══
   h+=`<div class="es-page" dir="${isAr?'rtl':'ltr'}" style="font-family:${fontF}">`;
@@ -4187,7 +4210,7 @@ function renderSummary(){
     <div class="es-chart-donut"><div class="es-sec"><div class="es-sec-title">${L('Capital Structure','هيكل رأس المال')}</div></div><canvas id="esDonutChart"></canvas></div>
   </div>`;
 
-  h+=`<div class="es-footer"><span>${L('CONFIDENTIAL — For authorized recipients only.','سري — للمخولين فقط')}</span><span>${L('RE Fund Financial Study','الدراسة المالية للصندوق العقاري')}  |  ${L('Page','صفحة')} 2/2</span></div></div>`;
+  h+=`<div class="es-footer"><span>${L('CONFIDENTIAL — For authorized recipients only.','سري — للمخولين فقط')}</span><span>${L('Mizan','ميزان')}  |  ${L('Page','صفحة')} 2/2</span></div></div>`;
 
   p.innerHTML=h;fitSummary();
 
@@ -5503,7 +5526,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-11-14a';
+const BUILD='2026-11-15a';
 (function(){const e=document.querySelector('.footer .build');if(e)e.textContent='· build '+BUILD;})(); // footer label always shows BUILD
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
