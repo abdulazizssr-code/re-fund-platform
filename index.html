@@ -984,6 +984,46 @@ html:not([data-theme=gulf]) .stmt-seg a.on{background:#00322d;color:#fff}
 /* control-room strip (2026-10-22): below 1200 the strip is two rows tall, so it stops being sticky — this must sit after the theme block */
 @media(max-width:1200px){.ops-period,html[data-theme=gulf] .ops-period{position:relative;top:auto}}
 /* ═══ END STATEMENTS ═══ */
+
+/* ═══ NAV STATEMENT (2026-11-24) — preview overlay + A4 portrait print ═══ */
+.nav-bar{flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+#navPrint{position:fixed;inset:0;z-index:9999;background:#ece5d8;overflow:auto;padding:0 16px 60px}
+#navPrint .navr-bar{position:sticky;top:0;z-index:2;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 0;background:#ece5d8;max-width:794px;margin:0 auto}
+#navPrint .navr-warn{flex-basis:100%;font-size:.8rem;color:#8a5a12}
+.navr{background:#fff;color:#1f2a26;max-width:794px;min-height:1123px;margin:0 auto 24px;display:flex;flex-direction:column;font-family:'Inter','Work Sans',system-ui,sans-serif;font-size:14px;line-height:1.5;box-sizing:border-box}
+.navr *{box-sizing:border-box}
+.navr[lang=ar]{font-family:'Cairo','Noto Kufi Arabic',system-ui,sans-serif}
+.navr-mast{background:#0f4d3f;color:#fff;padding:30px 40px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.navr-mast h3{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:28px;margin:0;line-height:1.15;color:#fff}
+.navr[lang=ar] .navr-mast h3{font-family:'Cairo','Noto Kufi Arabic',sans-serif;font-weight:700;font-size:25px}
+.navr-mast p{margin:4px 0 0;opacity:.8;font-size:13px;color:#fff}
+.navr-mast img{height:42px;width:auto;display:block}
+.navr-body{padding:10px 40px 26px;flex:1}
+.navr-st{border-collapse:collapse;width:100%}
+.navr-st .num{font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap;direction:ltr;font-family:'Inter','Work Sans',system-ui,sans-serif}
+.navr-st th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6c766f;font-weight:600;text-align:start;padding:20px 0 7px;border-bottom:1px solid #e3dccd}
+.navr[lang=ar] .navr-st th{letter-spacing:0;font-size:13px}
+.navr-st td{padding:8px 0;border-bottom:1px solid #eee8dc;font-size:14px}
+.navr-st td:first-child{padding-inline-start:14px}
+.navr-st tr.tot td{font-weight:700;border-bottom:0;border-top:1px solid #1f2a26}
+.navr-st tr.tot td:first-child{padding-inline-start:0}
+.navr-nav{display:grid;grid-template-columns:repeat(3,1fr);margin-top:22px;background:#0f4d3f;color:#fff;border-radius:10px}
+.navr-nav div{padding:15px 18px}
+.navr-nav div+div{border-inline-start:1px solid rgba(255,255,255,.18)}
+.navr-nav small{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.navr[lang=ar] .navr-nav small{letter-spacing:0;font-size:12.5px}
+.navr-nav b{display:block;font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:21px;font-variant-numeric:tabular-nums;margin-top:2px;direction:ltr;text-align:left}
+.navr[lang=ar] .navr-nav b{text-align:right}
+.navr-foot{display:flex;justify-content:space-between;gap:12px;padding:14px 40px;border-top:1px solid #eee8dc;color:#6c766f;font-size:11.5px}
+@media print{
+  html.nav-printing body>*:not(#navPrint){display:none!important}
+  html.nav-printing #navPrint{position:static;padding:0;background:#fff;overflow:visible}
+  html.nav-printing #navPrint .navr-bar{display:none!important}
+  html.nav-printing .navr{page:navp;max-width:none;width:210mm;min-height:0;height:296mm;margin:0;break-after:page;page-break-after:always}
+  html.nav-printing .navr:last-child{break-after:auto;page-break-after:auto}
+  @page navp{size:A4 portrait;margin:0}
+}
+/* ═══ END NAV STATEMENT ═══ */
 </style>
 <script>
 // ═══ ICONS — inline SVG icon set (stroke 1.75, 24 viewBox, currentColor). ico(name,cls) → markup; icoHydrate() fills static <i data-ico> placeholders.
@@ -1731,7 +1771,7 @@ function closeShareModal(){
 function stripDefaults(obj,def){const r={};for(const k in obj){if(obj[k]!==def[k]) r[k]=obj[k];}return r;}
 function stripZero(obj){const r={};for(const k in obj){const v=obj[k];if(v===0||v===''||v===null||v===undefined) continue;if(Array.isArray(v)&&v.length===0) continue;r[k]=v;}return r;}
 // Short key maps for D (fund-level) to reduce link size
-const _DK={fund_name:'fn',is_fund:'if',project_location:'pl',project_type:'pt',fund_period_months:'fpm',start_date:'sd',num_projects:'np',custody_annual:'ca',custody_freq:'cf',spv_setup:'ss',fund_setup:'fs',auditor_annual:'aa',auditor_freq:'af',sharia_annual:'sa',sharia_freq:'sf',engineering_annual:'ea',engineering_freq:'ef',board_annual:'ba',board_freq:'bf',fin_advisor:'fa',mgmt_fee_mode:'mfm',mgmt_fee_pct:'mfp',mgmt_fee_fixed:'mff',marketing_cost:'mc',marketing_date:'md',vat_rate:'vr',vat_refund:'vrf',vat_refund_months:'vrm',vat_advisor_pct:'vap',hurdle_rate:'hr',perf_fee_pct:'pfp',bank_mgmt_pct:'bmp',ik_land_pct:'ilp',ik_brok_pct:'ibp',ik_dev_pct:'idp',ik_mkt_pct:'imp',ik_con_pct:'icp',ik_sell_pct:'isp',equity:'eq',gp_commit_cash:'gcc',gp_commit_inkind_pct:'gip',gp_commit_inkind_cap:'gic',offplan_cap:'opc',saibor:'sb',margin:'mg',arr_fee_pct:'afp',min_cash:'mnc',vat_refund_con:'vrc',rett_pct:'rtp'};
+const _DK={fund_name:'fn',is_fund:'if',project_location:'pl',project_type:'pt',fund_period_months:'fpm',start_date:'sd',num_projects:'np',custody_annual:'ca',custody_freq:'cf',spv_setup:'ss',fund_setup:'fs',auditor_annual:'aa',auditor_freq:'af',sharia_annual:'sa',sharia_freq:'sf',engineering_annual:'ea',engineering_freq:'ef',board_annual:'ba',board_freq:'bf',fin_advisor:'fa',mgmt_fee_mode:'mfm',mgmt_fee_pct:'mfp',mgmt_fee_fixed:'mff',admin_fee_pct:'afp',marketing_cost:'mc',marketing_date:'md',vat_rate:'vr',vat_refund:'vrf',vat_refund_months:'vrm',vat_advisor_pct:'vap',hurdle_rate:'hr',perf_fee_pct:'pfp',bank_mgmt_pct:'bmp',ik_land_pct:'ilp',ik_brok_pct:'ibp',ik_dev_pct:'idp',ik_mkt_pct:'imp',ik_con_pct:'icp',ik_sell_pct:'isp',equity:'eq',gp_commit_cash:'gcc',gp_commit_inkind_pct:'gip',gp_commit_inkind_cap:'gic',offplan_cap:'opc',saibor:'sb',margin:'mg',arr_fee_pct:'afp',min_cash:'mnc',vat_refund_con:'vrc',rett_pct:'rtp'};
 const _DKR={};for(const k in _DK) _DKR[_DK[k]]=k;
 function compactD(obj){const r={};for(const k in obj){r[_DK[k]||k]=obj[k];}return r;}
 function expandD(obj){const r={};for(const k in obj){const kk=_DKR[k]||k;if(isUnsafeKey(k)||isUnsafeKey(kk)) continue;r[kk]=obj[k];}return r;}
@@ -2021,7 +2061,7 @@ const D={
   engineering_annual:494166, engineering_freq:'quarterly',
   board_annual:40000, board_freq:'semiannual', board_vat:0,
   fin_advisor:0,
-  mgmt_fee_mode:'total_asset', mgmt_fee_pct:1.25, mgmt_fee_fixed:0,
+  mgmt_fee_mode:'total_asset', mgmt_fee_pct:1.25, mgmt_fee_fixed:0, admin_fee_pct:0,
   marketing_cost:4592526, marketing_date:'2026-06-30',
   vat_rate:15, vat_refund:0, vat_refund_months:6, vat_advisor_pct:3,
   hurdle_rate:15, perf_fee_pct:35, bank_mgmt_pct:1,
@@ -2135,7 +2175,7 @@ const TX={
       rettRef:'RETT Refund',vatAdvisor:'VAT Advisor',netRefunds:'Net Refunds',
       custody:'Custody Expenses',spv:'SPV Setup',fundSetup:'Fund Setup',
       auditor:'Auditor Expenses',sharia:'Sharia Committee',engineering:'Engineering Consultant',
-      board:'Board Compensation',finAdvisor:'Financial Advisor',mgmtFee:'Fund Management Fees',
+      board:'Board Compensation',finAdvisor:'Financial Advisor',mgmtFee:'Fund Management Fees',adminFee:'Admin Fee (% of NAV)',
       marketing:'Marketing Costs',bankMgmt:'Bank Management Fees',arrFee:'Arrangement Fee',
       perfFee:'Performance Fees',totalFundExp:'Total Fund Expenses',interest:'Debt Profit',
       netOp:'Net Operating Cash Flow',land:'Land Acquisition',conCost:'Construction Cost',
@@ -2178,7 +2218,7 @@ const TX={
       custody:'Custody Expenses (Annual)',spvSetup:'SPV Setup (One-Time)',fundSetup:'Fund Setup (One-Time)',
       auditor:'Auditor Expenses (Annual)',sharia:'Sharia Committee (Annual)',
       engineering:'Engineering Consultant (Annual)',board:'Board Compensation (Annual)',
-      mgmtMode:'Management Fee Mode',mgmtPct:'Mgmt Fee % (Annual)',mgmtFixed:'Mgmt Fee Fixed (Annual)',
+      mgmtMode:'Management Fee Mode',mgmtPct:'Mgmt Fee % (Annual)',mgmtFixed:'Mgmt Fee Fixed (Annual)',adminPct:'Admin Fee % of NAV (Annual, 0 = none)',
       marketingCost:'Marketing Cost (SAR)',vatRate:'VAT %',vatRefund:'VAT Refund?',vatRefCon:'VAT Refund on Construction?',
       vatRefDelay:'VAT Refund Delay (Months)',vatAdvisor:'VAT Advisor %',
       hurdle:'Hurdle Rate % (Annual)',perfFee:'Performance Fee %',
@@ -2221,7 +2261,7 @@ const TX={
       rettRef:'استرداد الرسوم العقارية',vatAdvisor:'مستشار الضريبة',netRefunds:'صافي الاسترداد',
       custody:'رسوم الحفظ',spv:'تأسيس الشركة',fundSetup:'تأسيس الصندوق',
       auditor:'أتعاب المراجع',sharia:'اللجنة الشرعية',engineering:'الاستشاري',
-      board:'مجلس الإدارة',finAdvisor:'المستشار المالي',mgmtFee:'رسوم الإدارة',
+      board:'مجلس الإدارة',finAdvisor:'المستشار المالي',mgmtFee:'رسوم الإدارة',adminFee:'الرسوم الإدارية (% من صافي الأصول)',
       marketing:'تكاليف التسويق',bankMgmt:'رسوم إدارة البنك',arrFee:'رسوم الترتيب',
       perfFee:'رسوم الأداء',totalFundExp:'إجمالي مصاريف الصندوق',interest:'أرباح التمويل',
       netOp:'صافي التشغيل',land:'الأرض',conCost:'تكلفة التطوير',
@@ -2264,7 +2304,7 @@ const TX={
       custody:'رسوم الحفظ (سنوي)',spvSetup:'تأسيس الشركة (لمرة واحدة)',fundSetup:'تأسيس الصندوق (لمرة واحدة)',
       auditor:'أتعاب المراجع (سنوي)',sharia:'اللجنة الشرعية (سنوي)',
       engineering:'الاستشاري الهندسي (سنوي)',board:'مكافأة مجلس الإدارة (سنوي)',
-      mgmtMode:'نوع رسوم الإدارة',mgmtPct:'رسوم الإدارة % (سنوي)',mgmtFixed:'رسوم الإدارة الثابتة (سنوي)',
+      mgmtMode:'نوع رسوم الإدارة',mgmtPct:'رسوم الإدارة % (سنوي)',mgmtFixed:'رسوم الإدارة الثابتة (سنوي)',adminPct:'الرسوم الإدارية % من صافي الأصول (سنوي، 0 = لا يوجد)',
       marketingCost:'تكلفة التسويق (ريال)',vatRate:'نسبة الضريبة %',vatRefund:'استرداد الضريبة؟',vatRefCon:'استرداد ضريبة التطوير؟',
       vatRefDelay:'مدة استرداد الضريبة (شهر)',vatAdvisor:'مستشار الضريبة %',
       hurdle:'معدل العائد المستهدف % (سنوي)',perfFee:'رسوم الأداء %',
@@ -2448,6 +2488,7 @@ function buildForm(){
     ${fld('mgmt_fee_mode',F.mgmtMode,D.mgmt_fee_mode,'select',[['nav',F.navMode],['total_asset',F.totalAssetMode],['fixed',F.fixedMode]])}
     ${fld('mgmt_fee_pct',F.mgmtPct,D.mgmt_fee_pct)}
     ${fld('mgmt_fee_fixed',F.mgmtFixed,D.mgmt_fee_fixed)}
+    ${fld('admin_fee_pct',F.adminPct||'Admin Fee % of NAV (Annual, 0 = none)',D.admin_fee_pct||0)}
     <div class="sep"></div>
     ${fld('hurdle_rate',F.hurdle,D.hurdle_rate)}
     ${fld('perf_fee_pct',F.perfFee,D.perf_fee_pct)}
@@ -3004,6 +3045,7 @@ function calculate(){
   const qAuditor=Array(nq).fill(0), qSharia=Array(nq).fill(0), qEngineering=Array(nq).fill(0);
   const qBoard=Array(nq).fill(0), qFinAdvisor=Array(nq).fill(0);
   const qMgmtFee=Array(nq).fill(0), qBankMgmt=Array(nq).fill(0), qVATAdvisor=Array(nq).fill(0);
+  const qAdminFee=Array(nq).fill(0); // admin fee = % of NAV (2026-11-24); 0% leaves every number unchanged
   const qPerfFee=Array(nq).fill(0);
 
   const isFund=Number(A.is_fund);
@@ -3087,7 +3129,8 @@ function calculate(){
         else if(A.mgmt_fee_mode==='total_asset') qMgmtFee[qi]=qTotalAssets[qi]*pct(A.mgmt_fee_pct)/4*V;
         else qMgmtFee[qi]=A.mgmt_fee_fixed/4*V;
       }
-      qTotalFundExp[qi]=baseExp+qMgmtFee[qi];
+      if(isFund) qAdminFee[qi]=Math.max(0,qNAV[qi])*pct(A.admin_fee_pct||0)/4*V;
+      qTotalFundExp[qi]=baseExp+qMgmtFee[qi]+qAdminFee[qi];
     }
 
     // GP In-Kind = % of mgmt fee added back as in-kind equity. Reset qIKTotal so debt sizing accounts for it.
@@ -3183,7 +3226,8 @@ function calculate(){
       else if(A.mgmt_fee_mode==='total_asset') qMgmtFee[qi]=qTotalAssets[qi]*pct(A.mgmt_fee_pct)/4*V;
       else qMgmtFee[qi]=A.mgmt_fee_fixed/4*V;
     }
-    qTotalFundExp[qi]=baseExp+qMgmtFee[qi];
+    if(isFund) qAdminFee[qi]=Math.max(0,qNAV[qi])*pct(A.admin_fee_pct||0)/4*V;
+      qTotalFundExp[qi]=baseExp+qMgmtFee[qi]+qAdminFee[qi];
   }
 
   // Expense VAT — Interest EXCLUDED (bank loan interest is VAT-exempt in KSA)
@@ -3347,7 +3391,7 @@ function calculate(){
   }
   R={nq,labels,A,baseLand,tLand,tLandExVAT,tCon,tConExVAT,baseConExVAT,otherConExVAT,tRev,tRevNet,totalSelling,totalFundExpExSell,totalCost,totalCostIncVAT,totalCostExVAT,vatInCost,grossProfit,profitMargin,annualROI,totalDebt,totalInt,ltc,totalDiv,totalPerfFee,totalFundExpExPerf,totalVATNet,roiUH,annROIUH,
     qGrossSales,qEscrow,qSales,qWafi,qSellExp,qCon,qBaseCon,qDevFee,qContingency,qLicensing,qDesignFee,qInsurance,qSupervision,qMkt,qVATNet,qVATAdvisor,qArrFee,
-    qCustody,qSPV,qFundSetup,qAuditor,qSharia,qEngineering,qBoard,qFinAdvisor,qMgmtFee,qBankMgmt,qPerfFee,qTotalFundExp,
+    qCustody,qSPV,qFundSetup,qAuditor,qSharia,qEngineering,qBoard,qFinAdvisor,qMgmtFee,qAdminFee,qBankMgmt,qPerfFee,qTotalFundExp,
     qInterest,qNetOp,qLandCF,qNetInv,qDSCR,
     drawdowns,qRepay,qEquity,qIKLand,qIKBrok,qIKDev,qIKCon,qIKMkt,qIKSell,qIKTotal,qDividends,qNetFin,
     qCashOpen,qCashClose,qLoanOpen,qLoanClose,qNAV,qTotalAssets,qEqNAV,qTermAdj,
@@ -3736,6 +3780,7 @@ function renderCashFlow(){
   h+=tr(L.board,r.qBoard.map(v=>-v));
   h+=tr(L.finAdvisor,r.qFinAdvisor.map(v=>-v));
   h+=tr(L.mgmtFee,r.qMgmtFee.map(v=>-v));
+  if((r.qAdminFee||[]).some(v=>Math.abs(v)>0.5))h+=tr(L.adminFee||'Admin Fee (% of NAV)',r.qAdminFee.map(v=>-v));
   h+=tr(L.marketing,r.qMkt.map(v=>-v));
   h+=tr(L.bankMgmt,r.qBankMgmt.map(v=>-v));
   h+=tr(L.arrFee,r.qArrFee.map(v=>-v));
@@ -4323,6 +4368,7 @@ const ACT_CATS=[
   {key:'selling',     en:'Selling / Commission',ar:'عمولات البيع',       group:'selling', derived:true, getQ:(R,i)=>(R.qSellExp[i]||0)+(R.qWafi[i]||0)}, // deduction from revenue, computed from sales in the forecast (2026-11-01)
   {key:'fund_setup',  en:'Fund Setup',           ar:'تأسيس الصندوق',      group:'cost', getQ:(R,i)=>(R.qFundSetup||[])[i]||0, fundOnly:true},
   {key:'mgmt_fee',    en:'Management Fee',       ar:'رسوم الإدارة',        group:'cost', getQ:(R,i)=>(R.qMgmtFee||[])[i]||0, fundOnly:true},
+  {key:'admin_fee',   en:'Admin Fee',            ar:'الرسوم الإدارية',     group:'cost', getQ:(R,i)=>(R.qAdminFee||[])[i]||0, fundOnly:true},
   {key:'custody',     en:'Custody',              ar:'رسوم الحفظ',          group:'cost', getQ:(R,i)=>(R.qCustody||[])[i]||0, fundOnly:true},
   {key:'spv',         en:'SPV Setup',            ar:'تأسيس الشركة',        group:'cost', getQ:(R,i)=>(R.qSPV||[])[i]||0, fundOnly:true},
   {key:'auditor',     en:'Auditor',              ar:'المراجع الخارجي',     group:'cost', getQ:(R,i)=>(R.qAuditor||[])[i]||0, fundOnly:true},
@@ -5170,6 +5216,7 @@ function runReforecast(){
   if(isFund){
     if(catArrays.fund_setup) R2.qFundSetup=catArrays.fund_setup;
     if(catArrays.mgmt_fee) R2.qMgmtFee=catArrays.mgmt_fee;
+    if(catArrays.admin_fee) R2.qAdminFee=catArrays.admin_fee;
     if(catArrays.custody) R2.qCustody=catArrays.custody;
     if(catArrays.spv) R2.qSPV=catArrays.spv;
     if(catArrays.auditor) R2.qAuditor=catArrays.auditor;
@@ -5183,7 +5230,7 @@ function runReforecast(){
     // Rebuild total fund expenses from sub-items (must match calculate(): baseExp + qMgmtFee + qPerfFee)
     // baseExp includes: custody, spv, fundSetup, auditor, sharia, engineering, board, finAdvisor, mkt, bankMgmt, wafi, sellExp, arrFee
     for(let i=0;i<nq;i++){
-      R2.qTotalFundExp[i]=(R2.qCustody[i]||0)+(R2.qSPV[i]||0)+(R2.qFundSetup[i]||0)+(R2.qAuditor[i]||0)+(R2.qSharia[i]||0)+(R2.qEngineering[i]||0)+(R2.qBoard[i]||0)+(R2.qFinAdvisor[i]||0)+(R2.qMgmtFee[i]||0)+(R2.qBankMgmt[i]||0)+(R2.qPerfFee[i]||0)+(R2.qArrFee[i]||0)+(R2.qMkt[i]||0)+(R2.qWafi[i]||0)+(R2.qSellExp[i]||0);
+      R2.qTotalFundExp[i]=(R2.qCustody[i]||0)+(R2.qSPV[i]||0)+(R2.qFundSetup[i]||0)+(R2.qAuditor[i]||0)+(R2.qSharia[i]||0)+(R2.qEngineering[i]||0)+(R2.qBoard[i]||0)+(R2.qFinAdvisor[i]||0)+(R2.qMgmtFee[i]||0)+((R2.qAdminFee||[])[i]||0)+(R2.qBankMgmt[i]||0)+(R2.qPerfFee[i]||0)+(R2.qArrFee[i]||0)+(R2.qMkt[i]||0)+(R2.qWafi[i]||0)+(R2.qSellExp[i]||0);
     }
   }
 
@@ -5512,7 +5559,7 @@ function tipLabel(label,rows){
 function otherExpBreakdown(RX){
   const V=1+(Number(RX.A.vat_rate)||0)/100, d=Number(RX.A.vat_refund)?V:1, S=a=>(a||[]).reduce((x,y)=>x+y,0)/d, ar=lang==='ar';
   return [[ar?'تأسيس الصندوق':'Fund setup',S(RX.qFundSetup)],[ar?'تأسيس الشركة ذات الغرض الخاص':'SPV setup',S(RX.qSPV)],[ar?'رسوم الحفظ':'Custody',S(RX.qCustody)],[ar?'المحاسب القانوني':'Auditor',S(RX.qAuditor)],
-    [ar?'اللجنة الشرعية':'Shariah committee',S(RX.qSharia)],[ar?'الاستشاري الهندسي':'Engineering consultant',S(RX.qEngineering)],[ar?'مكافآت مجلس الإدارة':'Board compensation',S(RX.qBoard)],[ar?'المستشار المالي':'Financial advisor',S(RX.qFinAdvisor)],
+    [ar?'اللجنة الشرعية':'Shariah committee',S(RX.qSharia)],[ar?'الاستشاري الهندسي':'Engineering consultant',S(RX.qEngineering)],[ar?'مكافآت مجلس الإدارة':'Board compensation',S(RX.qBoard)],[ar?'المستشار المالي':'Financial advisor',S(RX.qFinAdvisor)],...(S(RX.qAdminFee)>0.5?[[ar?'الرسوم الإدارية':'Admin fee',S(RX.qAdminFee)]]:[]),
     [ar?'التسويق':'Marketing',S(RX.qMkt)],[ar?'رسوم الإدارة البنكية':'Bank management fee',S(RX.qBankMgmt)],[ar?'رسوم الترتيب':'Arrangement fee',S(RX.qArrFee)],[ar?'مستشار ضريبي':'VAT advisor',(RX.qVATAdvisor||[]).reduce((x,y)=>x+y,0)]];
 }
 function defaultRF(){return {redistMode:'proportional',actualLoanBalance:null,budgetOverrides:{},manualRedist:{},salesPins:{},sketches:[],cutoffQ:null,lineMode:{},assumptionOverrides:{},baseline:null,contracts:[],invoices:[],submissions:[]};}
@@ -5526,7 +5573,7 @@ function _rfNorm(){const d=defaultRF();for(const k in d) if(reforecastSettings[k
 // shifts schedules, adds one-off items or overrides assumptions, and only while it is running.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 var _SKETCH=null; // set only while a sketch runs
-const BUILD='2026-11-15a';
+const BUILD='2026-11-24b';
 (function(){const e=document.querySelector('.footer .build');if(e)e.textContent='· build '+BUILD;})(); // footer label always shows BUILD
 const SK_LINES=[['equity','Equity injection (cash)','ضخ رأس المال (نقد)'],['land','Land price','سعر الأرض'],['brokerage','Brokerage','السعي'],['rett','RETT','ضريبة التصرفات'],['fund_setup','Fund setup','تأسيس الصندوق'],['spv','SPV setup','تأسيس الشركة'],['fin_advisor','Financial advisor','المستشار المالي'],['arr_fee','Arrangement fee','رسوم الترتيب'],['bank_mgmt','Bank management fee','رسوم إدارة البنك'],['custody','Custody','الحفظ'],['auditor','Auditor','المحاسب القانوني'],['sharia','Sharia committee','الهيئة الشرعية'],['engineering','Engineering consultant','الاستشاري الهندسي'],['board','Board compensation','مكافآت المجلس'],['base_con','Base construction','تكاليف البناء'],['dev_fee','Developer fee','رسوم التطوير'],['contingency','Contingency','احتياطي الطوارئ'],['design','Design fee','رسوم التصميم'],['supervision','Supervision fee','رسوم الإشراف'],['licensing','Licensing fee','رسوم الترخيص'],['insurance','Insurance','التأمين'],['marketing','Marketing','التسويق'],['revenue','Sales revenue','إيرادات المبيعات']];
 const SK_SCHED={base_con:'schBaseCon',dev_fee:'schDevFee',contingency:'schContingency',design:'schDesign',supervision:'schSupervision',licensing:'schLicensing',insurance:'schInsurance',marketing:'schMarketing',revenue:'salesSchedule'};
@@ -5712,7 +5759,7 @@ function getCutoffQ(RX){_rfNorm();const nq=(RX||R).nq;const c=reforecastSettings
 
 // Forward parameters that may change during the life of the fund (key, label en, label ar, kind)
 const OPS_FIELDS=[['fund_period_months','Fund term (months)','مدة الصندوق (أشهر)'],['saibor','SAIBOR %','سايبور %'],['margin','Bank margin %','هامش البنك %'],['min_cash','Minimum cash balance','الحد الأدنى للرصيد النقدي'],
-  ['mgmt_fee_fixed','Management fee (fixed, annual)','رسوم الإدارة (ثابت سنوي)'],['gp_commit_inkind_cap','GP in-kind cap (SAR)','سقف المساهمة العينية للمدير'],['offplan_cap','Off-plan proceeds cap (SAR)','سقف متحصلات البيع على الخارطة'],['mgmt_fee_pct','Management fee %','رسوم الإدارة %'],['hurdle_rate','Hurdle rate %','العائد المطلوب %'],['perf_fee_pct','Performance fee %','رسوم الأداء %'],
+  ['admin_fee_pct','Admin fee % of NAV p.a.','الرسوم الإدارية % من صافي الأصول سنوياً'],['mgmt_fee_fixed','Management fee (fixed, annual)','رسوم الإدارة (ثابت سنوي)'],['gp_commit_inkind_cap','GP in-kind cap (SAR)','سقف المساهمة العينية للمدير'],['offplan_cap','Off-plan proceeds cap (SAR)','سقف متحصلات البيع على الخارطة'],['mgmt_fee_pct','Management fee %','رسوم الإدارة %'],['hurdle_rate','Hurdle rate %','العائد المطلوب %'],['perf_fee_pct','Performance fee %','رسوم الأداء %'],
   ['vat_refund_months','VAT refund period (months)','فترة الاسترداد الضريبي (أشهر)'],['custody_annual','Custody (annual)','رسوم الحفظ (سنوي)'],['auditor_annual','Auditor (annual)','المحاسب القانوني (سنوي)'],['engineering_annual','Engineering consultant (annual)','الاستشاري الهندسي (سنوي)'],
   ['board_annual','Board compensation (annual)','مكافآت مجلس الإدارة (سنوي)'],['marketing_cost','Marketing (total)','التسويق (إجمالي)'],['equity','Cash equity (top-up allowed)','رأس المال النقدي']];
 
@@ -5997,7 +6044,7 @@ function setCommitted(key,v){_rfNorm();reforecastSettings.committed=reforecastSe
 // the engine and the cash-flow statement keep the bank fee inside fund expenses).
 // ═══════════════════════════════════════════════
 const EXP_TYPES=[
-  {key:'fund',en:'Fund expenses',ar:'مصاريف الصندوق',color:'#00322d',cats:['fund_setup','mgmt_fee','custody','spv','auditor','sharia','board','fin_advisor','perf_fee','marketing','selling','other_exp','vat_paid']},
+  {key:'fund',en:'Fund expenses',ar:'مصاريف الصندوق',color:'#00322d',cats:['fund_setup','mgmt_fee','admin_fee','custody','spv','auditor','sharia','board','fin_advisor','perf_fee','marketing','selling','other_exp','vat_paid']},
   {key:'dev', en:'Development / construction',ar:'التطوير والإنشاء',color:'#775a19',cats:['land','brokerage','rett','base_con','dev_fee','contingency','licensing','design','insurance','supervision','engineering']},
   {key:'fin', en:'Banking / financing',ar:'البنوك والتمويل',color:'#4a6c8c',cats:['bank_mgmt','arr_fee','interest']}
 ];
@@ -6195,7 +6242,7 @@ function opsSales(){
 // Documented VAT only: the VAT printed on the invoice / imported VAT column / entered on the payment. Payments with
 // no VAT value are shown separately as an estimate and never counted in the claim.
 // ═══════════════════════════════════════════════
-const VATABLE=['brokerage','base_con','dev_fee','contingency','design','insurance','supervision','marketing','selling','fund_setup','mgmt_fee','custody','spv','auditor','sharia','engineering','fin_advisor','arr_fee','bank_mgmt','other_exp']; // board compensation is VAT-exempt
+const VATABLE=['brokerage','base_con','dev_fee','contingency','design','insurance','supervision','marketing','selling','fund_setup','mgmt_fee','admin_fee','custody','spv','auditor','sharia','engineering','fin_advisor','arr_fee','bank_mgmt','other_exp']; // board compensation is VAT-exempt
 const _VAT_SKIP=['revenue','vat_received','vat_paid','rett_received','rett','land','interest','licensing','perf_fee'];
 function payVAT(p){return (p.include!==false&&typeof p.vat==='number'&&isFinite(p.vat)&&!FIN_KEYS.includes(p.category))?p.vat:0;} // documented only
 function payVATEst(p){ // estimate for a VAT-able payment that carries no VAT value (display only; costs ex-VAT use it)
@@ -6380,33 +6427,221 @@ function navModel(){
   }
   return {rows,unitPrice,commit};
 }
+// ═══════════════════════════════════════════════
+// NAV — DAILY LEDGER, TRIAL-BALANCE RECONCILIATION AND NAV STATEMENT (2026-11-24, company method agreed with Aziz)
+//  • Recurring contractual fees (management, admin, custody, audit, Shariah, board, engineering consultant) accrue EVERY DAY at
+//    annual ÷ 365 from the fund start date; paying one clears its payable and does not move the NAV again.
+//  • Bank profit accrues daily: each profit period's expected profit ÷ its actual days (start → maturity); the payment clears the payable.
+//  • Land and development payments are capitalised at cost (net of VAT; input VAT is a receivable). Everything else that is paid
+//    (marketing, bank management fee, arrangement fee, setup, other charges…) is an expense on the day it is paid.
+//  • Each day: total assets − total liabilities = NAV; %-of-NAV charges (management fee in % modes, then the admin fee) are taken on
+//    that day's NAV ÷ 365 and added to the payables.
+//  • VAT never touches the accruals: fees accrue net of VAT. VAT matters only when something is paid — the VAT part of a payment (and any
+//    'VAT paid' row) leaves cash and enters the VAT receivable, so the NAV does not move; a refund received does the reverse.
+//  The fee classes are fixed here on purpose (no setting on screen). Settings live in reforecastSettings.nav:
+//    periods[{id,start,maturity,profit}] · tb{date,org,file,rows[{no,name,cl}]} · names{accountNo:arabic} · map{accountNo:bucket} · asOf · from · src · lang
+// ═══════════════════════════════════════════════
+const NAV_DAILY_FEES=[['mgmt_fee','Management fee','أتعاب الإدارة'],['admin_fee','Admin fee','الرسوم الإدارية'],['custody','Custody fee','رسوم الحفظ'],['auditor','Audit fee','أتعاب مراجع الحسابات'],['sharia','Shariah committee fee','أتعاب اللجنة الشرعية'],['board','Fund board fee','مكافآت مجلس الإدارة'],['engineering','Engineering consultant fee','أتعاب الاستشاري الهندسي']];
+const NAV_FEE_ANNUAL={custody:'custody_annual',auditor:'auditor_annual',sharia:'sharia_annual',board:'board_annual',engineering:'engineering_annual'};
+const NAV_LAND=['land','brokerage','rett'], NAV_DEV=['base_con','dev_fee','contingency','licensing','design','insurance','supervision'];
+const NAV_BUCKETS=[['cash','Cash and bank','النقد والبنوك','a'],['invest','Investments (at cost)','الاستثمارات (بالتكلفة)','a'],['land','Property investment (land, at cost)','استثمارات عقارية (الأرض، بالتكلفة)','a'],['dev','Property development (at cost)','عقارات تحت التطوير (بالتكلفة)','a'],['vat','VAT and RETT receivable','ضريبة القيمة المضافة وضريبة التصرفات المستحقة','a'],['prepaid','Prepaid fees','رسوم مدفوعة مقدماً','a'],['other_a','Other assets','أصول أخرى','a'],
+  ['loan','Bank financing','التمويل البنكي','l'],['profit','Bank profit payable','أرباح التمويل المستحقة','l'],...NAV_DAILY_FEES.map(([k,en,ar])=>[k,en+' payable',ar+' المستحقة','l']),['other_l','Other payables','ذمم دائنة أخرى','l']];
+function _navDay(s){if(s instanceof Date&&!isNaN(s))return Math.floor(Date.UTC(s.getFullYear(),s.getMonth(),s.getDate())/864e5);const m=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(s||''));return m?Math.floor(Date.UTC(+m[1],+m[2]-1,+m[3])/864e5):null;}
+function _navDate(n){return new Date(n*864e5).toISOString().slice(0,10);}
+function _navToday(){return new Date().toISOString().slice(0,10);}
+function navCfg(){const n=navSettings();if(!Array.isArray(n.periods))n.periods=[];n.names=n.names||{};n.map=n.map||{};if(!n.src)n.src='auto';if(!n.lang)n.lang='both';return n;}
+function navAsOf(){const n=navCfg();return n.asOf||_navToday();}
+// The daily ledger. Returns the statement at the END of `asOf` plus the fee position and a quarter-end NAV path.
+function navLedger(asOf){
+  const n=navCfg(),A=(R2&&R2.A)||(R&&R.A)||D,V=1+(Number(A.vat_rate)||0)/100;
+  const s0=_navDay(A.start_date||D.start_date)||_navDay(_navToday()),e=Math.max(s0,_navDay(asOf)||s0);
+  const endDay=(()=>{const d=new Date(s0*864e5);d.setUTCMonth(d.getUTCMonth()+(Number(A.fund_period_months)||0));return Math.floor(d.getTime()/864e5);})();
+  const isFund=Number(A.is_fund),rettRef=projects.some(p=>Number(p.rett_refund));
+  const byDay=new Map();
+  for(const p of actuals){if(p.include===false)continue;let d=_navDay(p.date);if(d==null)d=_navDay(qEndDate(Number(p.quarter)||0).toISOString().slice(0,10));if(d==null)continue;d=Math.max(s0,d);if(d>e)continue;(byDay.get(d)||byDay.set(d,[]).get(d)).push(p);}
+  const annual={};for(const k in NAV_FEE_ANNUAL)annual[k]=isFund?(Number(A[NAV_FEE_ANNUAL[k]])||0):0;
+  const mgMode=A.mgmt_fee_mode||'fixed',mgPct=isFund?(Number(A.mgmt_fee_pct)||0)/100:0,mgFixed=isFund&&mgMode==='fixed'?(Number(A.mgmt_fee_fixed)||0):0,adPct=isFund?(Number(A.admin_fee_pct)||0)/100:0;
+  const periods=n.periods.map(p=>({s:_navDay(p.start),m:_navDay(p.maturity),profit:Number(p.profit)||0})).filter(p=>p.s!=null&&p.m!=null&&p.m>p.s);
+  let cash=0,invest=0,land=0,dev=0,vatRec=0,rettRec=0,loan=0,capital=0,income=0,expensed=0,dist=0,profitAccr=0,profitPaid=0;
+  const accr={},paid={};NAV_DAILY_FEES.forEach(([k])=>{accr[k]=0;paid[k]=0;});
+  const path=[];let A_=0,L_=0;
+  const totals=()=>{let pre=0,pay=0;for(const k in accr){const x=accr[k]-paid[k];if(x>0)pay+=x;else pre-=x;}const pp=profitAccr-profitPaid;
+    A_=cash+invest+land+dev+Math.max(0,vatRec)+Math.max(0,rettRec)+pre+Math.max(0,-pp);L_=loan+pay+Math.max(0,pp)+Math.max(0,-vatRec);return A_-L_;};
+  for(let d=s0;d<=e;d++){
+    const ps=byDay.get(d);
+    if(ps)for(const p of ps){const c=p.category,amt=Number(p.amount)||0,vat=typeof p.vat==='number'?p.vat:0,net=amt-vat;
+      if(c==='equity_in'){cash+=amt;capital+=amt;}
+      else if(c==='equity_ik'){capital+=amt;const k=String(p.component||'');if(k==='ik:gp'||k==='ik:mgmt')paid.mgmt_fee+=amt;else if(k==='ik:mkt'||k==='ik:sell')expensed+=amt;else if(k==='ik:dev'||k==='ik:con')dev+=amt;else land+=amt;}
+      else if(c==='debt_draw'){cash+=amt;loan+=amt;}
+      else if(c==='debt_repay'){cash-=amt;loan-=amt;}
+      else if(c==='distribution'){cash-=amt;dist+=amt;}
+      else if(c==='revenue'||c==='murabaha'||c==='other_inc'){cash+=amt;income+=amt;}
+      else if(c==='vat_received'){cash+=amt;vatRec-=amt;}
+      else if(c==='rett_received'){cash+=amt;rettRec-=amt;}
+      else if(c==='inv_out'){cash-=amt;invest+=amt;}
+      else if(c==='inv_in'){cash+=amt;invest-=amt;if(invest<0){income-=invest;invest=0;}} // returned above cost = profit
+      else if(c==='land'){cash-=amt;land+=net;if(rettRef)rettRec+=vat;else land+=vat;}            // "VAT" on a land payment is the RETT
+      else if(c==='rett'){cash-=amt;if(rettRef)rettRec+=amt;else land+=amt;}
+      else if(c==='brokerage'){cash-=amt;land+=net;vatRec+=vat;}
+      else if(NAV_DEV.includes(c)){cash-=amt;dev+=net;vatRec+=vat;}
+      else if(c in paid){cash-=amt;paid[c]+=net;vatRec+=vat;}
+      else if(c==='interest'){cash-=amt;profitPaid+=amt;}
+      else if(c==='vat_paid'){cash-=amt;vatRec+=amt;}                                              // a VAT payment moves cash into the VAT receivable: NAV unchanged
+      else {cash-=amt;expensed+=net;vatRec+=vat;}                                                   // counted when paid
+    }
+    if(d<endDay){for(const k in annual)accr[k]+=annual[k]/365;accr.mgmt_fee+=mgFixed/365;}
+    for(const p of periods)if(d>=p.s&&d<p.m)profitAccr+=p.profit/(p.m-p.s);
+    let nav=totals();
+    if(d<endDay&&mgPct&&mgMode!=='fixed'){accr.mgmt_fee+=Math.max(0,mgMode==='nav'?nav:A_)*mgPct/365;nav=totals();}
+    if(d<endDay&&adPct){accr.admin_fee+=Math.max(0,nav)*adPct/365;nav=totals();}
+    path.push(nav);
+  }
+  const nav=totals(),unit=Number(n.unitPrice)||10,units=unit?capital/unit:0;
+  const fees=NAV_DAILY_FEES.map(([k,en,ar])=>{const x=accr[k]-paid[k];return {key:k,en,ar,accr:accr[k],paid:paid[k],payable:Math.max(0,x),prepaid:Math.max(0,-x),daily:k==='mgmt_fee'?(mgMode==='fixed'?mgFixed/365:0):k==='admin_fee'?0:(annual[k]||0)/365};});
+  const pp=profitAccr-profitPaid,prepaid=fees.reduce((s,f)=>s+f.prepaid,0)+Math.max(0,-pp);
+  const B={cash,invest,land,dev,vat:Math.max(0,vatRec)+Math.max(0,rettRec),prepaid,other_a:0,loan,profit:Math.max(0,pp),other_l:Math.max(0,-vatRec)};fees.forEach(f=>B[f.key]=f.payable);
+  return {asOf:_navDate(e),start:_navDate(s0),days:e-s0+1,B,assets:A_,liab:L_,nav,units,navU:units?nav/units:0,unit,capital,income,expensed,dist,fees,profit:{accr:profitAccr,paid:profitPaid},path,s0,negCash:cash<-0.5,hasData:actuals.some(p=>p.include!==false)};
+}
+// ── trial balance (accounting system export: Account No. | Name | … | Closing Balance) ──
+async function navTbUpload(file){
+  if(!file)return;const ar=lang==='ar';
+  try{await libXlsx();const wb=XLSX.read(new Uint8Array(await file.arrayBuffer()),{type:'array',cellDates:true});const js=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,cellDates:true});
+    const tb=navTbParse(js);if(!tb.rows.length)throw new Error(ar?'لم يُعثر على حسابات في الملف (المتوقع: رقم الحساب في العمود الأول مثل A.2.1.1.0005)':'No accounts found in the file (expected an account number such as A.2.1.1.0005 in the first column)');
+    tb.file=file.name;tb.at=new Date().toISOString();const n=navCfg();n.tb=tb;if(tb.date)n.asOf=tb.date;opsRefresh();
+  }catch(e){showPop(ar?'تعذّر قراءة ميزان المراجعة':'Could not read the trial balance',[[escH(e.message||String(e)),0]]);}
+}
+function navTbParse(js){
+  const out={date:null,org:'',rows:[]},mon={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  const toDate=v=>{if(v instanceof Date&&!isNaN(v))return _navDate(_navDay(v));const s=String(v||'').trim();let m=/^(\d{1,2})[-\/ ]([A-Za-z]{3})[a-z]*[-\/ ](\d{4})$/.exec(s);if(m&&mon[m[2].toLowerCase()])return m[3]+'-'+String(mon[m[2].toLowerCase()]).padStart(2,'0')+'-'+m[1].padStart(2,'0');m=/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/.exec(s);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);return m?m[0]:null;};
+  for(const r of js){if(!r)continue;const cells=r.map(c=>c==null?'':c);
+    for(let i=0;i<cells.length;i++){const t=String(cells[i]).trim().toLowerCase();
+      if(/^date to/.test(t)){for(let j=i+1;j<cells.length;j++){const d=toDate(cells[j]);if(d){out.date=d;break;}}}
+      if(/^organization/.test(t)){for(let j=i+1;j<cells.length;j++){if(String(cells[j]).trim()){out.org=String(cells[j]).trim();break;}}}}
+    const no=String(cells[0]).trim();if(!/^[A-Z]\.\d/.test(no))continue;
+    let cl=null;for(let j=cells.length-1;j>=2;j--){if(typeof cells[j]==='number'){cl=cells[j];break;}}
+    out.rows.push({no,name:String(cells[1]||'').trim(),cl:cl||0,t:no[0]});}
+  return out;
+}
+function navBucketOf(row){const n=navCfg();if(n.map[row.no])return n.map[row.no];const s=row.name.toLowerCase();
+  if(row.t==='A'){if(/property development|under development|work in progress/.test(s))return 'dev';if(/property|land/.test(s))return 'land';if(/invest|mutual|equit|murabaha|wakala/.test(s))return 'invest';if(/vat|rett|tax/.test(s))return 'vat';if(/prepaid/.test(s))return 'prepaid';if(/bank|cash/.test(s))return 'cash';return 'other_a';}
+  if(row.t==='L'){if(/management/.test(s))return 'mgmt_fee';if(/admin/.test(s))return 'admin_fee';if(/custod/.test(s))return 'custody';if(/audit/.test(s))return 'auditor';if(/shari/.test(s))return 'sharia';if(/board/.test(s))return 'board';if(/engineer/.test(s))return 'engineering';if(/profit/.test(s))return 'profit';if(/financ|loan|facility|tawarruq|murabaha/.test(s))return 'loan';return 'other_l';}
+  return null;}
+// Arabic account names: saved translation first, then a built-in phrase list; unknown names stay as they are until corrected once.
+function navArName(row){const n=navCfg();if(n.names[row.no])return n.names[row.no];const s=row.name,l=s.toLowerCase(),acc=(/\(([^)]*\d{4}[^)]*)\)/.exec(s)||[])[1],tail=acc?' ('+acc+')':''; // keep only an account / IBAN number in brackets
+  const bank=/alinma/.test(l)?'مصرف الإنماء':/rajhi/.test(l)?'مصرف الراجحي':/\banb\b|arab national/.test(l)?'البنك العربي الوطني':/riyad/.test(l)?'بنك الرياض':/\bsnb\b|ahli/.test(l)?'البنك الأهلي السعودي':/albilad|bilad/.test(l)?'بنك البلاد':/aljazira|jazira/.test(l)?'بنك الجزيرة':null;
+  if(bank)return bank+(/spv/.test(l)?'، الشركة ذات الغرض الخاص':/\bca\b|current/.test(l)?'، حساب جارٍ':'')+tail;
+  const T=[[/management fee payable/,'أتعاب الإدارة المستحقة'],[/admin\w* fee payable/,'الرسوم الإدارية المستحقة'],[/custody fee payable/,'رسوم الحفظ المستحقة'],[/audit fee payable/,'أتعاب مراجع الحسابات المستحقة'],[/shari\w* committee fee payable/,'أتعاب اللجنة الشرعية المستحقة'],[/board fee payable/,'مكافآت مجلس الإدارة المستحقة'],[/valuation fee payable/,'أتعاب التقييم المستحقة'],[/other payable/,'ذمم دائنة أخرى'],[/profit payable/,'أرباح التمويل المستحقة'],
+    [/advance payment/,'دفعة مقدمة'],[/cash in hand/,'النقد في الصندوق'],[/vat input/,'ضريبة القيمة المضافة، مدخلات'],[/listed equities.*unrealized/,'استثمارات في أسهم مدرجة، أرباح / (خسائر) غير محققة'],[/listed equities/,'استثمارات في أسهم مدرجة'],[/mutual funds.*cost/,'استثمارات في صناديق استثمارية، بالتكلفة'],[/mutual funds/,'استثمارات في صناديق استثمارية'],
+    [/property investment.*rou/,'استثمارات عقارية، حق استخدام أرض'],[/property investment.*owned/,'استثمارات عقارية، مملوكة'],[/property development/,'عقارات تحت التطوير'],[/property investment/,'استثمارات عقارية'],[/misc\w* receivable/,'ذمم مدينة متنوعة'],[/financing|facility|tawarruq/,'التمويل البنكي']];
+  for(const [re,a] of T)if(re.test(l))return a+tail;return s;}
+function navTidyName(s){return String(s||'').replace(/\s*-\s*\(SAR\)\s*$/i,'').replace(/\s+/g,' ').trim();}
+// Which figures the statement shows: the books when a trial balance is loaded for the chosen date (or forced), otherwise the platform ledger.
+function navSource(L){const n=navCfg(),tb=n.tb;const useTb=tb&&tb.rows&&tb.rows.length&&(n.src==='books'||(n.src==='auto'&&tb.date===L.asOf));return useTb?'books':'platform';}
+function navStatement(L){const n=navCfg(),src=navSource(L);
+  if(src==='books'){const tb=n.tb,a=tb.rows.filter(r=>r.t==='A'&&Math.abs(r.cl)>0.005).map(r=>({en:navTidyName(r.name),ar:navArName(r),v:r.cl,no:r.no})),l=tb.rows.filter(r=>r.t==='L'&&Math.abs(r.cl)>0.005).map(r=>({en:navTidyName(r.name),ar:navArName(r),v:-r.cl,no:r.no}));
+    const ta=a.reduce((s,x)=>s+x.v,0),tl=l.reduce((s,x)=>s+x.v,0),cap=-tb.rows.filter(r=>r.t==='U').reduce((s,r)=>s+r.cl,0),units=L.unit?cap/L.unit:0;
+    return {src,date:tb.date||L.asOf,assets:a,liabs:l,ta,tl,nav:ta-tl,units,navU:units?(ta-tl)/units:0};}
+  const line=k=>{const b=NAV_BUCKETS.find(x=>x[0]===k);return {en:b[1],ar:b[2],v:L.B[k]||0,k};};
+  const a=NAV_BUCKETS.filter(b=>b[3]==='a').map(b=>line(b[0])).filter(x=>Math.abs(x.v)>0.005),l=NAV_BUCKETS.filter(b=>b[3]==='l').map(b=>line(b[0])).filter(x=>Math.abs(x.v)>0.005);
+  return {src,date:L.asOf,assets:a,liabs:l,ta:L.assets,tl:L.liab,nav:L.nav,units:L.units,navU:L.navU};}
+// Platform vs books, bucket by bucket, with the likely cause of each difference.
+function navReconcile(L){const n=navCfg(),tb=n.tb;if(!tb||!tb.rows||!tb.rows.length)return null;const ar=lang==='ar',books={};
+  for(const r of tb.rows){const b=navBucketOf(r);if(!b)continue;books[b]=(books[b]||0)+(r.t==='A'?r.cl:-r.cl);}
+  const f2=v=>v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const hint=(k,d)=>{const fee=L.fees.find(f=>f.key===k);
+    if(fee){if(fee.daily>0){const days=d/fee.daily;return (ar?'يعادل ':'equals ')+Math.abs(days).toFixed(1)+(ar?' يوم استحقاق ('+f2(fee.daily)+' يومياً). راجع تاريخ بدء الصندوق في المنصة ('+L.start+')، المبلغ السنوي، أو دفعة غير مسجّلة.':' days of accrual ('+f2(fee.daily)+' a day). Check the fund start date in the platform ('+L.start+'), the annual amount, or a payment that is not recorded.');}
+      return ar?'رسم محسوب كنسبة من صافي الأصول: راجع النسبة، تاريخ البدء، أو دفعة غير مسجّلة.':'Charged as a percentage of NAV: check the rate, the start date, or a payment that is not recorded.';}
+    return ({cash:ar?'راجع دفعات أو متحصلات غير مسجّلة في سجل الدفعات، أو أرصدة بنكية غير مدرجة في الدفاتر.':'Check payments or receipts missing from the payment log, or bank balances not in the books.',
+      invest:ar?'المنصة تسجّل الاستثمارات بالتكلفة: راجع المبالغ الموظّفة والمستردة والأرباح غير المحققة.':'The platform holds investments at cost: check amounts placed and returned, and unrealised gains.',
+      land:ar?'راجع تكلفة الأرض والسعي وضريبة التصرفات المرسملة.':'Check the capitalised land cost, brokerage and RETT.',dev:ar?'راجع تكاليف التطوير المرسملة وفصل الضريبة عنها.':'Check capitalised development costs and the VAT split.',
+      vat:ar?'راجع قيم الضريبة على الدفعات والمبالغ المستردة.':'Check the VAT values on payments and the refunds received.',prepaid:ar?'رسوم دُفعت قبل استحقاقها.':'Fees paid ahead of their accrual.',
+      loan:ar?'راجع السحوبات والسدادات المسجّلة.':'Check the recorded drawdowns and repayments.',profit:ar?'راجع فترات أرباح التمويل (المبلغ وتاريخ الاستحقاق) والأرباح المدفوعة.':'Check the bank profit periods (amount and maturity date) and the profit payments recorded.',
+      other_a:ar?'موجود في الدفاتر فقط: لا يوجد له سجل في المنصة.':'In the books only: the platform has no record for this account.',other_l:ar?'موجود في الدفاتر فقط: لا يوجد له سجل في المنصة.':'In the books only: the platform has no record for this account.'})[k]||'';};
+  const rows=NAV_BUCKETS.map(([k,en,arn,t])=>{const p=L.B[k]||0,b=books[k]||0,d=p-b;return {k,name:ar?arn:en,t,p,b,d,ok:Math.abs(d)<0.5,hint:Math.abs(d)<0.5?'':hint(k,d)};}).filter(r=>Math.abs(r.p)>0.005||Math.abs(r.b)>0.005);
+  const ta=tb.rows.filter(r=>r.t==='A').reduce((s,r)=>s+r.cl,0),tl=-tb.rows.filter(r=>r.t==='L').reduce((s,r)=>s+r.cl,0),cap=-tb.rows.filter(r=>r.t==='U').reduce((s,r)=>s+r.cl,0);
+  return {rows,booksNav:ta-tl,booksAssets:ta,booksLiab:tl,booksCap:cap,diff:L.nav-(ta-tl),dateOk:tb.date===L.asOf,tbDate:tb.date,matched:rows.every(r=>r.ok)};}
+function navSetF(f,v){const n=navCfg();n[f]=v===''?null:v;opsRefresh();}
+function navPeriodAdd(){const n=navCfg(),last=n.periods[n.periods.length-1];n.periods.push({id:_actGenId(),start:last?last.maturity:'',maturity:'',profit:0});opsRefresh();}
+function navPeriodSet(id,f,v){const p=navCfg().periods.find(x=>x.id===id);if(!p)return;p[f]=f==='profit'?(Number(v)||0):v;opsRefresh();}
+function navPeriodDel(id){const n=navCfg();n.periods=n.periods.filter(x=>x.id!==id);opsRefresh();}
+function navNameSet(no,v){const n=navCfg();if(v.trim())n.names[no]=v.trim();else delete n.names[no];}
+function navMapSet(no,v){const n=navCfg();if(v)n.map[no]=v;else delete n.map[no];opsRefresh();}
+function navTbClear(){const n=navCfg();n.tb=null;opsRefresh();}
 function opsNav(){
-  const m=navModel(),cut=R2._cutoffQ,nq=R2.nq,ar=lang==='ar',r=m.rows[Math.max(0,cut-1)],last=m.rows[nq-1];
+  const n=navCfg(),ar=lang==='ar',asOf=navAsOf(),L=navLedger(asOf),S=navStatement(L),rec=navReconcile(L);
+  const f2=v=>(v<0?'(':'')+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(v<0?')':'');
   const kpi=(l,v,s,cls)=>`<div class="ops-kpi"><small>${l}</small><b>${v}</b><i class="${cls||''}">${s}</i></div>`;
-  let h=`<div class="baseline-bar" style="margin:0 0 14px"><span>${ot('nBasis')}</span><label class="ops-field" style="margin:0">${ot('nUnitPrice')}<input type="number" class="ops-mini" style="width:90px" value="${m.unitPrice}" onchange="navSet('unitPrice',this.value)"></label></div>
-  <div class="ops-kpis">${kpi(ot('nNav')+' Q'+cut,M_(r.nav),ot('plan')+' '+M_(r.planNav),r.nav<r.planNav*0.98?'dn':'up')}${kpi(ot('nNavU'),r.navU.toFixed(3),ot('plan')+' '+r.planU.toFixed(3)+' · '+ot('nUnits')+' '+fN(r.units),r.navU<r.planU*0.98?'dn':'up')}${kpi(ot('nAssets'),M_(r.assets),ot('nLoan')+' '+M_(r.loan))}${kpi(ot('nNavEnd'),M_(last.nav),ot('nNavUEnd')+' '+last.navU.toFixed(3))}</div>`;
-  // chart NAV/unit plan vs actual+forecast
-  const lp=m.rows.map(x=>x.planU),la=m.rows.map((x,i)=>i<cut?x.navU:null),lf=m.rows.map((x,i)=>i>=cut-1?x.navU:null);
-  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ot('nChart')}<span>SAR/${ot('nUnit')}</span></h3>${svgLines([[lp,CHART.sand],[la,CHART.green],[lf,CHART.gold,1]],cut,nq)}</div>
-  <div class="ops-card"><h3>${ot('nBridge')} Q${cut}</h3><table class="rfcs-tbl cx-tbl"><tbody>
-  ${[[ot('nLand'),r.land],[ot('nCip'),r.cip],[ot('nCash'),r.cash],[ot('nVatRec'),r.vatRec],[ot('nRettRec'),r.rettRec],[ot('nOther'),r.other]].map(([l,v])=>`<tr><td>${l}</td><td class="rfcs-num">${fN(v)}</td></tr>`).join('')}
-  <tr class="tot"><td><b>${ot('nAssets')}</b></td><td class="rfcs-num"><b>${fN(r.assets)}</b></td></tr>
-  ${[[ot('nLoan'),r.loan],[ot('nAccrFee'),r.accrFee],[ot('nAccrPerf'),r.accrPerf],[ot('nPayables'),r.payables]].map(([l,v])=>`<tr><td>${l}</td><td class="rfcs-num">${v?'('+fN(v)+')':'—'}</td></tr>`).join('')}
-  <tr class="tot"><td><b>${ot('nNav')}</b></td><td class="rfcs-num"><b>${fN(r.nav)}</b></td></tr><tr><td>${ot('nUnits')}</td><td class="rfcs-num">${fN(r.units)}</td></tr><tr class="tot"><td><b>${ot('nNavU')}</b></td><td class="rfcs-num"><b>${r.navU.toFixed(4)}</b></td></tr></tbody></table></div></div>`;
-  // statement table across quarters with mark/accrual inputs
-  const cols=m.rows;
-  const line=(l,f,fmt,neg)=>`<tr><td>${l}</td>${cols.map(x=>`<td class="rfcs-num ${x.closed?'':'ops-muted'}">${neg&&x[f]?'('+fN(x[f])+')':(fmt?fmt(x[f]):fN(x[f]))}</td>`).join('')}</tr>`;
-  const inp=(l,kind,f)=>`<tr class="cx-sub"><td>${l}</td>${cols.map(x=>`<td><input type="number" class="ops-mini" style="width:96px" placeholder="—" value="${((kind==='mark'?navSettings().marks[x.q]:navSettings().accr[x.q])||{})[f]??''}" onchange="${kind==='mark'?'navMark':'navAccr'}(${x.q},'${f}',this.value)"></td>`).join('')}</tr>`;
-  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ot('nStatement')}<span>${ot('nStmtSub')}</span></h3><div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th>${cols.map(x=>`<th>Q${x.q+1}<small class="qe">${fmtDateS(qEndDate(x.q))}</small>${x.closed?'':'<small class="qe">'+ot('forecast')+'</small>'}${x.marked?' ✎':''}</th>`).join('')}</tr></thead><tbody>
-  ${line(ot('nLand'),'land')}${inp(ot('nMarkLand'),'mark','land')}${line(ot('nCip'),'cip')}${inp(ot('nMarkCip'),'mark','cip')}${line(ot('nCash'),'cash')}${line(ot('nVatRec'),'vatRec')}${line(ot('nRettRec'),'rettRec')}${inp(ot('nOther'),'accr','other')}
-  <tr class="tot"><td><b>${ot('nAssets')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${fN(x.assets)}</b></td>`).join('')}</tr>
-  ${line(ot('nLoan'),'loan',null,true)}${inp(ot('nAccrFee'),'accr','mgmt')}${inp(ot('nAccrPerf'),'accr','perf')}${inp(ot('nPayables'),'accr','payables')}
-  <tr class="tot"><td><b>${ot('nNav')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${fN(x.nav)}</b></td>`).join('')}</tr>
-  ${line(ot('nUnits'),'units')}<tr class="tot"><td><b>${ot('nNavU')}</b></td>${cols.map(x=>`<td class="rfcs-num"><b>${x.navU.toFixed(3)}</b></td>`).join('')}</tr>
-  <tr><td>${ot('nPlanU')}</td>${cols.map(x=>`<td class="rfcs-num ops-muted">${x.planU.toFixed(3)}</td>`).join('')}</tr></tbody></table></div>
-  <p class="ops-muted" style="font-size:.76rem;margin-top:10px">${ot('nNote')}</p></div>`;
+  const from=n.from?navLedger(n.from):null;
+  let h=`<div class="baseline-bar nav-bar" style="margin:0 0 14px">
+    <label class="ops-field" style="margin:0">${ar?'كما في':'As at'}<input type="date" id="nav_asof" class="ops-mini" style="width:150px" value="${asOf}" onchange="navSetF('asOf',this.value)"></label>
+    <label class="ops-field" style="margin:0">${ar?'مقارنة مع (اختياري)':'Compare with (optional)'}<input type="date" id="nav_from" class="ops-mini" style="width:150px" value="${n.from||''}" onchange="navSetF('from',this.value)"></label>
+    <label class="ops-field" style="margin:0">${ar?'القيمة الاسمية للوحدة':'Unit par value'}<input type="number" id="nav_unit" class="ops-mini" style="width:90px" value="${L.unit}" onchange="navSet('unitPrice',this.value)"></label>
+    <span style="flex:1"></span>
+    <label class="act-btn" style="cursor:pointer">${ico('upload')} ${ar?'رفع ميزان المراجعة':'Upload trial balance'}<input type="file" accept=".xlsx,.xls,.xlsm,.csv" style="display:none" onchange="navTbUpload(this.files[0]);this.value=''"></label>
+    <select id="nav_lang" class="ops-mini" style="width:auto" onchange="navSetF('lang',this.value)">${[['both',ar?'عربي + إنجليزي':'English + Arabic'],['en','English'],['ar','العربية']].map(([v,l])=>`<option value="${v}"${n.lang===v?' selected':''}>${l}</option>`).join('')}</select>
+    <button class="act-btn act-btn-add" onclick="navReport()">${ico('download')} ${ar?'تقرير صافي الأصول (PDF)':'NAV statement (PDF)'}</button></div>`;
+  if(!L.hasData)h+=`<div class="ops-card" style="margin-bottom:14px"><p class="ops-muted" style="margin:0">${ar?'لا توجد دفعات مسجّلة بعد. صافي الأصول اليومي يُبنى من سجل الدفعات (رأس المال، الأرض، التطوير، الرسوم، التمويل) مع الاستحقاق اليومي للرسوم من تاريخ بدء الصندوق '+L.start+'. أضف الدفعات من زر «إضافة دفعات»، أو ارفع ميزان المراجعة لعرض أرقام الدفاتر.':'No payments are recorded yet. The daily NAV is built from the payment log (equity, land, development, fees, financing) plus the daily fee accruals from the fund start date '+L.start+'. Add payments with “Add payments”, or upload the trial balance to show the figures from the books.'}</p></div>`;
+  const chg=from?S.src==='platform'?L.nav-from.nav:null:null;
+  h+=`<div class="ops-kpis">${kpi((ar?'صافي الأصول':'Net assets'),f2(S.nav),(S.src==='books'?(ar?'من الدفاتر (ميزان المراجعة)':'from the books (trial balance)'):(ar?'من سجل المنصة':'from the platform ledger'))+(chg!=null?' · '+(chg>=0?'+':'−')+f2(Math.abs(chg))+(ar?' منذ ':' since ')+from.asOf:''),chg!=null&&chg<0?'dn':'')}${kpi(ar?'سعر الوحدة':'Unit price',S.navU.toFixed(4),(ar?'الوحدات ':'units ')+S.units.toLocaleString('en-US',{maximumFractionDigits:4})+(L.unit?' · '+((S.navU/L.unit-1)*100).toFixed(2)+'% '+(ar?'عن القيمة الاسمية':'vs par'):''),S.navU<L.unit?'dn':'up')}${kpi(ar?'إجمالي الأصول':'Total assets',f2(S.ta),'')}${kpi(ar?'إجمالي الالتزامات':'Total liabilities',f2(S.tl),S.ta?((S.tl/S.ta)*100).toFixed(2)+'% '+(ar?'من الأصول':'of assets'):'')}</div>`;
+  const stRows=(arr)=>arr.map(x=>`<tr><td>${escH(ar?x.ar:x.en)}</td><td class="rfcs-num">${f2(x.v)}</td></tr>`).join('');
+  h+=`<div class="ops-grid2"><div class="ops-card"><h3>${ar?'قائمة صافي الأصول':'NAV statement'}<span>${S.date}</span></h3><table class="rfcs-tbl cx-tbl"><tbody>
+    <tr class="cx-sub"><td colspan="2"><b>${ar?'الأصول':'Assets'}</b></td></tr>${stRows(S.assets)}<tr class="tot"><td><b>${ar?'إجمالي الأصول':'Total assets'}</b></td><td class="rfcs-num"><b>${f2(S.ta)}</b></td></tr>
+    <tr class="cx-sub"><td colspan="2"><b>${ar?'الالتزامات':'Liabilities'}</b></td></tr>${stRows(S.liabs)||`<tr><td class="ops-muted">${ar?'لا يوجد':'none'}</td><td></td></tr>`}<tr class="tot"><td><b>${ar?'إجمالي الالتزامات':'Total liabilities'}</b></td><td class="rfcs-num"><b>${f2(S.tl)}</b></td></tr>
+    <tr class="tot"><td><b>${ar?'صافي الأصول':'Net assets'}</b></td><td class="rfcs-num"><b>${f2(S.nav)}</b></td></tr><tr><td>${ar?'الوحدات القائمة':'Units in issue'}</td><td class="rfcs-num">${S.units.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4})}</td></tr><tr class="tot"><td><b>${ar?'سعر الوحدة':'Unit price'}</b></td><td class="rfcs-num"><b>${S.navU.toFixed(4)}</b></td></tr></tbody></table>
+    ${L.negCash&&S.src==='platform'?`<p class="ops-muted" style="font-size:.78rem;margin:10px 0 0"><span class="cx-var bad"><span>${ar?'رصيد النقد سالب: سجل الدفعات ناقص (رأس مال أو سحب تمويل غير مسجّل).':'Cash is negative: the payment log is incomplete (equity or a drawdown is not recorded).'}</span></span></p>`:''}</div>
+    <div class="ops-card"><h3>${ar?'موقف الرسوم المستحقة يومياً':'Fees accrued daily'}<span>${L.start} → ${L.asOf} · ${L.days} ${ar?'يوم':'days'}</span></h3><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ar?'يومياً':'Per day'}</th><th>${ar?'المستحق حتى تاريخه':'Accrued'}</th><th>${ar?'المدفوع':'Paid'}</th><th>${ar?'الدائن':'Payable'}</th></tr></thead><tbody>
+    ${L.fees.filter(f=>f.accr>0.005||f.paid>0.005).map(f=>`<tr><td>${ar?f.ar:f.en}</td><td class="rfcs-num ops-muted">${f.daily?f2(f.daily):(ar?'% من صافي الأصول':'% of NAV')}</td><td class="rfcs-num">${f2(f.accr)}</td><td class="rfcs-num">${f2(f.paid)}</td><td class="rfcs-num"><b>${f.prepaid>0.005?'('+f2(f.prepaid)+')':f2(f.payable)}</b></td></tr>`).join('')||`<tr><td colspan="5" class="ops-muted">${ar?'لا توجد رسوم سنوية في الافتراضات.':'No annual fees in the assumptions.'}</td></tr>`}
+    ${L.profit.accr>0.005||L.profit.paid>0.005?`<tr><td>${ar?'أرباح التمويل':'Bank profit'}</td><td class="rfcs-num ops-muted">${ar?'حسب الفترة':'per period'}</td><td class="rfcs-num">${f2(L.profit.accr)}</td><td class="rfcs-num">${f2(L.profit.paid)}</td><td class="rfcs-num"><b>${f2(L.profit.accr-L.profit.paid)}</b></td></tr>`:''}</tbody></table>
+    <p class="ops-muted" style="font-size:.76rem;margin:10px 0 0">${ar?'الرسوم السنوية ÷ 365 يومياً من تاريخ بدء الصندوق. الدفع يُقفل الدائن ولا يؤثر على صافي الأصول مرة أخرى. تكاليف الأرض والتطوير تُرسمل، وباقي المصاريف تُحتسب عند الدفع.':'Annual fees ÷ 365 each day from the fund start date. A payment clears the payable and does not move the NAV again. Land and development costs are capitalised; other expenses count when paid.'}</p></div></div>`;
+  // bank profit periods
+  h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ar?'فترات أرباح التمويل':'Bank profit periods'}<span>${ar?'الربح المتوقع ÷ عدد أيام الفترة الفعلي، يُستحق يومياً':'expected profit ÷ the period’s actual days, accrued daily'}</span></h3>
+    <table class="rfcs-tbl cx-tbl"><thead><tr><th>${ar?'البداية':'Start'}</th><th>${ar?'الاستحقاق':'Maturity'}</th><th>${ar?'الأيام':'Days'}</th><th>${ar?'الربح المتوقع':'Expected profit'}</th><th>${ar?'يومياً':'Per day'}</th><th></th></tr></thead><tbody>
+    ${n.periods.map(p=>{const a=_navDay(p.start),b=_navDay(p.maturity),d=a!=null&&b!=null&&b>a?b-a:0;return `<tr><td><input type="date" id="navp_s_${p.id}" class="ops-mini" style="width:150px" value="${p.start||''}" onchange="navPeriodSet('${p.id}','start',this.value)"></td><td><input type="date" id="navp_m_${p.id}" class="ops-mini" style="width:150px" value="${p.maturity||''}" onchange="navPeriodSet('${p.id}','maturity',this.value)"></td><td class="rfcs-num">${d||'—'}</td><td><input type="number" id="navp_p_${p.id}" class="ops-mini" style="width:140px" value="${p.profit||''}" onchange="navPeriodSet('${p.id}','profit',this.value)"></td><td class="rfcs-num ops-muted">${d?f2(p.profit/d):'—'}</td><td><a class="cx-tg" onclick="navPeriodDel('${p.id}')" title="${ar?'حذف':'Remove'}">✕</a></td></tr>`;}).join('')||`<tr><td colspan="6" class="ops-muted">${ar?'لا توجد فترات. أضف فترة عند كل تجديد للتمويل: تاريخ البداية، تاريخ الاستحقاق، والربح المتوقع.':'No periods yet. Add one at each renewal of the facility: start date, maturity date and the expected profit.'}</td></tr>`}</tbody></table>
+    <p style="margin:10px 0 0"><button class="act-btn" onclick="navPeriodAdd()">＋ ${ar?'إضافة فترة':'Add period'}</button></p></div>`;
+  // reconciliation
+  if(rec){const tb=n.tb;
+    h+=`<div class="ops-card" style="margin-bottom:16px"><h3>${ar?'المطابقة مع ميزان المراجعة':'Reconciliation with the trial balance'}<span>${escH(tb.file||'')} · ${escH(tb.org||'')} · ${tb.date||''} <a class="cx-tg" onclick="navTbClear()" title="${ar?'إزالة الملف':'Remove file'}">✕</a></span></h3>
+    <p style="margin:0 0 10px"><span class="ops-pill ${rec.matched&&rec.dateOk?'good':'warn'}">${rec.matched&&rec.dateOk?(ar?'مطابق':'matched'):(ar?'يوجد فرق ':'difference ')+(rec.matched?'':f2(rec.diff))}</span> ${!rec.dateOk?`<span class="ops-muted" style="font-size:.8rem">${ar?'تاريخ الميزان '+rec.tbDate+' يختلف عن تاريخ التقرير '+L.asOf+'.':'The trial balance is dated '+rec.tbDate+', the statement '+L.asOf+'.'}</span>`:''}
+    <label class="ops-field" style="margin:0;display:inline-flex;margin-inline-start:12px">${ar?'أرقام التقرير من':'Statement figures from'}<select id="nav_src" class="ops-mini" style="width:auto" onchange="navSetF('src',this.value)">${[['auto',ar?'تلقائي (الدفاتر عند تطابق التاريخ)':'automatic (books when the date matches)'],['books',ar?'الدفاتر':'the books'],['platform',ar?'المنصة':'the platform']].map(([v,l])=>`<option value="${v}"${n.src===v?' selected':''}>${l}</option>`).join('')}</select></label></p>
+    <div class="cx-wrap"><table class="rfcs-tbl cx-tbl"><thead><tr><th></th><th>${ar?'المنصة':'Platform'}</th><th>${ar?'الدفاتر':'Books'}</th><th>${ar?'الفرق':'Difference'}</th><th style="text-align:start">${ar?'السبب المحتمل':'Likely cause'}</th></tr></thead><tbody>
+    ${['a','l'].map(t=>`<tr class="cx-sub"><td colspan="5"><b>${t==='a'?(ar?'الأصول':'Assets'):(ar?'الالتزامات':'Liabilities')}</b></td></tr>`+rec.rows.filter(r=>r.t===t).map(r=>`<tr><td>${r.name}</td><td class="rfcs-num">${f2(r.p)}</td><td class="rfcs-num">${f2(r.b)}</td><td class="rfcs-num">${r.ok?'<span class="ops-muted">—</span>':`<span class="cx-var ${Math.abs(r.d)>1?'bad':'warn'}"><span>${f2(r.d)}</span></span>`}</td><td style="text-align:start;white-space:normal;font-size:.78rem" class="ops-muted">${r.hint}</td></tr>`).join('')).join('')}
+    <tr class="tot"><td><b>${ar?'صافي الأصول':'Net assets'}</b></td><td class="rfcs-num"><b>${f2(L.nav)}</b></td><td class="rfcs-num"><b>${f2(rec.booksNav)}</b></td><td class="rfcs-num"><b>${Math.abs(rec.diff)<0.5?'—':f2(rec.diff)}</b></td><td></td></tr>
+    <tr><td>${ar?'رأس مال الوحدات':'Unit capital'}</td><td class="rfcs-num">${f2(L.capital)}</td><td class="rfcs-num">${f2(rec.booksCap)}</td><td class="rfcs-num">${Math.abs(L.capital-rec.booksCap)<0.5?'—':f2(L.capital-rec.booksCap)}</td><td style="text-align:start;white-space:normal;font-size:.78rem" class="ops-muted">${Math.abs(L.capital-rec.booksCap)<0.5?'':(ar?'راجع ضخّ رأس المال المسجّل والقيمة الاسمية للوحدة.':'Check the recorded equity injections and the unit par value.')}</td></tr></tbody></table></div>
+    <details style="margin-top:12px"><summary class="ops-muted" style="cursor:pointer;font-size:.82rem">${ar?'حسابات الميزان: التصنيف والاسم العربي':'Trial balance accounts: grouping and Arabic names'} (${tb.rows.filter(r=>r.t==='A'||r.t==='L').length})</summary>
+    <div class="cx-wrap" style="margin-top:8px"><table class="rfcs-tbl cx-tbl"><thead><tr><th style="text-align:start">${ar?'الحساب':'Account'}</th><th>${ar?'الرصيد':'Balance'}</th><th style="text-align:start">${ar?'يُقارن مع':'Compared with'}</th><th style="text-align:start">${ar?'الاسم العربي في التقرير':'Arabic name on the statement'}</th></tr></thead><tbody>
+    ${tb.rows.filter(r=>r.t==='A'||r.t==='L').map(r=>{const b=navBucketOf(r);return `<tr><td style="text-align:start"><small class="ops-muted">${escH(r.no)}</small> ${escH(navTidyName(r.name))}</td><td class="rfcs-num">${f2(r.t==='A'?r.cl:-r.cl)}</td><td style="text-align:start"><select id="navmap_${escH(r.no)}" class="ops-mini" style="width:auto" onchange="navMapSet('${escH(r.no)}',this.value)">${NAV_BUCKETS.filter(x=>x[3]===(r.t==='A'?'a':'l')).map(x=>`<option value="${x[0]}"${b===x[0]?' selected':''}>${ar?x[2]:x[1]}</option>`).join('')}</select></td><td style="text-align:start"><input type="text" id="navname_${escH(r.no)}" class="ops-mini" dir="rtl" style="width:260px" value="${escH(navArName(r))}" onchange="navNameSet('${escH(r.no)}',this.value)"></td></tr>`;}).join('')}</tbody></table></div></details></div>`;
+  }
   return h;
 }
+// ── the NAV statement (approved layout): preview overlay → browser print → Save as PDF. English and/or Arabic, A4 portrait. ──
+function navReportHtml(lg,L,S){const ar=lg==='ar',n=navCfg(),A=(R2&&R2.A)||(R&&R.A)||D;
+  const f2=v=>(v<0?'(':'')+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(v<0?')':'');
+  const dt=new Date(S.date+'T00:00:00Z'),dstr=dt.toLocaleDateString(ar?'ar-SA-u-ca-gregory-nu-latn':'en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+  const now=new Date(),gen=now.toLocaleDateString(ar?'ar-SA-u-ca-gregory-nu-latn':'en-GB',{day:'numeric',month:'short',year:'numeric'})+(ar?'، ':', ')+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const fund=escH(A.fund_name||D.fund_name||'');
+  const nm=x=>{const t=escH(ar?x.ar:x.en);return t.replace(/\(([^)]*\d[^)]*)\)/g,'<bdi dir="ltr">($1)</bdi>');};
+  const rows=a=>a.map(x=>`<tr><td>${nm(x)}</td><td class="num">${f2(x.v)}</td></tr>`).join('');
+  const T=ar?{t:'صافي قيمة الأصول',asat:'كما في',cur:'ريال سعودي',a:'الأصول',l:'الالتزامات',ta:'إجمالي الأصول',tl:'إجمالي الالتزامات',na:'صافي الأصول',u:'الوحدات القائمة',up:'سعر الوحدة',sar:'ريال',by:'إعداد مدير الصندوق',gen:'تاريخ الإصدار',pg:'صفحة 1 من 1',none:'لا يوجد'}
+           :{t:'Net Asset Value',asat:'as at',cur:'SAR',a:'Assets',l:'Liabilities',ta:'Total assets',tl:'Total liabilities',na:'Net assets',u:'Units in issue',up:'Unit price',sar:'SAR',by:'Prepared by the Fund Manager',gen:'Generated',pg:'Page 1 of 1',none:'none'};
+  return `<div class="navr" dir="${ar?'rtl':'ltr'}" lang="${lg}">
+  <div class="navr-mast"><div><h3>${T.t}</h3><p>${fund} · ${T.asat} ${dstr} · ${T.cur}</p></div><img src="${LOGO_B64}" alt="Musharaka Capital"></div>
+  <div class="navr-body"><table class="navr-st">
+    <tr><th>${T.a}</th><th class="num">${T.sar}</th></tr>${rows(S.assets)}<tr class="tot"><td>${T.ta}</td><td class="num">${f2(S.ta)}</td></tr>
+    <tr><th>${T.l}</th><th class="num">${T.sar}</th></tr>${rows(S.liabs)||`<tr><td>${T.none}</td><td class="num">0.00</td></tr>`}<tr class="tot"><td>${T.tl}</td><td class="num">${f2(S.tl)}</td></tr>
+  </table>
+  <div class="navr-nav"><div><small>${T.na}</small><b>${f2(S.nav)}</b></div><div><small>${T.u}</small><b>${S.units.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4})}</b></div><div><small>${T.up}</small><b>${S.navU.toFixed(4)}</b></div></div></div>
+  <div class="navr-foot"><span>${T.by}</span><span>${T.gen} ${gen}</span><span>${T.pg}</span></div></div>`;}
+function navReport(){
+  if(!ensureForecast())return;const n=navCfg(),ar=lang==='ar',L=navLedger(navAsOf()),S=navStatement(L),rec=navReconcile(L);
+  const langs=n.lang==='both'?['en','ar']:[n.lang];
+  let el=document.getElementById('navPrint');if(el)el.remove();el=document.createElement('div');el.id='navPrint';
+  const warn=rec&&!(rec.matched&&rec.dateOk)?`<span class="navr-warn">${ar?'تنبيه: يوجد فرق بين المنصة والدفاتر (راجع جدول المطابقة). التقرير يعرض أرقام ':'Note: the platform and the books differ (see the reconciliation table). This statement shows the figures from '}${S.src==='books'?(ar?'الدفاتر.':'the books.'):(ar?'المنصة.':'the platform.')}</span>`:'';
+  el.innerHTML=`<div class="navr-bar"><button class="act-btn act-btn-add" onclick="navPrint()">${ico('download')} ${ar?'طباعة / حفظ PDF':'Print / Save as PDF'}</button><button class="act-btn" onclick="navReportClose()">${ar?'إغلاق':'Close'}</button><span class="ops-muted" style="font-size:.8rem">${ar?'في نافذة الطباعة اختر «حفظ كـ PDF»، مقاس A4 طولي.':'In the print dialog choose “Save as PDF”, A4 portrait.'}</span>${warn}</div>`+langs.map(lg=>navReportHtml(lg,L,S)).join('');
+  document.body.appendChild(el);
+}
+function navReportClose(){const el=document.getElementById('navPrint');if(el)el.remove();document.documentElement.classList.remove('nav-printing');}
+function navPrint(){const h=document.documentElement;h.classList.add('nav-printing');const done=()=>{h.classList.remove('nav-printing');window.removeEventListener('afterprint',done);};window.addEventListener('afterprint',done);setTimeout(()=>window.print(),150);}
+// ═══ END DAILY NAV ═══
 // ═══════════════════════════════════════════════
 // DOCUMENTS — cost & VAT transaction process (Steps 1–5)
 //   1 tax invoice  → obligation (base / VAT / total)          reforecastSettings.invoices[]
@@ -7523,8 +7758,8 @@ function dlExcel(){
   rows.push(expRow('Arrangement Fee','IF(COLUMN()=2,Assumptions!$B$60*Assumptions!$B$56,0)',16,true));
 
   // Row 17: Management Fee FIXED (red)
-  {let c=lbl('Management Fee *',false);
-   for(let i=0;i<nq;i++) c+=redNum(R.qMgmtFee[i]);
+  {const _adm=(R.qAdminFee||[]).some(v=>Math.abs(v)>0.5);let c=lbl(_adm?'Management Fee + Admin Fee *':'Management Fee *',false);
+   for(let i=0;i<nq;i++) c+=redNum(R.qMgmtFee[i]+((R.qAdminFee||[])[i]||0));
    c+=fc('SUM(B17:'+lc+'17)',S.rdN);
    rows.push('<row>'+c+'</row>');}
 
@@ -8320,6 +8555,7 @@ function dlExcel(){
     rfRow('Board Compensation',r2.qBoard.map(v=>-v),false);
     rfRow('Financial Advisor',r2.qFinAdvisor.map(v=>-v),true);
     rfRow('Fund Management Fees',r2.qMgmtFee.map(v=>-v),false);
+    if((r2.qAdminFee||[]).some(v=>Math.abs(v)>0.5))rfRow('Admin Fee (% of NAV)',r2.qAdminFee.map(v=>-v),false);
     rfRow('Marketing Costs',r2.qMkt.map(v=>-v),true);
     rfRow('Bank Management Fees',r2.qBankMgmt.map(v=>-v),false);
     rfRow('Arrangement Fee',r2.qArrFee.map(v=>-v),true);
@@ -8386,7 +8622,7 @@ function dlExcel(){
     const _exSell=X=>arr(X.qTotalFundExp).map((v,i)=>v-((X.qWafi||[])[i]||0)-((X.qSellExp||[])[i]||0)); // selling costs are shown under revenue
     sheet('Revenue','REVENUE — FORECAST',[{rows:[['Gross sales',r.qGrossSales],['Less: WAFI fee',arr(r.qWafi).map(v=>-v)],['Less: commission',arr(r.qSellExp).map(v=>-v)],['Net sales revenue',arr(r.qGrossSales).map((v,i)=>v-(r.qWafi[i]||0)-(r.qSellExp[i]||0)),1]]},{sec:'BASELINE (for comparison)',rows:[['Gross sales — baseline',B.qGrossSales],['Variance vs baseline',arr(r.qGrossSales).map((v,i)=>v-(B.qGrossSales[i]||0))]]}]);
     sheet('Construction Cost','CONSTRUCTION & LAND — FORECAST',[{sec:'LAND',rows:[['Land, brokerage & RETT (cash out)',arr(r.qLandCF).map(v=>-v)]]},{sec:'CONSTRUCTION (inc. VAT)',rows:[['Base construction',r.qBaseCon],['Developer fees',r.qDevFee],['Contingency',r.qContingency],['Insurance',r.qInsurance],['Design fee',r.qDesignFee],['Supervision fee',r.qSupervision],['Licensing fee',r.qLicensing],['Total construction',r.qCon,1]]},{sec:'BASELINE',rows:[['Total construction — baseline',B.qCon],['Variance vs baseline',arr(r.qCon).map((v,i)=>v-(B.qCon[i]||0))]]}]);
-    sheet('Fund Expenses','FUND EXPENSES — FORECAST (inc. VAT where applicable)',[{rows:[['Custody',r.qCustody],['SPV setup',r.qSPV],['Fund setup',r.qFundSetup],['Auditor',r.qAuditor],['Sharia committee',r.qSharia],['Engineering consultant',r.qEngineering],['Board compensation',r.qBoard],['Financial advisor',r.qFinAdvisor],['Management fees',r.qMgmtFee],['Marketing',r.qMkt],['Bank management fees',r.qBankMgmt],['Arrangement fee',r.qArrFee],['Performance fee',r.qPerfFee],['Total fund expenses (ex selling costs)',_exSell(r),1]]},{sec:'BASELINE',rows:[['Total fund expenses — baseline (ex selling costs)',_exSell(B)]]}]);
+    sheet('Fund Expenses','FUND EXPENSES — FORECAST (inc. VAT where applicable)',[{rows:[['Custody',r.qCustody],['SPV setup',r.qSPV],['Fund setup',r.qFundSetup],['Auditor',r.qAuditor],['Sharia committee',r.qSharia],['Engineering consultant',r.qEngineering],['Board compensation',r.qBoard],['Financial advisor',r.qFinAdvisor],['Admin fee (% of NAV)',r.qAdminFee||[]],['Management fees',r.qMgmtFee],['Marketing',r.qMkt],['Bank management fees',r.qBankMgmt],['Arrangement fee',r.qArrFee],['Performance fee',r.qPerfFee],['Total fund expenses (ex selling costs)',_exSell(r),1]]},{sec:'BASELINE',rows:[['Total fund expenses — baseline (ex selling costs)',_exSell(B)]]}]);
     sheet('Debt Schedule','DEBT SCHEDULE — FORECAST',[{rows:[['Opening balance',r.qLoanOpen],['Drawdowns',r.drawdowns],['Repayments',arr(r.qRepay).map(v=>-v)],['Closing balance',r.qLoanClose,1],['Profit / interest',r.qInterest],['Funding gap (beyond facility)',r._fundingGap||[]]]},{sec:'BASELINE',rows:[['Closing balance — baseline',B.qLoanClose],['Interest — baseline',B.qInterest]]}]);
     sheet('VAT Schedule','VAT — FORECAST',[{rows:[['VAT on fund expenses (paid)',r.qExpVAT],['VAT refund — construction',r.qVATRefundCon],['VAT refund — expenses',r.qVATRefundExp],['VAT refund — brokerage',r.qBrokVATRefund],['RETT refund',r.qRETTRefund],['VAT advisor',arr(r.qVATAdvisor).map(v=>-v)],['Net refunds',r.qVATNet,1]]}]);
     sheet('In-Kind','IN-KIND PARTICIPATION — FORECAST',[{rows:[['In-kind — land',r.qIKLand],['In-kind — brokerage',r.qIKBrok],['In-kind — development',r.qIKDev],['In-kind — construction',r.qIKCon],['In-kind — marketing',r.qIKMkt],['In-kind — selling',r.qIKSell],['In-kind — management fee (GP share)',r.qIKGp||Array(r.nq).fill(0)],['In-kind — catch-up for closed quarters',r.qIKCatch||Array(r.nq).fill(0)],['In-kind — booked, source not tagged',r.qIKOther||Array(r.nq).fill(0)],['Total in-kind',r.qIKTotal,1]]}]);
@@ -8666,6 +8902,7 @@ function calcWith(overrides){
   const qAuditor=Array(nq).fill(0),qSharia=Array(nq).fill(0),qEngineering=Array(nq).fill(0);
   const qBoard=Array(nq).fill(0),qFinAdvisor=Array(nq).fill(0);
   const qMgmtFee=Array(nq).fill(0),qBankMgmt=Array(nq).fill(0),qVATAdvisor=Array(nq).fill(0);
+  const qAdminFee=Array(nq).fill(0);
   const qPerfFee=Array(nq).fill(0),qArrFee=Array(nq).fill(0);
 
   if(isFund){
@@ -8737,7 +8974,8 @@ function calcWith(overrides){
         else if(A.mgmt_fee_mode==='total_asset') qMgmtFee[qi]=qTotalAssets[qi]*pct(A.mgmt_fee_pct)/4*V;
         else qMgmtFee[qi]=A.mgmt_fee_fixed/4*V;
       }
-      qTotalFundExp[qi]=baseExp+qMgmtFee[qi];
+      if(isFund) qAdminFee[qi]=Math.max(0,qNAV[qi])*pct(A.admin_fee_pct||0)/4*V;
+      qTotalFundExp[qi]=baseExp+qMgmtFee[qi]+qAdminFee[qi];
     }
     // GP In-Kind = % of mgmt fee added back as in-kind. Reset qIKTotal so debt sizing accounts for it.
     {let _gpLeft=Number(A.gp_commit_inkind_cap)>0?Number(A.gp_commit_inkind_cap):Infinity;for(let qi=0;qi<nq;qi++){const g=isFund?Math.min(qMgmtFee[qi]*gpIKPct,_gpLeft):0;_gpLeft-=g;qIKTotal[qi]=qIKBase[qi]+g;}} // GP share of the fee, capped at the committed in-kind amount
@@ -8821,7 +9059,8 @@ function calcWith(overrides){
       else if(A.mgmt_fee_mode==='total_asset') qMgmtFee[qi]=qTotalAssets[qi]*pct(A.mgmt_fee_pct)/4*V;
       else qMgmtFee[qi]=A.mgmt_fee_fixed/4*V;
     }
-    qTotalFundExp[qi]=baseExp+qMgmtFee[qi];
+    if(isFund) qAdminFee[qi]=Math.max(0,qNAV[qi])*pct(A.admin_fee_pct||0)/4*V;
+      qTotalFundExp[qi]=baseExp+qMgmtFee[qi]+qAdminFee[qi];
   }
   // Expense VAT — Interest EXCLUDED (bank loan interest is VAT-exempt in KSA)
   for(let qi=0;qi<nq;qi++){
